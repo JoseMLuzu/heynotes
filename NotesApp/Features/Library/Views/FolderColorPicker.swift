@@ -39,12 +39,13 @@ struct FolderSidebarLabel: View {
     let selected: Bool
     var body: some View {
         HStack(spacing: 8) {
-            Label(folder.title, systemImage: selected ? "folder.fill" : "folder")
-            Spacer(minLength: 4)
-            Circle().fill(folder.color.color).frame(width: 8, height: 8)
-                .overlay(Circle().strokeBorder(Color(uiColor: .systemBackground).opacity(0.7), lineWidth: 0.7))
+            Circle().fill(folder.color.color).frame(width: 10, height: 10)
                 .accessibilityHidden(true)
+            Label(folder.title, systemImage: selected ? "folder.fill" : "folder")
         }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .contentShape(Rectangle())
+        .accessibilityElement(children: .combine)
         .accessibilityValue("\(folder.color.title) folder")
     }
 }

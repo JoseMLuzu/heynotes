@@ -136,16 +136,18 @@ import PencilKit
             try await settle(host); capture(host, name: "Settings-\(appearance.rawValue)")
             window.isHidden = true; window.rootViewController = nil
         }
-        prefs.appearance = .light
-        let (window, host) = try host(LibraryView(context: container.mainContext).modelContainer(container).modifier(AppAppearance()),
-                                      size: CGSize(width: 1366, height: 1024))
-        defer { window.isHidden = true; window.rootViewController = nil }
-        try await settle(host)
-        let split = try XCTUnwrap(controllers(host).compactMap { $0 as? UISplitViewController }.first)
-        split.show(.primary)
-        try await Task.sleep(for: .milliseconds(400))
-        try await settle(host)
-        capture(host, name: "Folder-Colors-Library-Sidebar")
+        for appearance in [AppPreferences.Appearance.light, .dark] {
+            prefs.appearance = appearance
+            let (window, host) = try host(LibraryView(context: container.mainContext).modelContainer(container).modifier(AppAppearance()),
+                                          size: CGSize(width: 1366, height: 1024))
+            defer { window.isHidden = true; window.rootViewController = nil }
+            try await settle(host)
+            let split = try XCTUnwrap(controllers(host).compactMap { $0 as? UISplitViewController }.first)
+            split.show(.primary)
+            try await Task.sleep(for: .milliseconds(400))
+            try await settle(host)
+            capture(host, name: "Folder-Colors-Library-Sidebar-\(appearance.rawValue)")
+        }
     }
 
     private func drawing() -> PKDrawing {

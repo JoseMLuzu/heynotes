@@ -2,7 +2,7 @@
 
 ## User workflow
 
-Touch and hold a folder in the library or sidebar and choose **Change Color**. Eight curated colors are available: Sage, Blue, Teal, Lavender, Rose, Coral, Amber and Graphite. The folder cover and the small dot beside its sidebar label share the same saved color. Each folder, including a subfolder, has its own color; moving or restoring it does not change that color. A selected folder retains the normal selection treatment, with its dot still visible. VoiceOver receives the color name as an additional value, so color is not the only identifying cue.
+Touch and hold a folder in the library or sidebar and choose **Change Color**. Eight curated colors are available: Sage, Blue, Teal, Lavender, Rose, Coral, Amber and Graphite. The folder cover and the solid 10-point dot before its sidebar icon share the same saved color. Each folder, including a subfolder, has its own color; moving or restoring it does not change that color. A selected folder retains the normal selection treatment, with its dot still visible. VoiceOver receives the color name as an additional value, so color is not the only identifying cue.
 
 Open **Settings** at the bottom of the sidebar or from the editor's page-options menu. Settings includes:
 
@@ -68,3 +68,7 @@ Final verification: all 79 native simulator tests passed, followed by a successf
 ## Soft-blue default — 2026-11-11
 
 The revised palette and one-time legacy-Sage preference upgrade passed all 83 native simulator tests. Tests also verify that a subsequent Sage selection persists and an existing Lavender selection survives the upgrade. Default-blue editor/library screenshots and light/dark Settings screenshots were inspected. The signed Release build succeeded and was installed on the connected iPad with CoreDevice installation sequence 2644.
+
+## Leading folder dots — 2026-11-11
+
+Sidebar color dots now precede the folder icon and title. The marker uses a solid 10-point vector circle. Removing the former translucent 0.7-point white border and increasing the diameter gives it a cleaner edge. Each row combines its accessible label and color value and retains a full-width hit area. All six native personalization tests pass; real library sidebar captures were inspected in Light and Dark appearance. The signed Release update was installed on the connected iPad with installation sequence 2652.
