@@ -5,12 +5,15 @@ struct DocumentTabBar<TrailingActions: View>: View {
     let showLibrary: () -> Void
     let toggleSidebar: () -> Void
     let showsRecents: Bool
+    let backButton: NavigationBackButton?
     let trailingActions: TrailingActions
     init(workspace: DocumentWorkspace, showLibrary: @escaping () -> Void,
          toggleSidebar: @escaping () -> Void, showsRecents: Bool = true,
+         backButton: NavigationBackButton? = nil,
          @ViewBuilder trailingActions: () -> TrailingActions) {
         self.workspace = workspace; self.showLibrary = showLibrary
         self.toggleSidebar = toggleSidebar; self.showsRecents = showsRecents
+        self.backButton = backButton
         self.trailingActions = trailingActions()
     }
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
@@ -19,15 +22,23 @@ struct DocumentTabBar<TrailingActions: View>: View {
 
     var body: some View {
         HStack(spacing: 8) {
-            Button { if !workspace.blocksNavigation { toggleSidebar() } } label: {
-                Image(systemName: "sidebar.left")
-                    .font(.body)
-                    .frame(width: 44, height: rowHeight)
+            if let backButton {
+                backButton.frame(height: rowHeight)
+            } else {
+                Button { if !workspace.blocksNavigation { toggleSidebar() } } label: {
+                    Image(systemName: "sidebar.left")
+                        .font(.body)
+                        .frame(width: 44, height: rowHeight)
+                }
+                .accessibilityLabel("Toggle Sidebar")
+                .help("Show or hide the library sidebar")
             }
-            .accessibilityLabel("Toggle Sidebar")
-            .help("Show or hide the library sidebar")
 
-            tabStrip
+            if workspace.openNotebooks.isEmpty {
+                Spacer(minLength: 0)
+            } else {
+                tabStrip
+            }
         }
         .font(.subheadline)
         .buttonStyle(.plain)

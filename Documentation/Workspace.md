@@ -94,3 +94,11 @@ The workspace keeps its existing load/save boundary: loading completes before pu
 The effect is scoped to library-card selections. Tab switches, recent-history selection, startup restoration, returning to Library and page turns retain their existing behavior. Reduce Motion bypasses zoom and the extra input gate. Unavailable source geometry falls back to direct opening. No persistent schema or file format changes.
 
 Validation: all 49 native regression tests pass. DocumentOpeningTests renders the opening at progress 0, 0.5 and 1 and verifies that canvas identity, bounds and editable ink remain unchanged. The signed generic iOS build passes. Manual acceptance: open notebooks/PDFs at different grid positions and after scrolling; check the short zoom, input after completion, Reduce Motion, failed-document recovery and an unchanged tab/page navigation workflow.
+
+## Parent-folder navigation — 2026-11-11
+
+While browsing Library, the leading control below the native navigation bar is Back. It moves from a subfolder to its parent and from a root folder to Library. Its accessible label names the destination. Back clears the active search so the parent contents are visible. The control also appears inside folders when the workspace has no open tabs. At Library root, an existing tab row keeps a disabled Back control; with no open tabs the extra row is hidden. The native upper sidebar button controls sidebar visibility.
+
+`LibraryNavigation` holds the current virtual section or folder ID and resolves parent destinations from the loaded folders. `DocumentTabBar` accepts the library's native back control and retains its editor sidebar presentation for editing. The navigation regression test drives the same state used by folder cards and activates the actual native Back button through both parent levels, with and without open tabs.
+
+Validation: all 84 native tests and 26 host tests pass. The parent-folder regression also passes with the application appearance applied. Folder captures with and without tabs were inspected. The signed Release build and installation on the connected iPad succeeded, with CoreDevice installation sequence 2660.

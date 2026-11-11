@@ -2,10 +2,6 @@ import SwiftUI
 import SwiftData
 import UniformTypeIdentifiers
 
-private enum LibrarySection: Hashable {
-    case library, inbox, favorites, study, trash, folder(UUID)
-}
-
 private enum LibrarySheet: Identifiable {
     case notebook(PaperTemplate), folder(UUID?), renameNotebook(Notebook), renameFolder(Folder)
     var id: String {
@@ -20,7 +16,7 @@ private enum LibrarySheet: Identifiable {
 
 struct LibraryView: View {
     @State private var model: LibraryViewModel
-    @State private var selection: LibrarySection? = .library
+    @State private var navigation: LibraryNavigation
     @State private var search = ""
     @State private var workspace: DocumentWorkspace
     @State private var focusMode: EditorFocusMode
@@ -43,8 +39,10 @@ struct LibraryView: View {
     @State private var openingSource: DocumentOpeningSource?
     @State private var isOpeningDocument = false
 
-    init(context: ModelContext, workspace: DocumentWorkspace? = nil, focusMode: EditorFocusMode? = nil) {
+    init(context: ModelContext, workspace: DocumentWorkspace? = nil, focusMode: EditorFocusMode? = nil,
+         navigation: LibraryNavigation? = nil) {
         _model = State(initialValue: LibraryViewModel(context: context))
+        _navigation = State(initialValue: navigation ?? LibraryNavigation())
         _workspace = State(initialValue: workspace ?? DocumentWorkspace(context: context))
         _focusMode = State(initialValue: focusMode ?? EditorFocusMode())
     }
@@ -59,13 +57,11 @@ struct LibraryView: View {
                 set: { if !focusMode.isActive { compactColumn = $0 } })
     }
 
-    private var selectedFolder: Folder? {
-        guard case .folder(let id) = selection else { return nil }
-        return model.folders.first { $0.id == id }
-    }
+    private var selectedFolder: Folder? { navigation.folder(in: model.folders) }
+    private var backDestination: String? { navigation.backDestination(in: model.folders) }
 
     private var title: String {
-        switch selection {
+        switch navigation.selection {
         case .favorites: "Favorites"
         case .study: "Study"
         case .inbox: "Inbox"
@@ -78,7 +74,7 @@ struct LibraryView: View {
     private var visibleNotebooks: [Notebook] {
         model.notebooks.filter { notebook in
             let matchesSection: Bool
-            switch selection {
+            switch navigation.selection {
             case .favorites: matchesSection = notebook.isFavorite
             case .folder(let id): matchesSection = notebook.folder?.id == id
             case .inbox: matchesSection = notebook.folder == nil
@@ -92,7 +88,7 @@ struct LibraryView: View {
     private var visibleFolders: [Folder] {
         model.folders.filter { folder in
             let matches: Bool
-            switch selection {
+            switch navigation.selection {
             case .favorites: matches = folder.isFavorite
             case .folder(let id): matches = folder.parent?.id == id
             case .library: matches = !search.isEmpty || folder.parent == nil
@@ -104,9 +100,9 @@ struct LibraryView: View {
 
     var body: some View {
         NavigationSplitView(columnVisibility: focusColumnVisibility, preferredCompactColumn: focusCompactColumn) {
-            List(selection: Binding(get: { selection }, set: { destination in
+            List(selection: Binding(get: { navigation.selection }, set: { destination in
                 Task {
-                    if await workspace.showLibrary() { selection = destination ?? .library; model.reload() }
+                    if await workspace.showLibrary() { navigation.selection = destination ?? .library; model.reload() }
                 }
             })) {
                 Section {
@@ -122,7 +118,7 @@ struct LibraryView: View {
                 Section("Library") {
                     Label("Inbox", systemImage: "tray").tag(LibrarySection.inbox)
                     OutlineGroup(model.folders.filter { $0.parent == nil }, children: \.visibleChildren) { folder in
-                        FolderSidebarLabel(folder: folder, selected: selection == .folder(folder.id))
+                        FolderSidebarLabel(folder: folder, selected: navigation.selection == .folder(folder.id))
                             .tag(LibrarySection.folder(folder.id))
                             .contextMenu { folderActions(folder) }
                     }
@@ -148,8 +144,9 @@ struct LibraryView: View {
         } detail: {
             NavigationStack {
                 VStack(spacing: 0) {
-                    if workspace.activeSession == nil && !workspace.openNotebooks.isEmpty {
-                        DocumentTabBar(workspace: workspace, showLibrary: showLibrary, toggleSidebar: toggleSidebar) { EmptyView() }
+                    if workspace.activeSession == nil && (!workspace.openNotebooks.isEmpty || backDestination != nil) {
+                        DocumentTabBar(workspace: workspace, showLibrary: showLibrary, toggleSidebar: toggleSidebar,
+                                       backButton: NavigationBackButton(destination: backDestination, action: goBack)) { EmptyView() }
                     }
                     Group {
                         if let session = workspace.activeSession {
@@ -158,9 +155,9 @@ struct LibraryView: View {
                                 .disabled(workspace.isSwitching)
                                 .transition(openingTransition(for: session.notebook.id))
                                 .zIndex(1)
-                        } else if selection == .trash {
+                        } else if navigation.selection == .trash {
                             LibraryTrashView(model: model)
-                        } else if selection == .study {
+                        } else if navigation.selection == .study {
                             ContentUnavailableView("A little practice. A lasting memory.", systemImage: "rectangle.on.rectangle",
                                                    description: Text("Study is coming soon. Your notebooks are ready for the ideas you want to keep."))
                         } else {
@@ -183,7 +180,7 @@ struct LibraryView: View {
                 .toolbarBackground(.visible, for: .navigationBar)
                 .toolbar(workspace.activeSession == nil ? .visible : .hidden, for: .navigationBar)
                 .toolbar {
-                    if selection != .study && selection != .trash && workspace.activeSession == nil {
+                    if navigation.selection != .study && navigation.selection != .trash && workspace.activeSession == nil {
                         ToolbarItem(placement: .primaryAction) {
                             Button { showingImporter = true } label: { Label("Import PDF", systemImage: "square.and.arrow.down") }
                                 .disabled(importing)
@@ -274,7 +271,7 @@ struct LibraryView: View {
                 if let folder = deletingFolder {
                     let ids = Set(model.documents(inSubtreeOf: folder).map(\.id))
                     Task {
-                        if await workspace.forget(ids) { model.delete(folder); selection = .library }
+                        if await workspace.forget(ids) { model.delete(folder); navigation.selection = .library }
                     }
                 }
                 deletingFolder = nil
@@ -322,6 +319,12 @@ struct LibraryView: View {
         Task { if await workspace.showLibrary() { model.reload() } }
     }
 
+    private func goBack() {
+        guard !workspace.blocksNavigation, backDestination != nil else { return }
+        navigation.goBack(in: model.folders)
+        search = ""
+    }
+
     private var errorPresented: Binding<Bool> {
         Binding(get: { model.errorMessage != nil }, set: { if !$0 { model.errorMessage = nil } })
     }
@@ -332,7 +335,7 @@ struct LibraryView: View {
         return ScrollView {
             VStack(alignment: .leading, spacing: 24) {
                 HStack(alignment: .firstTextBaseline) {
-                    Text(selection == .favorites ? "Keep a few close." : selectedFolder != nil ? "Ideas, in good company." : "A place for your thoughts.")
+                    Text(navigation.selection == .favorites ? "Keep a few close." : selectedFolder != nil ? "Ideas, in good company." : "A place for your thoughts.")
                         .font(.system(.title3, design: .serif, weight: .medium))
                     Spacer(minLength: 12)
                     if !notebooks.isEmpty {
@@ -343,10 +346,10 @@ struct LibraryView: View {
                 if notebooks.isEmpty && folders.isEmpty {
                     if !search.isEmpty {
                         ContentUnavailableView.search(text: search).frame(minHeight: 320)
-                    } else if selection == .favorites {
+                    } else if navigation.selection == .favorites {
                         LibraryEmptyState(title: "Keep your favorites nearby.",
                                           message: "Touch and hold a folder or notebook, then add it to Favorites.",
-                                          actionTitle: "View Library") { selection = .library }
+                                          actionTitle: "View Library") { navigation.selection = .library }
                     } else {
                         LibraryEmptyState(title: "Every idea starts somewhere.",
                                           message: "A lecture, a question, a thought worth keeping. Give it a notebook.",
@@ -355,7 +358,7 @@ struct LibraryView: View {
                 } else {
                     LazyVGrid(columns: [GridItem(.adaptive(minimum: 170, maximum: 230), spacing: 28, alignment: .top)], spacing: 30) {
                         ForEach(folders) { folder in
-                            Button { selection = .folder(folder.id) } label: { FolderCard(folder: folder) }
+                            Button { navigation.open(folder) } label: { FolderCard(folder: folder) }
                                 .buttonStyle(QuietPressStyle())
                                 .hoverEffect(.lift)
                                 .contextMenu { folderActions(folder) }

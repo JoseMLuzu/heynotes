@@ -59,6 +59,17 @@
 			<key>sourceTree</key>
 			<string>SOURCE_ROOT</string>
 		</dict>
+		<key>0523EF3BB51B89C403EB9465</key>
+		<dict>
+			<key>isa</key>
+			<string>PBXFileReference</string>
+			<key>lastKnownFileType</key>
+			<string>sourcecode.swift</string>
+			<key>path</key>
+			<string>NotesAppDeviceTests/ModalPresentationTests.swift</string>
+			<key>sourceTree</key>
+			<string>SOURCE_ROOT</string>
+		</dict>
 		<key>05456D0C6BB7F1827C43B71B</key>
 		<dict>
 			<key>fileRef</key>
@@ -268,6 +279,17 @@
 			<string>sourcecode.swift</string>
 			<key>path</key>
 			<string>NotesApp/Core/Components/PDFShareSheet.swift</string>
+			<key>sourceTree</key>
+			<string>SOURCE_ROOT</string>
+		</dict>
+		<key>1941EA1B07AB60C120ACC356</key>
+		<dict>
+			<key>isa</key>
+			<string>PBXFileReference</string>
+			<key>lastKnownFileType</key>
+			<string>sourcecode.swift</string>
+			<key>path</key>
+			<string>NotesApp/Core/Components/NavigationBackButton.swift</string>
 			<key>sourceTree</key>
 			<string>SOURCE_ROOT</string>
 		</dict>
@@ -594,6 +616,13 @@
 			<key>sourceTree</key>
 			<string>SOURCE_ROOT</string>
 		</dict>
+		<key>37D4F310A61DDB5C18FCD2E0</key>
+		<dict>
+			<key>fileRef</key>
+			<string>1941EA1B07AB60C120ACC356</string>
+			<key>isa</key>
+			<string>PBXBuildFile</string>
+		</dict>
 		<key>386B6DAA631A3E6A32EC27D2</key>
 		<dict>
 			<key>isa</key>
@@ -773,6 +802,7 @@
 				<string>68775C22C739DCE085135D27</string>
 				<string>E6375D5C48F98438F1DF3D8A</string>
 				<string>BDB7AC1EB5A1E3CD33C56E2C</string>
+				<string>5B03DBEE559243809BAB7737</string>
 			</array>
 			<key>isa</key>
 			<string>PBXSourcesBuildPhase</string>
@@ -851,6 +881,13 @@
 			<key>isa</key>
 			<string>PBXBuildFile</string>
 		</dict>
+		<key>5586CC33D08FF5E2F420FB15</key>
+		<dict>
+			<key>fileRef</key>
+			<string>9BBFE9BA7023ADA22336F3C7</string>
+			<key>isa</key>
+			<string>PBXBuildFile</string>
+		</dict>
 		<key>5594CE35BDFF9B5550D258D9</key>
 		<dict>
 			<key>fileRef</key>
@@ -891,6 +928,13 @@
 			<key>sourceTree</key>
 			<string>SOURCE_ROOT</string>
 		</dict>
+		<key>5B03DBEE559243809BAB7737</key>
+		<dict>
+			<key>fileRef</key>
+			<string>A6A678E89F826F833B4355BE</string>
+			<key>isa</key>
+			<string>PBXBuildFile</string>
+		</dict>
 		<key>5DA26730F478F0B6DC8117A5</key>
 		<dict>
 			<key>isa</key>
@@ -928,6 +972,8 @@
 		<dict>
 			<key>buildSettings</key>
 			<dict>
+				<key>ASSETCATALOG_COMPILER_APPICON_NAME</key>
+				<string>AppIcon</string>
 				<key>CODE_SIGN_STYLE</key>
 				<string>Automatic</string>
 				<key>CURRENT_PROJECT_VERSION</key>
@@ -962,8 +1008,6 @@
 				<string>complete</string>
 				<key>TARGETED_DEVICE_FAMILY</key>
 				<string>2</string>
-				<key>ASSETCATALOG_COMPILER_APPICON_NAME</key>
-				<string>AppIcon</string>
 			</dict>
 			<key>isa</key>
 			<string>XCBuildConfiguration</string>
@@ -1078,6 +1122,8 @@
 		<dict>
 			<key>buildSettings</key>
 			<dict>
+				<key>ASSETCATALOG_COMPILER_APPICON_NAME</key>
+				<string>AppIcon</string>
 				<key>CODE_SIGN_STYLE</key>
 				<string>Automatic</string>
 				<key>CURRENT_PROJECT_VERSION</key>
@@ -1112,8 +1158,6 @@
 				<string>complete</string>
 				<key>TARGETED_DEVICE_FAMILY</key>
 				<string>2</string>
-				<key>ASSETCATALOG_COMPILER_APPICON_NAME</key>
-				<string>AppIcon</string>
 			</dict>
 			<key>isa</key>
 			<string>XCBuildConfiguration</string>
@@ -1713,6 +1757,17 @@
 				<string>75BD2E4726E4F97190107AF7</string>
 			</array>
 		</dict>
+		<key>9BBFE9BA7023ADA22336F3C7</key>
+		<dict>
+			<key>isa</key>
+			<string>PBXFileReference</string>
+			<key>lastKnownFileType</key>
+			<string>sourcecode.swift</string>
+			<key>path</key>
+			<string>NotesApp/Core/Components/AppSheetPresentation.swift</string>
+			<key>sourceTree</key>
+			<string>SOURCE_ROOT</string>
+		</dict>
 		<key>9BF306296F2307902DCF140A</key>
 		<dict>
 			<key>fileRef</key>
@@ -1791,6 +1846,17 @@
 			<string>64EC557A631496DC5ED5F836</string>
 			<key>isa</key>
 			<string>PBXBuildFile</string>
+		</dict>
+		<key>A6A678E89F826F833B4355BE</key>
+		<dict>
+			<key>isa</key>
+			<string>PBXFileReference</string>
+			<key>lastKnownFileType</key>
+			<string>sourcecode.swift</string>
+			<key>path</key>
+			<string>NotesAppDeviceTests/LibraryNavigationTests.swift</string>
+			<key>sourceTree</key>
+			<string>SOURCE_ROOT</string>
 		</dict>
 		<key>A7B76FCEBE5D590BDF1CC5CC</key>
 		<dict>
@@ -2097,11 +2163,20 @@
 				<string>020971B96CEA275C8C7FAF67</string>
 				<string>F7EAE70DB66BE087EC4948CE</string>
 				<string>5586CC33D08FF5E2F420FB15</string>
+				<string>37D4F310A61DDB5C18FCD2E0</string>
+				<string>510348BC128805ED6507A309</string>
 			</array>
 			<key>isa</key>
 			<string>PBXSourcesBuildPhase</string>
 			<key>runOnlyForDeploymentPostprocessing</key>
 			<string>0</string>
+		</dict>
+		<key>BDB7AC1EB5A1E3CD33C56E2C</key>
+		<dict>
+			<key>fileRef</key>
+			<string>0523EF3BB51B89C403EB9465</string>
+			<key>isa</key>
+			<string>PBXBuildFile</string>
 		</dict>
 		<key>C082BAA4E025E6B696DE2BE8</key>
 		<dict>
@@ -2654,6 +2729,9 @@
 				<string>C6046F34054679457FEB9DBB</string>
 				<string>9BBFE9BA7023ADA22336F3C7</string>
 				<string>0523EF3BB51B89C403EB9465</string>
+				<string>1941EA1B07AB60C120ACC356</string>
+				<string>A6A678E89F826F833B4355BE</string>
+				<string>F4E1464EE98719E5615C9652</string>
 			</array>
 			<key>isa</key>
 			<string>PBXGroup</string>
@@ -2944,41 +3022,23 @@
 			<key>isa</key>
 			<string>PBXBuildFile</string>
 		</dict>
-		<key>9BBFE9BA7023ADA22336F3C7</key>
+		<key>F4E1464EE98719E5615C9652</key>
 		<dict>
 			<key>isa</key>
 			<string>PBXFileReference</string>
 			<key>lastKnownFileType</key>
 			<string>sourcecode.swift</string>
 			<key>path</key>
-			<string>NotesApp/Core/Components/AppSheetPresentation.swift</string>
+			<string>NotesApp/Features/Library/ViewModels/LibraryNavigation.swift</string>
 			<key>sourceTree</key>
 			<string>SOURCE_ROOT</string>
 		</dict>
-		<key>5586CC33D08FF5E2F420FB15</key>
+		<key>510348BC128805ED6507A309</key>
 		<dict>
 			<key>isa</key>
 			<string>PBXBuildFile</string>
 			<key>fileRef</key>
-			<string>9BBFE9BA7023ADA22336F3C7</string>
-		</dict>
-		<key>0523EF3BB51B89C403EB9465</key>
-		<dict>
-			<key>isa</key>
-			<string>PBXFileReference</string>
-			<key>lastKnownFileType</key>
-			<string>sourcecode.swift</string>
-			<key>path</key>
-			<string>NotesAppDeviceTests/ModalPresentationTests.swift</string>
-			<key>sourceTree</key>
-			<string>SOURCE_ROOT</string>
-		</dict>
-		<key>BDB7AC1EB5A1E3CD33C56E2C</key>
-		<dict>
-			<key>isa</key>
-			<string>PBXBuildFile</string>
-			<key>fileRef</key>
-			<string>0523EF3BB51B89C403EB9465</string>
+			<string>F4E1464EE98719E5615C9652</string>
 		</dict>
 	</dict>
 	<key>rootObject</key>
