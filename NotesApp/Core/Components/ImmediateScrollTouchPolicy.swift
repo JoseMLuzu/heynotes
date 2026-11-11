@@ -29,4 +29,3 @@ struct ImmediateScrollTouchPolicy: UIViewRepresentable {
         }
     }
 }
-

@@ -12,7 +12,7 @@ public enum NotesSchemaV2: VersionedSchema {
         public var createdAt: Date
         @Relationship(deleteRule: .nullify, inverse: \Notebook.folder)
         public var notebooks: [Notebook] = []
-    
+
         public init(title: String, id: UUID = UUID(), createdAt: Date = .now) {
             self.id = id
             self.title = title
@@ -31,12 +31,12 @@ public enum NotesSchemaV2: VersionedSchema {
         public var folder: Folder?
         @Relationship(deleteRule: .cascade, inverse: \NotePage.notebook)
         public var pages: [NotePage] = []
-    
+
         public var coverColor: CoverColor {
             get { CoverColor(rawValue: coverColorRawValue) ?? .sage }
             set { coverColorRawValue = newValue.rawValue }
         }
-    
+
         public var orderedPages: [NotePage] {
             pages.sorted {
                 $0.pageIndex == $1.pageIndex
@@ -44,7 +44,7 @@ public enum NotesSchemaV2: VersionedSchema {
                     : $0.pageIndex < $1.pageIndex
             }
         }
-    
+
         public init(title: String, coverColor: CoverColor = .sage, folder: Folder? = nil,
                     id: UUID = UUID(), now: Date = .now) {
             self.id = id
@@ -69,18 +69,18 @@ public enum NotesSchemaV2: VersionedSchema {
         public var pdfPageIndex: Int? = nil
         public var pageWidth: Double? = nil
         public var pageHeight: Double? = nil
-    
+
         public var logicalSize: CGSize {
             CGSize(width: pageWidth ?? 768, height: pageHeight ?? 1086)
         }
         public var createdAt: Date
         public var updatedAt: Date
-    
+
         public var paperTemplate: PaperTemplate {
             get { PaperTemplate(rawValue: paperTemplateRawValue) ?? .blank }
             set { paperTemplateRawValue = newValue.rawValue }
         }
-    
+
         public init(pageIndex: Int, paperTemplate: PaperTemplate = .blank,
                     id: UUID = UUID(), now: Date = .now) {
             self.id = id
