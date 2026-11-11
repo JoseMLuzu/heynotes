@@ -1,15 +1,17 @@
 # App icon
 
-The selected artwork is the slate-blue folded-notebook-page dove on a warm white background. The left tail forms a notebook page with a margin and two ruled lines. The built-in image_gen tool produced the color variant during design exploration. The selected image was resized to a 1024 × 1024 opaque PNG for Xcode.
+The selected artwork is a white origami dove holding a yellow pencil against a blue background. The built-in image_gen tool produced this design during icon exploration. The selected image was resized to a 1024 × 1024 opaque PNG for Xcode.
 
 The project asset is `NotesApp/Resources/Assets.xcassets/AppIcon.appiconset/AppIcon.png`. Both app build configurations select `AppIcon`. The asset catalog supplies the native iPad icon renditions.
 
 ## Generation prompt
 
 ```text
-Use case: precise-object-edit. Produce one color variant of this exact folded-notebook-page dove app icon. Variant color is Azul pizarra. Preserve the exact central silhouette, size, position, paper fold geometry, rectangular notebook-page tail, vertical margin and exactly two horizontal lines, head and raised wing of the reference. Recolor ALL of the green paper to Azul pizarra paper, broad main faces approximately #819BB5, restrained highlights #B6C7D7, folded shadows #4E6984 and the notebook margin/rules #465F77. Keep the opaque warm white background #FAF8F2, same soft contact shadow, same quiet premium minimal craftsmanship and same spacious composition. The whole dove and notebook tail should be clearly legible at small app-icon sizes. Use restrained dimensional folded-paper shading and crisp gentle edges. Only change the paper's palette, preserving its unified continuous sheet-to-bird construction. Single full-bleed opaque square icon only. No text, color names, lettering, palette swatches, notification marks, pencils, new objects, borders, rounded corner mask, collage or board.
+Use case: precise-object-edit. Asset type: one premium iPad handwritten-notes app icon concept. Edit the reference white origami dove on blue. Preserve its elegant paper-fold silhouette, white and very pale lavender materials, raised triangular wing, graceful head facing right, centered composition and soft dimensional shading. Remove both yellow notification marks above the head. Instead add ONE clearly recognizable small warm-yellow wooden pencil, delicately held by the dove's beak, integrated naturally into the composition. The pencil must have a simple yellow barrel, a visible sharpened pale wooden end and graphite writing point, broad clean shapes readable at small app-icon sizes. Keep the pencil secondary to the dove but large enough to identify at a glance, roughly one third of the icon's width, positioned on a gentle diagonal with breathing room around it. Use the warm yellow of the original marks as the pencil accent. Keep the background a softly luminous sky-blue to royal-blue gradient with a slightly calmer saturation than the reference. Minimal polished native Apple-style visual quality, restrained shadows, strong readable silhouette. Full-bleed opaque square artwork, one icon only, 1024 by 1024. Avoid extra pages, notebook, envelope, speech bubbles, motion trails, notification marks, lettering, text, borders, baked rounded corners, collage or presentation board.
 ```
 
 ## Verification
 
-The asset is a square 1024 × 1024 PNG with no alpha channel. Xcode selects the AppIcon asset in both Debug and Release configurations. The Release and simulator builds succeeded. The updated icon was visually checked on the simulator Home Screen. The signed Release app was installed over the existing app on the connected iPad with CoreDevice installation sequence 2612.
+The asset is a square 1024 × 1024 PNG with no alpha channel. Xcode selects the AppIcon asset in both Debug and Release configurations.
+
+The signed Release and simulator builds succeeded. The updated icon was visually checked on the simulator Home Screen. The Release app was installed over the existing app on the connected iPad with CoreDevice installation sequence 2620.
