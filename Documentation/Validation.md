@@ -74,3 +74,7 @@ All 79 native simulator tests and 26 host tests pass. New coverage verifies froz
 ## Expanded modals — 2026-11-10
 
 All 81 native simulator tests pass. New tests open all 11 app-owned sheet forms through real SwiftUI presentations and verify their initial expanded height without a drag gesture; Settings is also checked in landscape and a narrow window. Native presentation screenshots were visually inspected. The optimized signed Release build succeeds and was installed over the existing iPad app (CoreDevice database sequence 2572), with no data reset. The iPadOS 17 fallback is compile-checked, while runtime verification used iPadOS 26.5. See [ModalPresentation.md](ModalPresentation.md) for the shared sizing policy and physical-device acceptance steps.
+
+## Soft-blue default — 2026-11-11
+
+All 83 native simulator tests pass after adopting the muted-blue default accent and porcelain-white/blue-gray surfaces. The preference-upgrade regression test verifies a one-time legacy-Sage replacement, preservation of appearance and paper settings, and persistence of later/custom color choices. Color-contrast checks use the actual revised canvas and header surfaces. Native editor, library and light/dark Settings attachments were reviewed. The signed Release build and physical iPad installation succeeded, with installation sequence 2644. See [Personalization.md](Personalization.md).

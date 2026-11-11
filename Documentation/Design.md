@@ -1,6 +1,6 @@
 # Visual direction — a quiet paper studio
 
-The app should feel native, warm and personal while giving handwriting the most room. Use a warm off-white library background, sage accent, muted book colors and a restrained system-serif accent for short editorial text. Keep navigation, search, forms, symbols, sheets and menus native. Avoid ornamental animation, gradients, fake activity and invented study progress.
+The app should feel native, warm and personal while giving handwriting the most room. Use a porcelain-white library background, soft blue accent, pale blue-gray canvas surroundings, muted book colors and a restrained system-serif accent for short editorial text. Keep navigation, search, forms, symbols, sheets and menus native. Avoid ornamental animation, gradients, fake activity and invented study progress.
 
 ## Implemented refinements
 
@@ -9,7 +9,7 @@ The app should feel native, warm and personal while giving handwriting the most 
 - Empty Library and Favorites states explain their actual next action. Search uses the native no-results state. Study remains clearly marked as coming soon.
 - Notebook creation shows a live cover preview and directly selectable color circles with checkmarks. Cover color is never the only indication of selection. Preview dimensions are explicit so its GeometryReader cannot overlap neighboring form rows.
 - The editor keeps the existing single-row header and 52-point page bar. A small cover-colored mark ties it to its notebook; tools sit in a quiet control surface and their selected background moves briefly between tools.
-- A muted canvas surround and subtle paper shadow separate the sheet from controls without changing exported backgrounds or ink. Dark mode uses a brighter sage accent for contrast. Paper remains white to preserve ink appearance.
+- A pale blue-gray canvas surround and subtle paper shadow separate the sheet from controls. Dark mode uses blue-gray surfaces and a brighter blue accent for contrast. Paper uses its template background.
 - Library buttons have a small press response and native pointer hover. Reduce Motion disables the added press scale and tool-selection animation. No decorative animation runs while writing.
 
 ## Scope and validation

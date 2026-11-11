@@ -15,8 +15,8 @@ extension CoverColor {
 enum AppTheme {
     @MainActor static var accent: Color { AppPreferences.shared.accentColor }
     @MainActor static var headerBackground: Color { AppPreferences.shared.headerBackground }
-    static let lightBackground = ThemeColorValue(red: 0.97, green: 0.965, blue: 0.95)
-    static let darkBackground = ThemeColorValue(red: 0.09, green: 0.10, blue: 0.095)
+    static let lightBackground = ThemeColorValue(red: 0.975, green: 0.977, blue: 0.98)
+    static let darkBackground = ThemeColorValue(red: 0.085, green: 0.095, blue: 0.115)
     static let background = Color(uiColor: UIColor { traits in
         UIColor(traits.userInterfaceStyle == .dark ? darkBackground : lightBackground)
     })
@@ -24,8 +24,8 @@ enum AppTheme {
     static let controlSurface = Color.primary.opacity(0.045)
     static let canvasUIColor = UIColor { traits in
         traits.userInterfaceStyle == .dark
-            ? UIColor(red: 0.065, green: 0.075, blue: 0.07, alpha: 1)
-            : UIColor(red: 0.925, green: 0.93, blue: 0.91, alpha: 1)
+            ? UIColor(red: 0.065, green: 0.075, blue: 0.095, alpha: 1)
+            : UIColor(red: 0.935, green: 0.945, blue: 0.955, alpha: 1)
     }
 }
 

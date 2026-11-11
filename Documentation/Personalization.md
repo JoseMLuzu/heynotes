@@ -11,9 +11,13 @@ Open **Settings** at the bottom of the sidebar or from the editor's page-options
 - Toolbar position, using the same preference as the editor's existing placement controls.
 - The default paper for new notebooks: Blank, Ruled, Grid, Dotted or Cornell. Explicit template-gallery selections take precedence.
 - Local-storage information and the installed app's actual version/build.
-- **Reset Appearance**, which restores Sage and System appearance without resetting editor defaults or documents.
+- **Reset Appearance**, which restores Blue and System appearance without resetting editor defaults or documents.
 
 ## Restrained visual treatment
+
+The default app accent is a muted blue paired with porcelain-white library surfaces and pale blue-gray canvas surroundings. Dark appearance uses blue-gray neutrals. Header tint and controls use the existing adaptive palette.
+
+The local preference defaults upgrade to version 2 once. An absent or invalid saved accent uses Blue. A stored legacy Sage accent upgrades to Blue on the first launch of this version. Other saved colors retain their values. Selecting Sage again after the upgrade persists normally across launches.
 
 The application accent tints the library navigation bar, notebook tab strip and editor header. These surfaces blend 12% of the adaptive accent into the neutral app background, and the Settings preview uses the same color. Controls, selections and glass outlines also use the accent. Folder colors, page content and notebook covers use their own palettes.
 
@@ -60,3 +64,7 @@ On the physical iPad, verify these interactions with your own documents:
 Actual Apple Pencil interaction and subjective visual preference require physical-device acceptance; simulator tests do not establish device frame rate or handwriting latency.
 
 Final verification: all 79 native simulator tests passed, followed by a successful signed optimized Release build. The Release app was installed over the existing iPad app with the same bundle identifier and retained data container (installation sequence 2564). The initial CoreDevice connection reset was resolved by retrying installation. Launch the updated app on the iPad to perform the acceptance steps above.
+
+## Soft-blue default — 2026-11-11
+
+The revised palette and one-time legacy-Sage preference upgrade passed all 83 native simulator tests. Tests also verify that a subsequent Sage selection persists and an existing Lavender selection survives the upgrade. Default-blue editor/library screenshots and light/dark Settings screenshots were inspected. The signed Release build succeeded and was installed on the connected iPad with CoreDevice installation sequence 2644.

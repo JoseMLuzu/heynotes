@@ -7,10 +7,10 @@ import PencilKit
 @MainActor final class PersonalizationTests: XCTestCase {
     private var containers: [ModelContainer] = []
     func testEverySampleAccentHasReadableLightAndDarkForegrounds() throws {
-        let light = ThemeColorValue(red: 0.925, green: 0.93, blue: 0.91)
-        let dark = ThemeColorValue(red: 0.09, green: 0.10, blue: 0.095)
         let lightTraits = UITraitCollection(userInterfaceStyle: .light)
         let darkTraits = UITraitCollection(userInterfaceStyle: .dark)
+        let light = try XCTUnwrap(ThemeColorValue(AppTheme.canvasUIColor.resolvedColor(with: lightTraits)))
+        let dark = AppTheme.darkBackground
         let samples = [0.0, 0.25, 0.5, 0.75, 1.0]
         for red in samples { for green in samples { for blue in samples {
             let palette = AccentPalette(.init(red: red, green: green, blue: blue))
@@ -31,20 +31,44 @@ import PencilKit
         let name = "AppSettings.\(UUID())", defaults = try XCTUnwrap(UserDefaults(suiteName: name))
         defer { defaults.removePersistentDomain(forName: name) }
         let prefs = AppPreferences(defaults: defaults)
+        XCTAssertEqual(prefs.accent, FolderColor.blue.value)
         prefs.accent = .init(red: 1, green: 0.9, blue: 0)
         prefs.appearance = .dark; prefs.defaultPaper = .grid
         let reopened = AppPreferences(defaults: defaults)
         XCTAssertEqual(reopened.accent, prefs.accent); XCTAssertEqual(reopened.appearance, .dark)
         XCTAssertEqual(reopened.defaultPaper, .grid)
         reopened.resetAppearance()
-        XCTAssertEqual(reopened.accent, FolderColor.sage.value); XCTAssertEqual(reopened.appearance, .system)
+        XCTAssertEqual(reopened.accent, AppPreferences.defaultAccent); XCTAssertEqual(reopened.appearance, .system)
         XCTAssertEqual(reopened.defaultPaper, .grid)
         defaults.set(Data([0, 1, 2]), forKey: "app.accent.v1")
         defaults.set("future", forKey: "app.appearance.v1")
         defaults.set("unknown-paper", forKey: "app.defaultPaper.v1")
         let recovered = AppPreferences(defaults: defaults)
-        XCTAssertEqual(recovered.accent, FolderColor.sage.value); XCTAssertEqual(recovered.appearance, .system)
+        XCTAssertEqual(recovered.accent, AppPreferences.defaultAccent); XCTAssertEqual(recovered.appearance, .system)
         XCTAssertEqual(recovered.defaultPaper, .blank)
+    }
+
+    func testLegacySageUpgradesOnceAndLaterColorChoicesPersist() throws {
+        let name = "AccentUpgrade.\(UUID())"
+        let defaults = try XCTUnwrap(UserDefaults(suiteName: name))
+        defer { defaults.removePersistentDomain(forName: name) }
+        defaults.set(try JSONEncoder().encode(FolderColor.sage.value), forKey: "app.accent.v1")
+        defaults.set("dark", forKey: "app.appearance.v1")
+        defaults.set(PaperTemplate.grid.rawValue, forKey: "app.defaultPaper.v1")
+
+        let upgraded = AppPreferences(defaults: defaults)
+        XCTAssertEqual(upgraded.accent, AppPreferences.defaultAccent)
+        XCTAssertEqual(upgraded.appearance, .dark)
+        XCTAssertEqual(upgraded.defaultPaper, .grid)
+        XCTAssertEqual(AppPreferences(defaults: defaults).accent, AppPreferences.defaultAccent)
+
+        upgraded.accent = FolderColor.sage.value
+        XCTAssertEqual(AppPreferences(defaults: defaults).accent, FolderColor.sage.value)
+        upgraded.accent = FolderColor.lavender.value
+        XCTAssertEqual(AppPreferences(defaults: defaults).accent, FolderColor.lavender.value)
+
+        defaults.removeObject(forKey: "app.accent.defaultsVersion")
+        XCTAssertEqual(AppPreferences(defaults: defaults).accent, FolderColor.lavender.value)
     }
 
     func testV4FolderMigrationPreservesActualEditableInkOnIPad() async throws {
@@ -74,6 +98,7 @@ import PencilKit
     func testChangingAppAccentDoesNotReplaceCanvasInkOrEditNotebook() async throws {
         let prefs = AppPreferences.shared, previous = prefs.accent
         defer { prefs.accent = previous }
+        prefs.accent = AppPreferences.defaultAccent
         let container = try PersistenceController.makeContainer(inMemory: true); containers.append(container)
         let notebook = Notebook(title: "Accent"), page = NotePage(pageIndex: 0)
         container.mainContext.insert(notebook); container.mainContext.insert(page); notebook.pages = [page]
@@ -85,6 +110,7 @@ import PencilKit
         try await settle(host)
         let canvas = try XCTUnwrap(session.canvas), original = canvas.drawing
         let inkTool = try XCTUnwrap(canvas.tool as? PKInkingTool)
+        capture(host, name: "Editor-Default-Soft-Blue")
         for (name, value) in [("Lavender", FolderColor.lavender.value), ("Custom-Yellow", .init(red: 1, green: 1, blue: 0))] {
             prefs.accent = value
             try await settle(host)
@@ -104,7 +130,7 @@ import PencilKit
         }
         try container.mainContext.save()
         for appearance in [AppPreferences.Appearance.light, .dark] {
-            prefs.appearance = appearance; prefs.accent = FolderColor.lavender.value
+            prefs.appearance = appearance; prefs.accent = AppPreferences.defaultAccent
             let (window, host) = try host(AppSettingsView(), size: CGSize(width: 820, height: 1180))
             window.overrideUserInterfaceStyle = appearance == .dark ? .dark : .light
             try await settle(host); capture(host, name: "Settings-\(appearance.rawValue)")

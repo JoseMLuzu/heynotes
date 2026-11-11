@@ -96,7 +96,7 @@ See [Phase 3 architecture, limits and acceptance checklist](Documentation/Phase3
 
 ## Visual refinement
 
-The library now uses warm neutrals, sage accents and lighter book-like covers. Notebook creation previews the cover as you choose its color. The compact editor keeps its single-row layout with a quieter selected-tool treatment. See [design direction and review checklist](Documentation/Design.md).
+The library uses porcelain-white surfaces, soft blue accents and lighter book-like covers. Notebook creation previews the cover as you choose its color. The compact editor keeps its single-row layout with a quieter selected-tool treatment. See [design direction and review checklist](Documentation/Design.md).
 
 ## Tool options
 
