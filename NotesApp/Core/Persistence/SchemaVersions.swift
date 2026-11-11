@@ -1,0 +1,100 @@
+import Foundation
+import SwiftData
+
+/// Frozen metadata layout shipped in Phases 1–2. Never edit this snapshot.
+public enum NotesSchemaV1: VersionedSchema {
+    public static var versionIdentifier: Schema.Version { .init(1, 0, 0) }
+    public static var models: [any PersistentModel.Type] { [Folder.self, Notebook.self, NotePage.self] }
+    @Model
+    public final class Folder {
+        @Attribute(.unique) public var id: UUID
+        public var title: String
+        public var createdAt: Date
+        @Relationship(deleteRule: .nullify, inverse: \Notebook.folder)
+        public var notebooks: [Notebook] = []
+    
+        public init(title: String, id: UUID = UUID(), createdAt: Date = .now) {
+            self.id = id
+            self.title = title
+            self.createdAt = createdAt
+        }
+    }
+
+    @Model
+    public final class Notebook {
+        @Attribute(.unique) public var id: UUID
+        public var title: String
+        public var createdAt: Date
+        public var updatedAt: Date
+        public var coverColorRawValue: String
+        public var isFavorite: Bool
+        public var folder: Folder?
+        @Relationship(deleteRule: .cascade, inverse: \NotePage.notebook)
+        public var pages: [NotePage] = []
+    
+        public var coverColor: CoverColor {
+            get { CoverColor(rawValue: coverColorRawValue) ?? .sage }
+            set { coverColorRawValue = newValue.rawValue }
+        }
+    
+        public var orderedPages: [NotePage] {
+            pages.sorted {
+                $0.pageIndex == $1.pageIndex
+                    ? $0.id.uuidString < $1.id.uuidString
+                    : $0.pageIndex < $1.pageIndex
+            }
+        }
+    
+        public init(title: String, coverColor: CoverColor = .sage, folder: Folder? = nil,
+                    id: UUID = UUID(), now: Date = .now) {
+            self.id = id
+            self.title = title
+            self.createdAt = now
+            self.updatedAt = now
+            self.coverColorRawValue = coverColor.rawValue
+            self.isFavorite = false
+            self.folder = folder
+        }
+    }
+
+    @Model
+    public final class NotePage {
+        @Attribute(.unique) public var id: UUID
+        public var notebook: Notebook?
+        public var pageIndex: Int
+        public var paperTemplateRawValue: String
+        // Relative to the app's document root. Nil means a new page without saved ink.
+        public var drawingFilePath: String?
+        public var createdAt: Date
+        public var updatedAt: Date
+    
+        public var paperTemplate: PaperTemplate {
+            get { PaperTemplate(rawValue: paperTemplateRawValue) ?? .blank }
+            set { paperTemplateRawValue = newValue.rawValue }
+        }
+    
+        public init(pageIndex: Int, paperTemplate: PaperTemplate = .blank,
+                    id: UUID = UUID(), now: Date = .now) {
+            self.id = id
+            self.pageIndex = pageIndex
+            self.paperTemplateRawValue = paperTemplate.rawValue
+            self.createdAt = now
+            self.updatedAt = now
+        }
+    }
+}
+
+public enum NotesSchemaV5: VersionedSchema {
+    public static var versionIdentifier: Schema.Version { .init(5, 0, 0) }
+    public static var models: [any PersistentModel.Type] { [Folder.self, Notebook.self, NotePage.self, NotebookSection.self] }
+}
+
+public enum NotesMigrationPlan: SchemaMigrationPlan {
+    public static var schemas: [any VersionedSchema.Type] { [NotesSchemaV1.self, NotesSchemaV2.self, NotesSchemaV3.self, NotesSchemaV4.self, NotesSchemaV5.self] }
+    public static var stages: [MigrationStage] {
+        [.lightweight(fromVersion: NotesSchemaV1.self, toVersion: NotesSchemaV2.self),
+         .lightweight(fromVersion: NotesSchemaV2.self, toVersion: NotesSchemaV3.self),
+         .lightweight(fromVersion: NotesSchemaV3.self, toVersion: NotesSchemaV4.self),
+         .lightweight(fromVersion: NotesSchemaV4.self, toVersion: NotesSchemaV5.self)]
+    }
+}
