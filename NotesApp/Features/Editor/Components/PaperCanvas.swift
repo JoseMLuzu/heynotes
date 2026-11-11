@@ -1,0 +1,407 @@
+import SwiftUI
+import PencilKit
+
+/// Fixed logical page coordinates shared by ink, templates, thumbnails and future export.
+enum PageGeometry {
+    static let size = CGSize(width: 768, height: 1086)
+}
+
+final class PaperView: UIView {
+    var template: PaperTemplate = .blank { didSet { if oldValue != template { setNeedsDisplay() } } }
+    var pdfImage: UIImage? { didSet { setNeedsDisplay() } }
+    var pdfContentSize: CGSize? { didSet { if oldValue != pdfContentSize { setNeedsDisplay() } } }
+    override func draw(_ rect: CGRect) {
+        guard let context = UIGraphicsGetCurrentContext() else { return }
+        PDFRendering.paper(template, size: bounds.size, in: context)
+        if let pdfImage { pdfImage.draw(in: CGRect(origin: .zero, size: pdfContentSize ?? bounds.size)) }
+    }
+}
+
+final class InkCanvas: PKCanvasView {
+    var pageID: UUID?
+    private let history = UndoManager()
+    override var undoManager: UndoManager? { history }
+}
+
+private final class PagePanDelegate: NSObject, UIGestureRecognizerDelegate {
+    weak var host: CanvasHost?
+    func gestureRecognizerShouldBegin(_ gestureRecognizer: UIGestureRecognizer) -> Bool {
+        guard let host, let pan = gestureRecognizer as? UIPanGestureRecognizer,
+              host.ink.drawingPolicy == .pencilOnly,
+              abs(host.zoomScale - host.minimumZoomScale) < 0.01,
+              !host.isZooming, !host.isZoomBouncing,
+              host.ink.drawingGestureRecognizer.state != .began,
+              host.ink.drawingGestureRecognizer.state != .changed,
+              pan.numberOfTouches == 1 else { return false }
+        let point = pan.location(in: host.objectControls)
+        let translation = pan.translation(in: host.objectControls)
+        let start = CGPoint(x: point.x - translation.x, y: point.y - translation.y)
+        guard !host.objectControls.fingerDragEditsObject(at: start) else { return false }
+        let velocity = pan.velocity(in: host)
+        return abs(velocity.x) > abs(velocity.y) * 1.25
+    }
+}
+
+final class CanvasHost: UIScrollView, UIScrollViewDelegate {
+    let paper: PaperView
+    let ink: InkCanvas
+    let pageSize: CGSize
+    let objectContent: PageObjectsContentView
+    let objectControls: PageObjectsInteractionView
+    var objectsMode = false { didSet { updateInkInteraction() } }
+    private let zoomContent: UIView
+    private let pageSurface: UIView
+    var onPageSwipe: ((Int, Bool) -> Void)?
+    var onCreationProgress: ((Double?) -> Void)?
+    var hasNextPage = true
+    var hasPreviousPage = false
+    var editorAllowsInk = true { didSet { updateInkInteraction() } }
+    var transitionPausesInk = false { didSet { updateInkInteraction() } }
+    let pagePan = UIPanGestureRecognizer()
+    private let pagingDelegate = PagePanDelegate()
+    private var startingOffset = CGPoint.zero
+    private var fitted = false
+    private var gestureViewport = CGSize.zero
+    private var gesturePageID: UUID?
+    private var lastTranslation = CGPoint.zero
+    private var turnCommitted = false
+    private var creationHold = PageCreationHold()
+    private var creationTask: Task<Void, Never>?
+    init(pageSize: CGSize = PageGeometry.size) {
+        self.pageSize = pageSize
+        zoomContent = UIView(frame: CGRect(origin: .zero, size: pageSize))
+        pageSurface = UIView(frame: CGRect(origin: .zero, size: pageSize))
+        paper = PaperView(frame: CGRect(origin: .zero, size: pageSize))
+        objectContent = PageObjectsContentView(frame: CGRect(origin: .zero, size: pageSize))
+        objectControls = PageObjectsInteractionView(frame: CGRect(origin: .zero, size: pageSize))
+        ink = InkCanvas(frame: CGRect(origin: .zero, size: pageSize))
+        super.init(frame: .zero)
+        delegate = self
+        backgroundColor = .clear; isOpaque = false
+        panGestureRecognizer.allowedTouchTypes = [NSNumber(value: UITouch.TouchType.direct.rawValue)]
+        pagingDelegate.host = self
+        pagePan.delegate = pagingDelegate
+        pagePan.addTarget(self, action: #selector(handlePagePan(_:)))
+        pagePan.minimumNumberOfTouches = 1
+        pagePan.maximumNumberOfTouches = 1
+        pagePan.allowedTouchTypes = [NSNumber(value: UITouch.TouchType.direct.rawValue)]
+        addGestureRecognizer(pagePan)
+        objectControls.yieldFingerGestures(to: pagePan)
+        panGestureRecognizer.require(toFail: pagePan)
+        maximumZoomScale = 4
+        contentSize = pageSize
+        addSubview(zoomContent); zoomContent.addSubview(pageSurface)
+        pageSurface.addSubview(paper); paper.addSubview(objectContent); paper.addSubview(ink); paper.addSubview(objectControls)
+        objectContent.backgroundColor = .clear; objectContent.isOpaque = false; objectContent.isUserInteractionEnabled = false
+        objectControls.onPreview = { [weak objectContent] in objectContent?.elements = $0 }
+        paper.isUserInteractionEnabled = true
+        paper.layer.shadowColor = UIColor.black.cgColor
+        paper.layer.shadowOpacity = 0.08
+        paper.layer.shadowRadius = 10
+        paper.layer.shadowOffset = CGSize(width: 0, height: 3)
+        paper.layer.shadowPath = UIBezierPath(rect: paper.bounds).cgPath
+        ink.isOpaque = false; ink.backgroundColor = .clear
+        ink.isScrollEnabled = false
+        ink.contentSize = pageSize
+        ink.drawingPolicy = .pencilOnly
+        ink.overrideUserInterfaceStyle = .light
+        accessibilityLabel = "Handwriting page. At full-page view, flick left or right with one finger to turn pages. On the last page, pull left and hold to add a page. Pinch to zoom; drag to scroll when zoomed."
+    }
+    required init?(coder: NSCoder) { fatalError("init(coder:) is not supported") }
+    private func updateInkInteraction() {
+        ink.isUserInteractionEnabled = editorAllowsInk && !transitionPausesInk && !objectsMode
+        objectControls.isUserInteractionEnabled = editorAllowsInk && !transitionPausesInk
+    }
+    /// Animate inside the zoom root, leaving the scroll viewport/background stationary.
+    func setPageOffset(_ points: CGFloat) {
+        pageSurface.transform = CGAffineTransform(translationX: points / max(zoomScale, 0.01), y: 0)
+    }
+    override func layoutSubviews() {
+        super.layoutSubviews()
+        if gestureViewport != bounds.size { cancelPendingPageCreation() }
+        guard bounds.width > 0, bounds.height > 0 else { return }
+        let fit = min((bounds.width - 24) / pageSize.width, (bounds.height - 24) / pageSize.height)
+        let wasAtFit = !fitted || abs(zoomScale - minimumZoomScale) < 0.01
+        let minimum = max(0.01, fit)
+        if minimumZoomScale != minimum { minimumZoomScale = minimum }
+        let paperScale = min(traitCollection.displayScale, 2400 / max(pageSize.width, pageSize.height))
+        if paper.contentScaleFactor != paperScale { paper.contentScaleFactor = paperScale }
+        if objectContent.contentScaleFactor != paperScale { objectContent.contentScaleFactor = paperScale }
+        if objectControls.contentScaleFactor != paperScale { objectControls.contentScaleFactor = paperScale }
+        if wasAtFit, abs(zoomScale - minimumZoomScale) > 0.001 { zoomScale = minimumZoomScale }
+        fitted = true
+        objectControls.zoom = zoomScale
+        let insets = UIEdgeInsets(top: max(12, (bounds.height - zoomContent.frame.height) / 2), left: max(12, (bounds.width - zoomContent.frame.width) / 2), bottom: 12, right: 12)
+        if contentInset != insets { contentInset = insets }
+    }
+    @objc private func handlePagePan(_ pan: UIPanGestureRecognizer) {
+        switch pan.state {
+        case .began:
+            startingOffset = contentOffset
+            gestureViewport = bounds.size; gesturePageID = ink.pageID
+            turnCommitted = false; creationHold.reset()
+            updatePagePull(pan)
+        case .changed:
+            guard !turnCommitted else { return }
+            updatePagePull(pan)
+        case .ended:
+            cancelPendingPageCreation()
+            guard !turnCommitted else { return }
+            let direction = PageSwipe.direction(translation: pan.translation(in: self), velocity: pan.velocity(in: self), viewportWidth: bounds.width)
+            if validPageContext, let direction, (direction == 1 ? hasNextPage : hasPreviousPage), let onPageSwipe {
+                turnCommitted = true; onPageSwipe(direction, false)
+            } else { settlePagePull() }
+        case .cancelled, .failed:
+            cancelPendingPageCreation()
+            if !turnCommitted { settlePagePull() }
+        default: break
+        }
+    }
+
+    private func updatePagePull(_ pan: UIPanGestureRecognizer) {
+        lastTranslation = pan.translation(in: self)
+        // Include the first pan sample: a fast pull can already qualify when recognition begins.
+        let pull = !hasNextPage && validPageContext ? max(-100, min(0, lastTranslation.x)) * 0.2 : 0
+        contentOffset = CGPoint(x: startingOffset.x - pull, y: startingOffset.y)
+        updateCreationHold()
+        // Commit existing-page intent while the finger is still moving, not only on release.
+        if !turnCommitted, validPageContext,
+           let direction = PageSwipe.direction(translation: lastTranslation, velocity: pan.velocity(in: self), viewportWidth: bounds.width),
+           (direction == 1 ? hasNextPage : hasPreviousPage), let onPageSwipe {
+            turnCommitted = true
+            cancelPendingPageCreation()
+            onPageSwipe(direction, false)
+        }
+    }
+
+    private var validPageContext: Bool {
+        isUserInteractionEnabled && ink.drawingPolicy == .pencilOnly && abs(zoomScale - minimumZoomScale) < 0.01 &&
+        !isZooming && !isZoomBouncing && gestureViewport == bounds.size && gesturePageID == ink.pageID &&
+        ink.drawingGestureRecognizer.state != .began && ink.drawingGestureRecognizer.state != .changed
+    }
+
+    private func updateCreationHold() {
+        let eligible = validPageContext && !hasNextPage && !turnCommitted && pagePan.isEnabled &&
+            (pagePan.state == .began || pagePan.state == .changed) && pagePan.numberOfTouches == 1 &&
+            window?.windowScene?.activationState == .foregroundActive &&
+            PageSwipe.isCreationPull(lastTranslation, viewportWidth: bounds.width)
+        switch creationHold.update(eligible: eligible, now: CACurrentMediaTime()) {
+        case .inactive:
+            creationTask?.cancel(); creationTask = nil; onCreationProgress?(nil)
+        case .progress(let progress):
+            onCreationProgress?(progress)
+            if creationTask == nil {
+                creationTask = Task { [weak self] in
+                    while !Task.isCancelled {
+                        do { try await Task.sleep(for: .milliseconds(33)) } catch { return }
+                        guard let self else { return }
+                        self.updateCreationHold()
+                        if !self.creationHold.isWaiting { return }
+                    }
+                }
+            }
+        case .commit:
+            turnCommitted = true
+            creationTask?.cancel(); creationTask = nil; onCreationProgress?(nil)
+            onPageSwipe?(1, true)
+        }
+    }
+
+    func cancelPendingPageCreation() {
+        creationTask?.cancel(); creationTask = nil
+        creationHold.cancel(); onCreationProgress?(nil)
+    }
+    override func didMoveToWindow() {
+        super.didMoveToWindow()
+        if window == nil { cancelPendingPageCreation() }
+    }
+    deinit { creationTask?.cancel() }
+
+    func settlePagePull() {
+        setContentOffset(startingOffset, animated: !UIAccessibility.isReduceMotionEnabled)
+    }
+
+    func viewForZooming(in scrollView: UIScrollView) -> UIView? { zoomContent }
+    func scrollViewDidZoom(_ scrollView: UIScrollView) { setNeedsLayout() }
+}
+
+/// Retains both real canvases only for the short page turn; no ink rasterization is needed.
+final class PageCanvasContainer: UIView {
+    private(set) var current: CanvasHost?
+    private(set) var pageID: UUID?
+    private var animator: UIViewPropertyAnimator?
+    private var pendingPageID: UUID?
+    private let creationIndicator = PageCreationIndicator(effect: UIBlurEffect(style: .systemMaterial))
+
+    override init(frame: CGRect) {
+        super.init(frame: frame)
+        backgroundColor = AppTheme.canvasUIColor; isOpaque = true
+        addSubview(creationIndicator)
+    }
+    required init?(coder: NSCoder) { fatalError("init(coder:) is not supported") }
+    func showCreationProgress(_ progress: Double?) { creationIndicator.show(progress: progress) }
+
+    override func layoutSubviews() {
+        super.layoutSubviews()
+        // Rotation/resizing finishes a pending turn before laying out the viewport.
+        if current?.bounds.size != bounds.size {
+            finishTurn(); pendingPageID = nil
+            current?.setPageOffset(0)
+            current?.frame = bounds
+            current?.transitionPausesInk = false
+        } else if animator == nil && pendingPageID == nil { current?.frame = bounds }
+        let width = min(152, max(0, bounds.width - 24))
+        let preferredHeight = max(112, UIFont.preferredFont(forTextStyle: .caption1).lineHeight * 2 + 64)
+        let height = min(preferredHeight, max(0, bounds.height - 24))
+        creationIndicator.frame = CGRect(x: max(12, bounds.width - width - 16), y: max(12, (bounds.height - height) / 2), width: width, height: height)
+    }
+
+    private func finishTurn() {
+        let active = animator
+        animator = nil
+        active?.stopAnimation(false)
+        active?.finishAnimation(at: .end)
+    }
+
+    /// Retain the current page unchanged until its replacement is ready; no pre-flash/recoil.
+    func prepareTurn(from pageID: UUID, direction: Int, reduceMotion: Bool) {
+        guard self.pageID == pageID, pendingPageID == nil, current != nil else { return }
+        finishTurn()
+        pendingPageID = pageID
+    }
+
+    func cancelPendingTurn(from pageID: UUID) {
+        guard self.pageID == pageID, pendingPageID == pageID, let current else { return }
+        finishTurn(); pendingPageID = nil
+        current.setPageOffset(0)
+    }
+
+    func show(_ incoming: CanvasHost, pageID: UUID, direction: Int, reduceMotion: Bool) {
+        finishTurn()
+        pendingPageID = nil
+        let outgoing = current
+        outgoing?.cancelPendingPageCreation()
+        self.pageID = pageID
+        current = incoming
+        clipsToBounds = true
+        incoming.frame = bounds
+        addSubview(incoming)
+        bringSubviewToFront(creationIndicator)
+        incoming.layoutIfNeeded()
+        guard let outgoing, bounds.width > 0 else { return }
+        outgoing.isUserInteractionEnabled = false
+        // Keep finger paging responsive; only Pencil ink pauses until the short motion ends.
+        incoming.isUserInteractionEnabled = true
+        incoming.transitionPausesInk = true
+        guard !reduceMotion else {
+            outgoing.removeFromSuperview(); incoming.transitionPausesInk = false; return
+        }
+        let distance = min(44, max(24, bounds.width * 0.03)) * CGFloat(direction)
+        incoming.setPageOffset(distance)
+        let animation = UIViewPropertyAnimator(duration: 0.14, curve: .easeOut) {
+            incoming.setPageOffset(0)
+            outgoing.setPageOffset(-distance * 0.6)
+        }
+        animation.addCompletion { [weak self] _ in
+            outgoing.removeFromSuperview()
+            incoming.transitionPausesInk = false
+            self?.animator = nil
+        }
+        animator = animation
+        animation.startAnimation()
+    }
+}
+
+struct PaperCanvas: UIViewRepresentable {
+    let session: EditorSession
+    let tool: PKTool
+    let fingerDrawing: Bool
+    var editorTool: EditorTool = .pen
+    var inkStyle = InkStyle()
+    var rulerEnabled = false
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.isEnabled) private var isEnabled
+
+    func makeCoordinator() -> Coordinator { Coordinator(session: session) }
+    func makeUIView(context: Context) -> PageCanvasContainer { PageCanvasContainer() }
+
+    func updateUIView(_ container: PageCanvasContainer, context: Context) {
+        guard let page = session.page else { return }
+        if container.pageID != page.id || container.current?.pageSize != page.logicalSize {
+            let pageID = page.id
+            let host = CanvasHost(pageSize: page.logicalSize)
+            host.paper.pdfImage = session.pdfBackground
+            host.ink.pageID = pageID
+            host.ink.drawing = session.drawing
+            host.ink.delegate = context.coordinator
+            host.objectControls.onCommit = { [weak session] item, new in
+                guard let session else { return false }
+                if new { return session.insertElement(item) }
+                session.updateElement(item); return session.elements.contains(item)
+            }
+            host.objectControls.onSelect = { [weak session] in session?.selectedElementID = $0 }
+            host.objectControls.onReveal = { [weak session] in session?.toggleTape($0) }
+            host.onCreationProgress = { [weak container] in container?.showCreationProgress($0) }
+            host.onPageSwipe = { [weak session, weak host, weak container] direction, allowCreation in
+                Task {
+                    guard session?.page?.id == pageID, session?.ready == true, session?.busy == false,
+                          host?.window != nil, host?.pagePan.isEnabled == true,
+                          host?.ink.drawingGestureRecognizer.state != .began,
+                          host?.ink.drawingGestureRecognizer.state != .changed,
+                          session?.canvas === host?.ink else {
+                        host?.settlePagePull(); return
+                    }
+                    let originalID = session?.page?.id
+                    container?.prepareTurn(from: pageID, direction: direction, reduceMotion: UIAccessibility.isReduceMotionEnabled)
+                    host?.editorAllowsInk = false
+                    await session?.turnPage(direction, creatingIfNeeded: allowCreation)
+                    // Keep the pull continuous into a successful turn; spring back on a boundary/failure.
+                    if session?.page?.id == originalID || session?.ready != true {
+                        host?.settlePagePull(); container?.cancelPendingTurn(from: pageID)
+                        host?.editorAllowsInk = session?.ready == true && session?.busy == false && host?.pagePan.isEnabled == true
+                    }
+                }
+            }
+            session.canvas = host.ink
+            container.show(host, pageID: pageID, direction: session.pageTurnDirection, reduceMotion: reduceMotion)
+        }
+        guard let host = container.current else { return }
+        // Tool/metadata updates never replace the live drawing or its undo history.
+        if !sameTool(host.ink.tool, tool) { host.ink.tool = tool }
+        host.hasNextPage = page.pageIndex < session.notebook.pages.count - 1
+        host.hasPreviousPage = page.pageIndex > 0
+        host.pagePan.isEnabled = isEnabled && !fingerDrawing && session.ready && !session.busy
+        host.objectsMode = editorTool.editsObjects
+        host.editorAllowsInk = isEnabled && session.ready && !session.busy
+        host.ink.drawingPolicy = fingerDrawing ? .anyInput : .pencilOnly
+        host.panGestureRecognizer.minimumNumberOfTouches = fingerDrawing || editorTool.editsObjects ? 2 : 1
+        host.paper.template = page.paperTemplate
+        host.paper.pdfContentSize = page.contentSize
+        host.ink.isRulerActive = rulerEnabled && editorTool.inkType != nil
+        host.objectContent.images = session.objectImages
+        host.objectContent.elements = session.elements
+        host.objectContent.isHidden = !session.elements.contains { $0.kind != .tape }
+        host.objectControls.isHidden = !editorTool.editsObjects && !session.elements.contains { $0.kind == .tape }
+        host.objectControls.elements = session.elements
+        host.objectControls.revealed = session.revealedTapes
+        host.objectControls.selectedID = session.selectedElementID
+        host.objectControls.tool = editorTool
+        host.objectControls.fingerDrawing = fingerDrawing
+        host.objectControls.style = inkStyle
+    }
+    private func sameTool(_ lhs: PKTool, _ rhs: PKTool) -> Bool {
+        if let lhs = lhs as? PKInkingTool, let rhs = rhs as? PKInkingTool { return lhs == rhs }
+        if let lhs = lhs as? PKEraserTool, let rhs = rhs as? PKEraserTool { return lhs == rhs }
+        return lhs is PKLassoTool && rhs is PKLassoTool
+    }
+
+    @MainActor final class Coordinator: NSObject, PKCanvasViewDelegate {
+        let session: EditorSession
+        init(session: EditorSession) { self.session = session }
+        func canvasViewDrawingDidChange(_ canvasView: PKCanvasView) {
+            // Late callbacks from an outgoing page must never overwrite the incoming page.
+            guard (canvasView as? InkCanvas)?.pageID == session.page?.id else { return }
+            session.changed(canvasView.drawing)
+        }
+    }
+}
