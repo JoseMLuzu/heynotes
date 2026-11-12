@@ -367,7 +367,7 @@ struct LibraryView: View {
                                 .contextMenu { folderActions(folder) }
                         }
                         ForEach(notebooks) { notebook in
-                            Button { openFromLibrary(notebook) } label: { NotebookCard(notebook: notebook) }
+                            Button { openFromLibrary(notebook) } label: { NotebookCard(notebook: notebook, storage: model.storage) }
                             .buttonStyle(QuietPressStyle())
                             .hoverEffect(.lift)
                             .contextMenu { notebookMenu(notebook) }
@@ -414,7 +414,9 @@ struct LibraryView: View {
 
     @ViewBuilder
     private func notebookMenu(_ notebook: Notebook) -> some View {
-        Button("Change Cover", systemImage: "book.closed") { changingCover = notebook }
+        if !notebook.pages.contains(where: { $0.pdfFilePath != nil }) {
+            Button("Change Cover", systemImage: "book.closed") { changingCover = notebook }
+        }
         Button("Rename", systemImage: "pencil") { sheet = .renameNotebook(notebook) }
         Button(notebook.isFavorite ? "Remove Favorite" : "Add to Favorites", systemImage: "star") { model.toggleFavorite(notebook) }
         Button("Duplicate", systemImage: "plus.square.on.square") { Task { await model.duplicate(notebook) } }

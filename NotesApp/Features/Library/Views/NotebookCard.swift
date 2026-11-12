@@ -2,16 +2,27 @@ import SwiftUI
 
 struct NotebookCard: View {
     let notebook: Notebook
+    var storage: DrawingStorage = .shared
 
     var body: some View {
+        let notebookID = notebook.id
+        let pdfPage = notebook.pages.lazy.filter { $0.pdfFilePath != nil }.min {
+            $0.pageIndex == $1.pageIndex ? $0.id.uuidString < $1.id.uuidString : $0.pageIndex < $1.pageIndex
+        }
         VStack(alignment: .leading, spacing: 13) {
-            NotebookCover(title: notebook.title, color: notebook.coverColor,
-                          style: notebook.coverStyle,
-                          isPDF: notebook.pages.contains { $0.pdfFilePath != nil }, favorite: notebook.isFavorite)
+            Group {
+                if let pdfPage, let path = pdfPage.pdfFilePath {
+                    PDFDocumentCover(path: path, pageIndex: pdfPage.pdfPageIndex,
+                                     favorite: notebook.isFavorite, storage: storage)
+                } else {
+                    NotebookCover(title: notebook.title, color: notebook.coverColor,
+                                  style: notebook.coverStyle, favorite: notebook.isFavorite)
+                }
+            }
                 .background {
                     GeometryReader { geometry in
                         Color.clear.preference(key: NotebookCoverFrames.self,
-                                               value: [notebook.id: geometry.frame(in: .global)])
+                                               value: [notebookID: geometry.frame(in: .global)])
                     }
                 }
             LibraryItemCaption(title: notebook.title,
@@ -20,7 +31,7 @@ struct NotebookCard: View {
         .frame(maxWidth: .infinity, alignment: .leading)
         .contentShape(RoundedRectangle(cornerRadius: 12))
         .accessibilityElement(children: .ignore)
-        .accessibilityLabel("\(notebook.title), \(notebook.pages.count) pages\(notebook.isFavorite ? ", favorite" : "")")
+        .accessibilityLabel("\(notebook.title)\(pdfPage != nil ? ", PDF" : ""), \(notebook.pages.count) pages\(notebook.isFavorite ? ", favorite" : "")")
         .accessibilityValue("Modified \(notebook.updatedAt.formatted(date: .abbreviated, time: .omitted))")
     }
 }

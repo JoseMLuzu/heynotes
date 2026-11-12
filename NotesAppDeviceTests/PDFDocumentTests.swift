@@ -2,9 +2,71 @@ import XCTest
 import SwiftData
 import PDFKit
 import PencilKit
+import SwiftUI
 @testable import NotesApp
 
 @MainActor final class PDFDocumentTests: XCTestCase {
+    func testLibraryCardUsesUncroppedPDFPreviewAndReusesThumbnailCache() async throws {
+        let root = URL.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: root) }
+        let source = root.appendingPathComponent("Handout.pdf")
+        let bounds = CGRect(x: 0, y: 0, width: 400, height: 200)
+        try UIGraphicsPDFRenderer(bounds: bounds).writePDF(to: source) { context in
+            context.beginPage()
+            UIColor.blue.setFill(); context.fill(bounds)
+            UIColor.red.setFill(); context.fill(CGRect(x: 0, y: 0, width: 40, height: 200))
+            UIColor.green.setFill(); context.fill(CGRect(x: 360, y: 0, width: 40, height: 200))
+        }
+        let original = try Data(contentsOf: source)
+        let storage = DrawingStorage(root: root)
+        let container = try PersistenceController.makeContainer(inMemory: true)
+        let notebook = Notebook(title: "Landscape Handout")
+        let blank = NotePage(pageIndex: 0)
+        let pdf = NotePage(pageIndex: 1)
+        pdf.pdfFilePath = "Handout.pdf"; pdf.pdfPageIndex = 0
+        for page in [blank, pdf] { container.mainContext.insert(page) }
+        container.mainContext.insert(notebook)
+        notebook.pages = [blank, pdf] // A prepended note must not turn a PDF into a book cover.
+        let scene = try XCTUnwrap(UIApplication.shared.connectedScenes.compactMap { $0 as? UIWindowScene }.first)
+        let window = UIWindow(windowScene: scene)
+        window.frame = CGRect(x: 0, y: 0, width: 246, height: 420)
+        let host = UIHostingController(rootView: NotebookCard(notebook: notebook, storage: storage)
+            .frame(width: 246).frame(maxHeight: .infinity, alignment: .top)
+            .background(Color.white).environment(\.colorScheme, .light).modelContainer(container))
+        window.rootViewController = host; window.isHidden = false
+        defer { window.isHidden = true; window.rootViewController = nil }
+        host.view.frame = window.bounds
+        // Render the real asynchronous SwiftUI card, rather than just the PDF service output.
+        var screenshot = UIImage()
+        for _ in 0..<40 {
+            try await Task.sleep(for: .milliseconds(50))
+            host.view.layoutIfNeeded()
+            screenshot = UIGraphicsImageRenderer(size: window.bounds.size, format: unitScale()).image { _ in
+                host.view.drawHierarchy(in: host.view.bounds, afterScreenUpdates: true)
+            }
+            let center = pixel(screenshot, x: 123, y: 150)
+            if center.2 > 200 && center.0 < 50 { break }
+        }
+        let center = pixel(screenshot, x: 123, y: 150)
+        XCTAssertGreaterThan(center.2, 200); XCTAssertLessThan(center.0, 50)
+        let left = pixel(screenshot, x: 15, y: 150), right = pixel(screenshot, x: 230, y: 150)
+        XCTAssertGreaterThan(left.0, 200); XCTAssertLessThan(left.2, 50)
+        XCTAssertGreaterThan(right.1, 200); XCTAssertLessThan(right.2, 50)
+        // Landscape artwork fits inside the shared portrait card with its edges visible.
+        let above = pixel(screenshot, x: 123, y: 70)
+        XCTAssertGreaterThan(above.0, 200)
+        let before = await PDFDocumentService.thumbnails.cacheStatistics()
+        _ = try await PDFDocumentService.thumbnails.background(path: "Handout.pdf", index: 0, storage: storage, maxPixels: 640)
+        let after = await PDFDocumentService.thumbnails.cacheStatistics()
+        XCTAssertEqual(after.renders, before.renders)
+        XCTAssertEqual(try Data(contentsOf: source), original)
+        let attachment = XCTAttachment(image: screenshot)
+        attachment.name = "Library-PDF-Preview-Landscape"; attachment.lifetime = .keepAlways
+        add(attachment)
+        withExtendedLifetime(container) {}
+    }
+
     private func fixture(at url: URL) throws {
         let renderer = UIGraphicsPDFRenderer(bounds: CGRect(x: 0, y: 0, width: 200, height: 300))
         try renderer.writePDF(to: url) { context in
