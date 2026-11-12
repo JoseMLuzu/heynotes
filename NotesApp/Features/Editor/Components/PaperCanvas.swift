@@ -319,13 +319,31 @@ struct PaperCanvas: UIViewRepresentable {
     var editorTool: EditorTool = .pen
     var inkStyle = InkStyle()
     var rulerEnabled = false
+    var onPencilDoubleTap: ((UIPencilPreferredAction) -> Void)? = nil
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.isEnabled) private var isEnabled
 
     func makeCoordinator() -> Coordinator { Coordinator(session: session) }
-    func makeUIView(context: Context) -> PageCanvasContainer { PageCanvasContainer() }
+    func makeUIView(context: Context) -> PageCanvasContainer {
+        let container = PageCanvasContainer()
+        container.addInteraction(context.coordinator.pencil.interaction)
+        return container
+    }
+
+    static func dismantleUIView(_ container: PageCanvasContainer, coordinator: Coordinator) {
+        coordinator.pencil.detach()
+    }
 
     func updateUIView(_ container: PageCanvasContainer, context: Context) {
+        context.coordinator.pencil.interaction.isEnabled = isEnabled && session.ready && !session.busy
+        context.coordinator.pencil.onTap = { [weak container, weak session] action in
+            guard let host = container?.current, let session,
+                  session.ready, !session.busy, !host.transitionPausesInk,
+                  session.canvas === host.ink,
+                  host.ink.drawingGestureRecognizer.state != .began,
+                  host.ink.drawingGestureRecognizer.state != .changed else { return }
+            onPencilDoubleTap?(action)
+        }
         guard let page = session.page else { return }
         if container.pageID != page.id || container.current?.pageSize != page.logicalSize {
             let pageID = page.id
@@ -397,6 +415,7 @@ struct PaperCanvas: UIViewRepresentable {
 
     @MainActor final class Coordinator: NSObject, PKCanvasViewDelegate {
         let session: EditorSession
+        let pencil = PencilDoubleTapCoordinator()
         init(session: EditorSession) { self.session = session }
         func canvasViewDrawingDidChange(_ canvasView: PKCanvasView) {
             // Late callbacks from an outgoing page must never overwrite the incoming page.

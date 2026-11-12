@@ -6,10 +6,10 @@ struct EditorToolbar<InsertMenu: View>: View {
     let session: EditorSession
     let quickPalette: QuickPalettePreferences
     let position: EditorToolbarPosition
+    @Binding var showingToolOptions: Bool
     let edit: (PageElement) -> Void
     let openContent: () -> Void
     @ViewBuilder let insertMenu: InsertMenu
-    @State private var showingToolOptions = false
     @State private var toolStripWidth: CGFloat = 0
 
     var body: some View {

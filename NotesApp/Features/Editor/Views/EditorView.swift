@@ -26,6 +26,7 @@ struct EditorView: View {
     @State private var showingContent = false
     @State private var showingSettings = false
     @State private var showingHandwritingStyle = false
+    @State private var showingToolOptions = false
     @State private var showingMargin = false
     @State private var selectedPhoto: PhotosPickerItem?
     @State private var showingPhotos = false
@@ -35,19 +36,21 @@ struct EditorView: View {
     init(session: EditorSession, onLibrary: @escaping () -> Void,
          workspace: DocumentWorkspace? = nil, toggleSidebar: (() -> Void)? = nil,
          toolbarPlacement: EditorToolbarPreferences? = nil, focusMode: EditorFocusMode? = nil,
-         palette: QuickPalettePreferences? = nil, preferencesDefaults: UserDefaults = .standard) {
+         palette: QuickPalettePreferences? = nil, preferencesDefaults: UserDefaults = .standard,
+         controls: EditorControlPreferences? = nil) {
         self.session = session; self.onLibrary = onLibrary
         self.workspace = workspace; self.toggleSidebar = toggleSidebar
         _toolbarPlacement = State(initialValue: toolbarPlacement ?? EditorToolbarPreferences.shared)
         _focusMode = State(initialValue: focusMode ?? EditorFocusMode())
-        _controls = StateObject(wrappedValue: EditorControlPreferences(defaults: preferencesDefaults, palette: palette))
+        _controls = StateObject(wrappedValue: controls ?? EditorControlPreferences(defaults: preferencesDefaults, palette: palette))
     }
 
     var body: some View {
         VStack(spacing: 0) {
             Group {
                 if session.ready {
-                    EditorCanvasContent(session: session, tools: preferences, fingerDrawing: fingerDrawing)
+                    EditorCanvasContent(session: session, tools: preferences, fingerDrawing: fingerDrawing,
+                                        onPencilDoubleTap: handlePencilDoubleTap)
                         // Give the new notebook its own canvas without rebuilding the toolbar and tabs.
                         .id(session.notebook.id)
                         .allowsHitTesting(!session.busy)
@@ -121,6 +124,14 @@ struct EditorView: View {
         .sheet(isPresented: $showingSettings) { AppSettingsView() }
         .sheet(isPresented: $showingContent) { InsertedContentView(session: session) }
         .sheet(isPresented: $showingHandwritingStyle) { HandwritingStyleView(session: session) }
+        .background(alignment: .topTrailing) {
+            if focusMode.isActive {
+                Color.clear.frame(width: 1, height: 1)
+                    .popover(isPresented: $showingToolOptions, arrowEdge: .top) {
+                        ToolOptionsPanel(preferences: preferences) { session.clearHandwriting() }.tint(AppTheme.accent)
+                    }
+            }
+        }
         .onAppear { session.handwriting.setTool(preferences.selected, session: session) }
         .onChange(of: session.notebook.id) { _, _ in
             resetDocumentControls()
@@ -179,6 +190,22 @@ struct EditorView: View {
     private var isCurrentSession: Bool { workspace == nil || workspace?.activeSession === session }
     private var canFinishImport: Bool { isCurrentSession && workspace?.isSwitching != true }
 
+    private func handlePencilDoubleTap(_ action: UIPencilPreferredAction) {
+        guard isCurrentSession, session.ready, !session.busy, !session.exporting,
+              workspace?.isSwitching != true, session.errorMessage == nil,
+              !showingPages, !showingTemplates, !showingSettings, !showingContent,
+              !showingHandwritingStyle, !showingMargin, !showingPhotos, !showingImageFile,
+              editingContent == nil, sharedPDF == nil, !deleting,
+              let result = controls.performPencilAction(action) else { return }
+        switch result {
+        case .toolChanged: showingToolOptions = false
+        case .toolOptions: showingToolOptions.toggle()
+        case .contextualPalette:
+            if focusMode.isActive { showingToolOptions.toggle() }
+            else { quickPalette.togglePresentation() }
+        }
+    }
+
     private func resetDocumentControls() {
         fingerDrawing = false
         deleting = false
@@ -188,6 +215,7 @@ struct EditorView: View {
         editingContent = nil
         showingContent = false
         showingHandwritingStyle = false
+        showingToolOptions = false
         showingMargin = false
         selectedPhoto = nil
         showingPhotos = false
@@ -320,7 +348,7 @@ struct EditorView: View {
 
     private var toolBar: some View {
         EditorToolbar(preferences: preferences, session: session, quickPalette: quickPalette,
-                      position: toolbarPlacement.position, edit: { item in
+                      position: toolbarPlacement.position, showingToolOptions: $showingToolOptions, edit: { item in
             guard let page = session.page else { return }
             editingContent = EditorElementDraft(pageID: page.id, element: item, isNew: false)
         }, openContent: { showingContent = true }) {

@@ -1855,6 +1855,17 @@
 			<key>sourceTree</key>
 			<string>SOURCE_ROOT</string>
 		</dict>
+		<key>A18E037D41DE695BA41B21D4</key>
+		<dict>
+			<key>isa</key>
+			<string>PBXFileReference</string>
+			<key>lastKnownFileType</key>
+			<string>sourcecode.swift</string>
+			<key>path</key>
+			<string>NotesApp/Features/Editor/Components/PencilDoubleTapCoordinator.swift</string>
+			<key>sourceTree</key>
+			<string>SOURCE_ROOT</string>
+		</dict>
 		<key>A2A87116EE0FAD908925BAB8</key>
 		<dict>
 			<key>fileRef</key>
@@ -2213,6 +2224,7 @@
 				<string>54805C5417E65EB3949A5988</string>
 				<string>BE251D2D77AB2F0A635BE246</string>
 				<string>D1CF24DC5446943F9AED6744</string>
+				<string>FC110BF767E725C4959C3656</string>
 			</array>
 			<key>isa</key>
 			<string>PBXSourcesBuildPhase</string>
@@ -2809,6 +2821,7 @@
 				<string>65AE35F6C76D71B76EACE675</string>
 				<string>EB48512B2F3A07BE66EE1AE6</string>
 				<string>0B49BD6C3CF16D5D58D482E5</string>
+				<string>A18E037D41DE695BA41B21D4</string>
 				<string>B7F0ECEE46F795D3A77A8E9C</string>
 			</array>
 			<key>isa</key>
@@ -3089,6 +3102,13 @@
 			<string>Products</string>
 			<key>sourceTree</key>
 			<string>&lt;group&gt;</string>
+		</dict>
+		<key>FC110BF767E725C4959C3656</key>
+		<dict>
+			<key>fileRef</key>
+			<string>A18E037D41DE695BA41B21D4</string>
+			<key>isa</key>
+			<string>PBXBuildFile</string>
 		</dict>
 		<key>FC35B479761433AEBC3035DA</key>
 		<dict>
