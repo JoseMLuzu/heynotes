@@ -9,7 +9,7 @@ Before this milestone, Folder was flat; Favorites applied only to notebooks; del
 ## Delivery milestones
 
 1. **Hierarchy and recovery — implemented here.** Nested folders, inline sidebar expansion, subfolder cards, context actions, cycle-safe folder movement, folder favorites, virtual Inbox, recoverable notebook/PDF/folder trash and safe workspace integration.
-2. **Fast library navigation — deferred.** Home, All Notes, persistent lastOpenedAt distinct from updatedAt, Recents based on real dates, global New Quick Note, grid/list modes, name/date sorting and first-page PDF thumbnails. Quick Note will create a normal one-page notebook in virtual Inbox and open it after successful saving; no orphan NotePage is needed.
+2. **Fast library navigation — partially implemented.** Name, Recent and Type sorting are available in the library grid. Remaining work includes Home, All Notes, persistent lastOpenedAt distinct from updatedAt, a dedicated Recents view, global New Quick Note, grid/list modes and first-page PDF thumbnails. Quick Note will create a normal one-page notebook in virtual Inbox and open it after successful saving; no orphan NotePage is needed.
 3. **Notebook sections — implemented in the student-tools delivery.** NotebookSection has stable UUID/order and optional NotePage.section. The page index creates, renames, reorders and removes sections while preserving their pages; thumbnail menus move pages. Named bookmarks filter the same index. Page IDs and drawing paths survive regrouping. See StudentTools.md for V4 migration and validation; page metadata deletion still has the existing retained-binary recovery limitation.
 4. **Study integration — deferred.** Real StudyDeck/Flashcard/ReviewRecord models, review scheduling, due counts and permanent source links. Decks may reference a notebook. Cards may retain optional notebook and page references; moving a page between sections must not alter its UUID. Deleted/trashed sources need restore/unavailable guidance instead of a broken navigation path. Existing notebook duplication must not implicitly duplicate decks without a defined user action.
 
@@ -80,3 +80,10 @@ Launch status: CoreDevice rejected automatic opening because the iPad screen was
 ## Library presentation update — 2026-11-09
 
 Folder cards now use the same portrait dimensions and adaptive grid columns as notebooks. Both share LibraryItemCaption, reserving two lines below each cover and keeping row tops aligned for long titles. Folders retain navigation, favorite badges and existing move/rename/trash context actions; no data migration is required.
+
+
+## Library sorting — 2026-11-11
+
+Use the arrow-up/arrow-down menu above the document grid to choose Name, Recent or Type. Folders appear first. Name uses localized natural order, including numbered titles such as Lecture 2 before Lecture 10. Recent orders notebooks by updatedAt, newest first. Folder activity uses its creation date, descendant folder creation dates and contained notebook modification dates. Type groups handwritten notebooks before documents containing PDF pages, with alphabetical order within each group. Equal names/dates have stable UUID tie breaks.
+
+The choice persists in the local library.sortOrder preference and applies to Library, folders, Inbox, Favorites and matching search results. Recent is the initial default. This is a display-order preference, with metadata and binary files retaining their existing values. The sidebar keeps its alphabetical folder hierarchy.

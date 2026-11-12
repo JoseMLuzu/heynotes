@@ -1,6 +1,7 @@
 import SwiftUI
 import SwiftData
 import UniformTypeIdentifiers
+import UIKit
 
 private enum LibrarySheet: Identifiable {
     case notebook(PaperTemplate), folder(UUID?), renameNotebook(Notebook), renameFolder(Folder)
@@ -18,6 +19,7 @@ struct LibraryView: View {
     @State private var model: LibraryViewModel
     @State private var navigation: LibraryNavigation
     @State private var search = ""
+    @AppStorage("library.sortOrder") private var sortOrder: LibrarySortOrder = .recent
     @State private var workspace: DocumentWorkspace
     @State private var focusMode: EditorFocusMode
     @Environment(\.scenePhase) private var scenePhase
@@ -330,11 +332,11 @@ struct LibraryView: View {
     }
 
     private var libraryContent: some View {
-        let notebooks = visibleNotebooks
-        let folders = visibleFolders
+        let notebooks = sortOrder.sortedNotebooks(visibleNotebooks)
+        let folders = sortOrder.sortedFolders(visibleFolders, allFolders: model.folders, notebooks: model.notebooks)
         return ScrollView {
             VStack(alignment: .leading, spacing: 24) {
-                HStack(alignment: .firstTextBaseline) {
+                HStack(alignment: .center) {
                     Text(navigation.selection == .favorites ? "Keep a few close." : selectedFolder != nil ? "Ideas, in good company." : "A place for your thoughts.")
                         .font(.system(.title3, design: .serif, weight: .medium))
                     Spacer(minLength: 12)
@@ -342,6 +344,7 @@ struct LibraryView: View {
                         Text("\(notebooks.count) \(notebooks.count == 1 ? "notebook" : "notebooks")")
                             .font(.caption).foregroundStyle(.secondary)
                     }
+                    sortMenu
                 }
                 if notebooks.isEmpty && folders.isEmpty {
                     if !search.isEmpty {
@@ -378,6 +381,19 @@ struct LibraryView: View {
             .frame(maxWidth: .infinity)
         }
         .searchable(text: $search, prompt: "Search notebooks")
+    }
+
+    private var sortMenu: some View {
+        let actions = LibrarySortOrder.allCases.map { order in
+            UIAction(title: order.title, state: order == sortOrder ? .on : .off) { _ in
+                sortOrder = order
+            }
+        }
+        return EditorMoreButton(title: "Sort Library", identifier: "library.sort", symbol: "arrow.up.arrow.down",
+                                menu: UIMenu(title: "Sort by", options: .singleSelection, children: actions))
+            .frame(width: 44, height: 44)
+            .accessibilityValue(sortOrder.title)
+            .help("Sort by name, latest changes or document type")
     }
 
     private var folderTrashMessage: String {

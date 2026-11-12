@@ -82,3 +82,7 @@ All 83 native simulator tests pass after adopting the muted-blue default accent 
 ## Parent-folder Back — 2026-11-11
 
 All 84 native simulator tests and 26 host tests pass. The new regression verifies parent-folder navigation through the actual native Back control in LibraryView, with and without existing document tabs, and checks the root disabled/hidden state and preservation of open tabs. Its final appearance-adjusted run also passes. The signed Release update was installed on the connected iPad with installation sequence 2660. See [Workspace.md](Workspace.md) for navigation behavior.
+
+## Library sorting — 2026-11-11
+
+All 85 native simulator tests and 30 host tests pass. New coverage checks natural title ordering, stable equal-title ties, modification-date ordering without metadata changes, PDF classification for mixed-page documents, nested folder activity and the actual native menu preference surviving LibraryView recreation. The final library screenshot was visually reviewed. The signed Release build succeeded and was installed over the existing iPad app with installation sequence 2668. See [Organization.md](Organization.md) for sorting semantics. On iPad, use the arrow-up/arrow-down menu above the grid to switch Name, Recent and Type, then reopen the app to confirm the preference remains selected.
