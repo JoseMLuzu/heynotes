@@ -65,6 +65,9 @@ final class ToolPreferences {
     }
     @ObservationIgnored private var saved: Saved
     @ObservationIgnored private let defaults: UserDefaults
+    @ObservationIgnored private var previousTool: EditorTool = .eraser
+    @ObservationIgnored private var lastNonEraser: EditorTool = .pen
+    @ObservationIgnored private var lastInkTool: EditorTool = .pen
     private static let key = "editor.tools.v1"
 
     init(defaults: UserDefaults = .standard) {
@@ -72,15 +75,24 @@ final class ToolPreferences {
         if let data = defaults.data(forKey: Self.key), let value = try? JSONDecoder().decode(Saved.self, from: data) {
             saved = value
         } else { saved = Saved() }
+        previousTool = saved.selected == .eraser ? .pen : .eraser
+        if saved.selected != .eraser { lastNonEraser = saved.selected }
+        if saved.selected.usesInkStyle { lastInkTool = saved.selected }
     }
 
     var selected: EditorTool {
         get { access(keyPath: \.selected); return saved.selected }
         set {
             guard selected != newValue else { return }
+            previousTool = saved.selected
+            if newValue != .eraser { lastNonEraser = newValue }
+            if newValue.usesInkStyle { lastInkTool = newValue }
             withMutation(keyPath: \.selected) { saved.selected = newValue; persist() }
         }
     }
+    func toggleEraser() { selected = selected == .eraser ? lastNonEraser : .eraser }
+    func selectPreviousTool() { selected = previousTool }
+    func selectInkToolForColors() { if !selected.usesInkStyle { selected = lastInkTool } }
     var rulerEnabled: Bool {
         get { access(keyPath: \.rulerEnabled); return saved.rulerEnabled ?? false }
         set {
