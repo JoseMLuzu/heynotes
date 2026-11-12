@@ -42,11 +42,12 @@ struct LibraryView: View {
     @State private var isOpeningDocument = false
 
     init(context: ModelContext, workspace: DocumentWorkspace? = nil, focusMode: EditorFocusMode? = nil,
-         navigation: LibraryNavigation? = nil) {
+         navigation: LibraryNavigation? = nil, columnVisibility: NavigationSplitViewVisibility = .automatic) {
         _model = State(initialValue: LibraryViewModel(context: context))
         _navigation = State(initialValue: navigation ?? LibraryNavigation())
         _workspace = State(initialValue: workspace ?? DocumentWorkspace(context: context))
         _focusMode = State(initialValue: focusMode ?? EditorFocusMode())
+        _columnVisibility = State(initialValue: columnVisibility)
     }
 
     // Focus overrides presentation, retaining the user's normal layout for restoration.

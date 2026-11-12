@@ -58,7 +58,7 @@ struct PaletteFavoriteDraft: Identifiable {
         var collapsed: Bool
         var visible: Bool
     }
-    private struct Saved: Codable {
+    private struct Saved: Codable, Equatable {
         var profiles: [PaletteProfile]
         var activeProfileID: UUID
         var position = PalettePosition()
@@ -179,6 +179,10 @@ struct PaletteFavoriteDraft: Identifiable {
         return favorites.isEmpty ? ToolPreset.initialFavorites : favorites
     }
     private func persist() {
+        // EditorView values are reconstructed during parent updates. A valid palette
+        // must not rewrite defaults on each reconstruction and invalidate AppStorage again.
+        if let data = defaults.data(forKey: Self.key),
+           let previous = try? JSONDecoder().decode(Saved.self, from: data), previous == saved { return }
         if let data = try? JSONEncoder().encode(saved) { defaults.set(data, forKey: Self.key) }
     }
 }

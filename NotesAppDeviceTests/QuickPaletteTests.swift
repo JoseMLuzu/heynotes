@@ -3,7 +3,41 @@ import SwiftUI
 import PencilKit
 @testable import NotesApp
 
+private final class PaletteWriteCountingDefaults: UserDefaults, @unchecked Sendable {
+    private let lock = NSLock()
+    private var writes = 0
+    var writeCount: Int { lock.withLock { writes } }
+    override func set(_ value: Any?, forKey defaultName: String) {
+        lock.withLock { writes += 1 }
+        super.set(value, forKey: defaultName)
+    }
+}
+
 @MainActor final class QuickPaletteTests: XCTestCase {
+    func testReopeningValidPaletteDoesNotWriteDefaults() throws {
+        let suite = "QuickPaletteReadOnly.\(UUID())"
+        let defaults = try XCTUnwrap(PaletteWriteCountingDefaults(suiteName: suite))
+        defer { defaults.removePersistentDomain(forName: suite) }
+        let palette = QuickPalettePreferences(defaults: defaults)
+        let bytes = try XCTUnwrap(defaults.data(forKey: "editor.quickPalette.v2"))
+        let initialWrites = defaults.writeCount
+        XCTAssertGreaterThan(initialWrites, 0)
+        for _ in 0..<10 {
+            let reopened = QuickPalettePreferences(defaults: defaults)
+            XCTAssertEqual(reopened.profiles, palette.profiles)
+            XCTAssertEqual(reopened.position, palette.position)
+            reopened.isVisible = reopened.isVisible
+            reopened.place(reopened.position)
+        }
+        XCTAssertEqual(defaults.writeCount, initialWrites)
+        XCTAssertEqual(defaults.data(forKey: "editor.quickPalette.v2"), bytes)
+        palette.isVisible.toggle()
+        XCTAssertEqual(defaults.writeCount, initialWrites + 1)
+        let reopened = QuickPalettePreferences(defaults: defaults)
+        XCTAssertEqual(reopened.isVisible, palette.isVisible)
+        XCTAssertEqual(defaults.writeCount, initialWrites + 1)
+    }
+
     func testToolbarRestoresHiddenAndCollapsedPaletteAfterRelaunch() throws {
         let suite = "QuickPaletteRestore.\(UUID().uuidString)"
         let defaults = try XCTUnwrap(UserDefaults(suiteName: suite))

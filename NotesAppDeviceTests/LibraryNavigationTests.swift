@@ -1,9 +1,75 @@
 import XCTest
 import SwiftUI
 import SwiftData
+import PencilKit
 @testable import NotesApp
 
 @MainActor final class LibraryNavigationTests: XCTestCase {
+    func testRestoringAnOpenEditorWithLibrarySortingRemainsResponsive() async throws {
+        let defaults = UserDefaults.standard
+        let previousSort = defaults.object(forKey: "library.sortOrder")
+        defer {
+            if let previousSort { defaults.set(previousSort, forKey: "library.sortOrder") }
+            else { defaults.removeObject(forKey: "library.sortOrder") }
+        }
+        defaults.set("type", forKey: "library.sortOrder")
+        _ = QuickPalettePreferences() // Finish any one-time migration before mounting the view.
+        let paletteData = defaults.data(forKey: "editor.quickPalette.v2")
+        let root = URL.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        defer { try? FileManager.default.removeItem(at: root) }
+        let storage = DrawingStorage(root: root)
+        let container = try PersistenceController.makeContainer(inMemory: true)
+        let notebook = Notebook(title: "Restored lecture")
+        let page = NotePage(pageIndex: 0)
+        container.mainContext.insert(notebook); container.mainContext.insert(page)
+        notebook.pages = [page]
+        let path = DrawingStorage.path(notebook: notebook.id, page: page.id)
+        let ink = PKDrawing().dataRepresentation()
+        try await storage.write(ink, to: path)
+        page.drawingFilePath = path
+        try container.mainContext.save()
+        let suite = "LibraryLaunch.\(UUID())"
+        let tabDefaults = try XCTUnwrap(UserDefaults(suiteName: suite))
+        defer { tabDefaults.removePersistentDomain(forName: suite) }
+        let saved = DocumentWorkspace(context: container.mainContext, storage: storage, defaults: tabDefaults)
+        let opened = await saved.open(notebook)
+        XCTAssertTrue(opened)
+        let restored = DocumentWorkspace(context: container.mainContext, storage: storage, defaults: tabDefaults)
+        XCTAssertNil(restored.activeSession)
+        let scene = try XCTUnwrap(UIApplication.shared.connectedScenes.compactMap { $0 as? UIWindowScene }.first)
+        let window = UIWindow(windowScene: scene)
+        window.frame = CGRect(x: 0, y: 0, width: 1180, height: 820)
+        let host = UIHostingController(rootView: LibraryView(context: container.mainContext, workspace: restored, columnVisibility: .all)
+            .modelContainer(container).modifier(AppAppearance()))
+        window.rootViewController = host; window.isHidden = false
+        defer { window.isHidden = true; window.rootViewController = nil }
+        host.view.frame = window.bounds
+        // Repeated main-actor suspension/resumption catches the former non-yielding redraw loop.
+        for _ in 0..<10 { try await settle(host.view) }
+        XCTAssertEqual(restored.activeID, notebook.id)
+        XCTAssertEqual(restored.activeSession?.ready, true)
+        XCTAssertFalse(restored.blocksTabControls)
+        let returned = await restored.showLibrary()
+        XCTAssertTrue(returned)
+        try await settle(host.view)
+        let sort = try XCTUnwrap(descendants(host.view).compactMap { $0 as? UIButton }
+            .first { $0.accessibilityIdentifier == "library.sort" })
+        XCTAssertTrue(sort.isEnabled)
+        let name = try XCTUnwrap(sort.menu?.children.compactMap { $0 as? UIAction }.first { $0.title == "Name" })
+        let activation = UIButton(type: .system)
+        activation.addAction(name, for: .primaryActionTriggered)
+        activation.sendActions(for: .primaryActionTriggered)
+        try await settle(host.view)
+        XCTAssertEqual(defaults.string(forKey: "library.sortOrder"), "name")
+        let reopened = await restored.open(notebook)
+        XCTAssertTrue(reopened)
+        try await settle(host.view)
+        XCTAssertEqual(defaults.data(forKey: "editor.quickPalette.v2"), paletteData)
+        let retainedInk = try await storage.read(path)
+        XCTAssertEqual(retainedInk, ink)
+        withExtendedLifetime(container) {}
+    }
+
     func testSortMenuPersistsCheckedChoiceAcrossLibraryReopening() async throws {
         let defaults = UserDefaults.standard
         let previous = defaults.object(forKey: "library.sortOrder")
