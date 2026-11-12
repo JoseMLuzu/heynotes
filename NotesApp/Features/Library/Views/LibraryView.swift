@@ -37,7 +37,6 @@ struct LibraryView: View {
     @State private var compactColumn: NavigationSplitViewColumn = .detail
     @Environment(\.horizontalSizeClass) private var sizeClass
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
-    @State private var coverFrames: [UUID: CGRect] = [:]
     @State private var openingSource: DocumentOpeningSource?
     @State private var isOpeningDocument = false
 
@@ -171,7 +170,6 @@ struct LibraryView: View {
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
                     .animation(openingAnimation, value: workspace.activeID)
                 }
-                .onPreferenceChange(NotebookCoverFrames.self) { coverFrames = $0 }
                 .onChange(of: workspace.activeID) { _, id in
                     focusMode.exit()
                     if openingSource?.id != id { openingSource = nil }
@@ -294,9 +292,9 @@ struct LibraryView: View {
                          identity: DocumentOpeningZoom(sourceFrame: source.frame, progress: 1))
     }
 
-    private func openFromLibrary(_ notebook: Notebook) {
+    private func openFromLibrary(_ notebook: Notebook, from frame: CGRect?) {
         guard !workspace.blocksNavigation else { return }
-        if let frame = coverFrames[notebook.id], frame.width > 0, frame.height > 0, !reduceMotion {
+        if let frame, frame.width > 0, frame.height > 0, !reduceMotion {
             openingSource = DocumentOpeningSource(id: notebook.id, frame: frame)
         } else { openingSource = nil }
         isOpeningDocument = openingSource != nil
@@ -368,9 +366,9 @@ struct LibraryView: View {
                                 .contextMenu { folderActions(folder) }
                         }
                         ForEach(notebooks) { notebook in
-                            Button { openFromLibrary(notebook) } label: { NotebookCard(notebook: notebook, storage: model.storage) }
-                            .buttonStyle(QuietPressStyle())
-                            .hoverEffect(.lift)
+                            LibraryNotebookTile(notebook: notebook, storage: model.storage) { frame in
+                                openFromLibrary(notebook, from: frame)
+                            }
                             .contextMenu { notebookMenu(notebook) }
                         }
                     }

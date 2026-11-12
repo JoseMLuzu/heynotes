@@ -2200,6 +2200,7 @@
 				<string>7209683D7D031149ED8ABB07</string>
 				<string>54805C5417E65EB3949A5988</string>
 				<string>BE251D2D77AB2F0A635BE246</string>
+				<string>D1CF24DC5446943F9AED6744</string>
 			</array>
 			<key>isa</key>
 			<string>PBXSourcesBuildPhase</string>
@@ -2781,6 +2782,7 @@
 				<string>CDCD99C39329F7D806ABFE51</string>
 				<string>65AE35F6C76D71B76EACE675</string>
 				<string>EB48512B2F3A07BE66EE1AE6</string>
+				<string>0B49BD6C3CF16D5D58D482E5</string>
 			</array>
 			<key>isa</key>
 			<string>PBXGroup</string>
@@ -3099,6 +3101,24 @@
 			<string>PBXBuildFile</string>
 			<key>fileRef</key>
 			<string>EB48512B2F3A07BE66EE1AE6</string>
+		</dict>
+		<key>0B49BD6C3CF16D5D58D482E5</key>
+		<dict>
+			<key>isa</key>
+			<string>PBXFileReference</string>
+			<key>lastKnownFileType</key>
+			<string>sourcecode.swift</string>
+			<key>path</key>
+			<string>NotesApp/Features/Library/Views/LibraryNotebookTile.swift</string>
+			<key>sourceTree</key>
+			<string>SOURCE_ROOT</string>
+		</dict>
+		<key>D1CF24DC5446943F9AED6744</key>
+		<dict>
+			<key>isa</key>
+			<string>PBXBuildFile</string>
+			<key>fileRef</key>
+			<string>0B49BD6C3CF16D5D58D482E5</string>
 		</dict>
 	</dict>
 	<key>rootObject</key>
