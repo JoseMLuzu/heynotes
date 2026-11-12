@@ -10,8 +10,9 @@ struct EditorView: View {
     var workspace: DocumentWorkspace? = nil
     var toggleSidebar: (() -> Void)? = nil
     @Environment(\.horizontalSizeClass) private var sizeClass
-    @State private var preferences = ToolPreferences()
-    @State private var quickPalette: QuickPalettePreferences
+    @StateObject private var controls: EditorControlPreferences
+    private var preferences: ToolPreferences { controls.tools }
+    private var quickPalette: QuickPalettePreferences { controls.palette }
     @State private var focusMode: EditorFocusMode
     @State private var toolbarPlacement: EditorToolbarPreferences
     @Environment(\.layoutDirection) private var layoutDirection
@@ -34,12 +35,12 @@ struct EditorView: View {
     init(session: EditorSession, onLibrary: @escaping () -> Void,
          workspace: DocumentWorkspace? = nil, toggleSidebar: (() -> Void)? = nil,
          toolbarPlacement: EditorToolbarPreferences? = nil, focusMode: EditorFocusMode? = nil,
-         palette: QuickPalettePreferences? = nil) {
+         palette: QuickPalettePreferences? = nil, preferencesDefaults: UserDefaults = .standard) {
         self.session = session; self.onLibrary = onLibrary
         self.workspace = workspace; self.toggleSidebar = toggleSidebar
         _toolbarPlacement = State(initialValue: toolbarPlacement ?? EditorToolbarPreferences.shared)
         _focusMode = State(initialValue: focusMode ?? EditorFocusMode())
-        _quickPalette = State(initialValue: palette ?? QuickPalettePreferences())
+        _controls = StateObject(wrappedValue: EditorControlPreferences(defaults: preferencesDefaults, palette: palette))
     }
 
     var body: some View {

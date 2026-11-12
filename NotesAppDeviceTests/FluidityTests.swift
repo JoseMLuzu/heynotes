@@ -2,7 +2,24 @@ import XCTest
 import SwiftUI
 import Observation
 import PencilKit
+import SwiftData
 @testable import NotesApp
+
+final class FluidityDefaults: UserDefaults, @unchecked Sendable {
+    private let lock = NSLock()
+    private var reads = 0
+    private var writes = 0
+    var dataReads: Int { lock.withLock { reads } }
+    var dataWrites: Int { lock.withLock { writes } }
+    override func data(forKey defaultName: String) -> Data? {
+        lock.withLock { reads += 1 }
+        return super.data(forKey: defaultName)
+    }
+    override func set(_ value: Any?, forKey defaultName: String) {
+        lock.withLock { writes += 1 }
+        super.set(value, forKey: defaultName)
+    }
+}
 
 private final class ChangeCount: @unchecked Sendable {
     private let lock = NSLock()
@@ -12,6 +29,42 @@ private final class ChangeCount: @unchecked Sendable {
 }
 
 @MainActor final class FluidityTests: XCTestCase {
+    func testEditorPreferenceReadsDuringParentRefreshes() async throws {
+        let suite = "EditorRefresh.\(UUID())"
+        let defaults = try XCTUnwrap(FluidityDefaults(suiteName: suite))
+        defer { defaults.removePersistentDomain(forName: suite) }
+        let container = try PersistenceController.makeContainer(inMemory: true)
+        let notebook = Notebook(title: "Refresh"), page = NotePage(pageIndex: 0)
+        container.mainContext.insert(notebook); container.mainContext.insert(page); notebook.pages = [page]
+        let session = EditorSession(notebook: notebook, context: container.mainContext)
+        await session.open(page)
+        let scene = try XCTUnwrap(UIApplication.shared.connectedScenes.compactMap { $0 as? UIWindowScene }.first)
+        let window = UIWindow(windowScene: scene)
+        window.frame = CGRect(x: 0, y: 0, width: 1180, height: 820)
+        func editor() -> some View {
+            EditorView(session: session, onLibrary: {}, preferencesDefaults: defaults).modelContainer(container)
+        }
+        let host = UIHostingController(rootView: editor())
+        window.rootViewController = host; window.isHidden = false
+        defer { window.isHidden = true; window.rootViewController = nil }
+        host.view.frame = window.bounds; host.view.layoutIfNeeded()
+        try await Task.sleep(for: .milliseconds(100))
+        let canvas = try XCTUnwrap(session.canvas)
+        let initialReads = defaults.dataReads, initialWrites = defaults.dataWrites
+        let started = ContinuousClock.now
+        for _ in 0..<20 {
+            host.rootView = editor()
+            host.view.layoutIfNeeded()
+            await Task.yield()
+        }
+        let duration = started.duration(to: .now)
+        print("FLUIDITY editor_parent_refreshes=20 preference_reads=\(defaults.dataReads - initialReads) writes=\(defaults.dataWrites - initialWrites) duration_ms=\(ms(duration))")
+        XCTAssertEqual(defaults.dataReads, initialReads)
+        XCTAssertEqual(defaults.dataWrites, initialWrites)
+        XCTAssertTrue(session.canvas === canvas)
+        withExtendedLifetime(container) {}
+    }
+
     func testStyleChangesDoNotInvalidateToolSelectionOrRulerAndNoOpsStayQuiet() throws {
         let name = "Fluidity.\(UUID())"
         let defaults = try XCTUnwrap(UserDefaults(suiteName: name))
