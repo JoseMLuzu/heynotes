@@ -5,6 +5,32 @@ import PencilKit
 @testable import NotesApp
 
 @MainActor final class DocumentWorkspaceTests: XCTestCase {
+    func testUnchangedPageMemoriesAvoidDefaultsWritesButRealNavigationPersists() async throws {
+        let suite = "WorkspaceNoOps.\(UUID())"
+        let defaults = try XCTUnwrap(FluidityDefaults(suiteName: suite))
+        defer { defaults.removePersistentDomain(forName: suite) }
+        let container = try PersistenceController.makeContainer(inMemory: true)
+        let notebook = makeNotebook("Navigation", context: container.mainContext)
+        let workspace = DocumentWorkspace(context: container.mainContext, defaults: defaults)
+        await workspace.restore()
+        _ = await workspace.open(notebook)
+        let writes = defaults.dataWrites
+        for _ in 0..<50 { workspace.rememberCurrentPage() }
+        XCTAssertEqual(defaults.dataWrites, writes)
+        let secondPage = notebook.orderedPages[1]
+        await workspace.activeSession?.open(secondPage)
+        workspace.rememberCurrentPage()
+        XCTAssertEqual(defaults.dataWrites, writes + 1)
+        for _ in 0..<50 { workspace.rememberCurrentPage() }
+        XCTAssertEqual(defaults.dataWrites, writes + 1)
+        let reopened = DocumentWorkspace(context: container.mainContext, defaults: defaults)
+        await reopened.restore()
+        XCTAssertEqual(reopened.activeID, notebook.id)
+        XCTAssertEqual(reopened.activeSession?.page?.id, secondPage.id)
+        XCTAssertEqual(defaults.dataWrites, writes + 1)
+        withExtendedLifetime(container) {}
+    }
+
     private func makeNotebook(_ title: String, context: ModelContext) -> Notebook {
         let notebook = Notebook(title: title)
         context.insert(notebook)

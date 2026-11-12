@@ -64,3 +64,31 @@ Use the optimized device build to compare rapid tool/color/width changes, tappin
 The signed Release build succeeds. The app compile command was verified to use Swift `-O`; unit-test target settings remain separate. The Release build uses the existing app bundle identifier and local store. Future runs from Xcode's default Debug scheme will use Debug optimization settings again; the source-level changes in this pass remain present in both configurations.
 
 The optimized Release app was installed successfully on the paired iPad after retrying a transient CoreDevice connection reset. The existing app/data container was retained; no uninstall, migration or data reset was performed.
+
+## General responsiveness follow-up — 2026-11-11
+
+This pass targets repeated work during library scrolling, editor updates and navigation. It follows the confirmed startup-loop correction in [QuickPalette.md](QuickPalette.md).
+
+### Editor control lifetime
+
+EditorView previously constructed temporary ToolPreferences and QuickPalettePreferences objects whenever its value was rebuilt, even though SwiftUI retained the original State instances. A lazy StateObject now owns EditorControlPreferences once per editor identity. Its two contained Observation models keep granular tool/palette observation. Existing palette injection, toolbar placement, tool selection, canvas identity and document-specific presentation reset behavior are preserved. The owner is local to the editor, with no global editor cache.
+
+### Library scrolling and opening
+
+Notebook cover geometry previously flowed into LibraryView's coverFrames State dictionary during scrolling. That invalidated the root library, including filtering/sorting, sidebar and menu construction. LibraryNotebookTile now captures its own latest cover frame in a non-observable reference. Scrolling updates this opening coordinate without changing root library state. Tapping supplies the current frame to the existing zoom transition; a native scroll test verifies that moving the library by 100 points moves the opening origin by 100 points while preserving cover dimensions.
+
+### Workspace persistence and page lookup
+
+DocumentWorkspace compares complete semantic navigation snapshots before encoding/writing preferences. Repeated rememberCurrentPage calls with unchanged tab order, active notebook, recent history and page IDs skip the write. Actual navigation and remembered-page changes still persist, and restore still prunes unavailable documents. Ink flushes and failure blocking remain independent of this preference optimization. Activation finds the remembered page directly or selects the stable minimum page index/UUID in linear time instead of sorting every page.
+
+### Measured work and limits
+
+| Workload | Before | After |
+| --- | ---: | ---: |
+| Preference data reads during 20 parent editor refreshes | 60 | 0 |
+| Additional preference writes during those refreshes | 0 | 0 |
+| UserDefaults.set calls during 50 unchanged page-memory updates | 50 (previous unconditional path) | 0 |
+
+The editor workload hosts the production SwiftUI editor and verifies the same PKCanvasView survives. The workspace workload counts actual set calls and verifies that a real page change writes once, restores the correct page and permits later no-op updates. These are operation counts, not filesystem-write counts or frame-rate measurements. The refresh harness also logs elapsed wall time; task scheduling and SwiftUI update coalescing vary, so that value is not used as a speedup metric. Physical frame pacing and Apple Pencil latency remain device acceptance measurements.
+
+Run the FluidityTests, DocumentOpeningTests and DocumentWorkspaceTests classes to reproduce these checks. For physical acceptance, compare library scrolling/opening, rapid tab/page switches, tool/color/width changes and menu opening. Check Undo/Redo, Focus Mode, toolbar docking, background/reopen and PDF preview/export with a dense handwritten notebook.

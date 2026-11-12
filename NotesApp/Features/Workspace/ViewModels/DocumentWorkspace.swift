@@ -5,7 +5,7 @@ import SwiftData
 /// One active editor, lightweight document tabs, and a small local navigation history.
 @MainActor @Observable
 final class DocumentWorkspace {
-    private struct Saved: Codable {
+    private struct Saved: Codable, Equatable {
         var openIDs: [UUID] = []
         var recentIDs: [UUID] = []
         var activeID: UUID?
@@ -20,12 +20,14 @@ final class DocumentWorkspace {
     @ObservationIgnored private let storage: DrawingStorage
     @ObservationIgnored private let defaults: UserDefaults
     @ObservationIgnored private var saved: Saved
+    @ObservationIgnored private var lastPersisted: Saved?
     @ObservationIgnored private var restored = false
     private static let key = "workspace.tabs.v1"
 
     init(context: ModelContext, storage: DrawingStorage = .shared, defaults: UserDefaults = .standard) {
         self.context = context; self.storage = storage; self.defaults = defaults
-        saved = defaults.data(forKey: Self.key).flatMap { try? JSONDecoder().decode(Saved.self, from: $0) } ?? Saved()
+        let restored = defaults.data(forKey: Self.key).flatMap { try? JSONDecoder().decode(Saved.self, from: $0) }
+        saved = restored ?? Saved(); lastPersisted = restored
     }
 
     var activeID: UUID? { activeSession?.notebook.id }
@@ -148,9 +150,10 @@ final class DocumentWorkspace {
     }
 
     private func activate(_ notebook: Notebook) async {
-        let pages = notebook.orderedPages
-        guard let first = pages.first else { return }
-        let destination = pages.first { $0.id == saved.pages[notebook.id] } ?? first
+        let remembered = saved.pages[notebook.id].flatMap { id in notebook.pages.first { $0.id == id } }
+        guard let destination = remembered ?? notebook.pages.min(by: {
+            $0.pageIndex == $1.pageIndex ? $0.id.uuidString < $1.id.uuidString : $0.pageIndex < $1.pageIndex
+        }) else { return }
         let incoming = EditorSession(notebook: notebook, context: context, storage: storage)
         // Keep the outgoing editor visible until the next document has loaded.
         await incoming.open(destination)
@@ -174,7 +177,11 @@ final class DocumentWorkspace {
         if let session = activeSession, let page = session.page { saved.pages[session.notebook.id] = page.id }
         let retained = Set(saved.openIDs + saved.recentIDs)
         saved.pages = saved.pages.filter { retained.contains($0.key) }
-        if let data = try? JSONEncoder().encode(saved) { defaults.set(data, forKey: Self.key) }
+        guard saved != lastPersisted else { return }
+        if let data = try? JSONEncoder().encode(saved) {
+            defaults.set(data, forKey: Self.key)
+            lastPersisted = saved
+        }
     }
 
     private func unique(_ ids: [UUID]) -> [UUID] {
