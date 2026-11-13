@@ -4,6 +4,21 @@ import SwiftData
 @testable import NotesApp
 
 @MainActor final class PageGestureTests: XCTestCase {
+    func testFullSheetMotionTracksPullAndAdaptsToFastFlicks() {
+        XCTAssertEqual(PageTurnMotion.followUpDuration(duration: 0.24, progress: 0), 0.06)
+        XCTAssertEqual(PageTurnMotion.followUpDuration(duration: 0.24, progress: 0.9), 0.024, accuracy: 0.001)
+        XCTAssertEqual(PageTurnMotion.followUpDuration(duration: 0.24, progress: 1), 0)
+        XCTAssertEqual(PageTurnMotion.distance(viewportWidth: 768), 784)
+        XCTAssertEqual(PageTurnMotion.pull(-24, hasDestination: true, viewportWidth: 768), -24)
+        XCTAssertEqual(PageTurnMotion.pull(24, hasDestination: true, viewportWidth: 768), 24)
+        XCTAssertEqual(PageTurnMotion.pull(-200, hasDestination: false, viewportWidth: 768), -24)
+        XCTAssertEqual(PageTurnMotion.pull(200, hasDestination: false, viewportWidth: 768), 24)
+        XCTAssertEqual(PageTurnMotion.duration(distance: 784, velocity: 0), 0.24)
+        XCTAssertEqual(PageTurnMotion.duration(distance: 784, velocity: -4000), 0.16)
+        XCTAssertEqual(PageTurnMotion.duration(distance: -784, velocity: 4000), 0.16)
+        XCTAssertEqual(PageTurnMotion.duration(distance: 784, velocity: .infinity), 0.24)
+    }
+
     func testObjectToolsLeaveFingerPagingAvailableWithoutStealingObjectDrags() throws {
         let host = CanvasHost()
         host.frame = CGRect(x: 0, y: 0, width: 768, height: 1024)
@@ -40,6 +55,7 @@ import SwiftData
         XCTAssertNil(PageSwipe.direction(translation: CGPoint(x: -6, y: 0), velocity: CGPoint(x: -1200, y: 0), viewportWidth: 768))
         XCTAssertNil(PageSwipe.direction(translation: CGPoint(x: -20, y: 18), velocity: CGPoint(x: -900, y: 100), viewportWidth: 768))
         XCTAssertNil(PageSwipe.direction(translation: CGPoint(x: -20, y: 2), velocity: CGPoint(x: 900, y: 20), viewportWidth: 768))
+        XCTAssertNil(PageSwipe.direction(translation: CGPoint(x: -180, y: 2), velocity: CGPoint(x: 900, y: 20), viewportWidth: 768))
         XCTAssertFalse(PageSwipe.isCreationPull(CGPoint(x: -20, y: 0), viewportWidth: 768))
         XCTAssertFalse(PageSwipe.isCreationPull(CGPoint(x: -100, y: 100), viewportWidth: 768))
         XCTAssertFalse(PageSwipe.isCreationPull(CGPoint(x: 100, y: 0), viewportWidth: 768))
