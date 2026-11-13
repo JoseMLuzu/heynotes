@@ -27,6 +27,9 @@ import SwiftData
         defer { defaults.removePersistentDomain(forName: name) }
         let palette = QuickPalettePreferences(defaults: defaults), tools = ToolPreferences(defaults: defaults)
         let element = PageElement(kind: .text, rect: CGRect(x: 10, y: 10, width: 240, height: 180))
+        try container.mainContext.save()
+        let study = StudyViewModel(container: container)
+        let deck = try study.saveDeck(title: "Revision", notebookID: notebook.id)
         let forms: [(String, AnyView)] = [
             ("New Notebook", AnyView(NotebookForm(folders: [folder], initialFolderID: nil) { _, _, _, _ in true })),
             ("New Folder", AnyView(TitleForm(heading: "New Folder", title: "") { _ in true })),
@@ -39,7 +42,10 @@ import SwiftData
             ("Text", AnyView(PageElementEditor(draft: element, pageSize: PageGeometry.size, save: { _ in true }, remove: nil))),
             ("Inserted Content", AnyView(InsertedContentView(session: session))),
             ("Handwriting Style", AnyView(HandwritingStyleView(session: session))),
-            ("PDF Margin", AnyView(PDFMarginEditor(session: session)))
+            ("PDF Margin", AnyView(PDFMarginEditor(session: session))),
+            ("New Deck", AnyView(StudyDeckForm(model: study))),
+            ("New Card", AnyView(FlashcardForm(model: study, deck: deck))),
+            ("Create Flashcard", AnyView(StudyCaptureView(context: container.mainContext, source: .init(notebookID: notebook.id, pageID: page.id))))
         ]
         for (title, view) in forms {
             let short = ["New Folder", "Rename", "Folder Color", "PDF Margin", "New Deck"].contains(title)

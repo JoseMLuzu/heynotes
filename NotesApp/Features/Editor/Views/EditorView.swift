@@ -27,6 +27,7 @@ struct EditorView: View {
     @State private var showingHandwritingStyle = false
     @State private var showingToolOptions = false
     @State private var showingMargin = false
+    @State private var studySource: StudySource?
     @State private var selectedPhoto: PhotosPickerItem?
     @State private var showingPhotos = false
     @State private var showingImageFile = false
@@ -139,6 +140,9 @@ struct EditorView: View {
         .onChange(of: focusMode.isActive) { _, active in if active { showingPages = false } }
         .onDisappear { session.handwriting.cancel() }
         .sheet(isPresented: $showingMargin) { PDFMarginEditor(session: session) }
+        .sheet(item: $studySource) { source in
+            StudyCaptureView(context: session.context, source: source)
+        }
         .photosPicker(isPresented: $showingPhotos, selection: $selectedPhoto, matching: .images)
         .fileImporter(isPresented: $showingImageFile, allowedContentTypes: [.image]) { result in
             guard case .success(let url) = result else {
@@ -193,7 +197,7 @@ struct EditorView: View {
         guard isCurrentSession, session.ready, !session.busy, !session.exporting,
               workspace?.isSwitching != true, session.errorMessage == nil,
               !showingPages, !showingTemplates, !showingContent,
-              !showingHandwritingStyle, !showingMargin, !showingPhotos, !showingImageFile,
+              !showingHandwritingStyle, !showingMargin, !showingPhotos, !showingImageFile, studySource == nil,
               editingContent == nil, sharedPDF == nil, !deleting,
               let result = controls.performPencilAction(action) else { return }
         switch result {
@@ -216,6 +220,7 @@ struct EditorView: View {
         showingHandwritingStyle = false
         showingToolOptions = false
         showingMargin = false
+        studySource = nil
         selectedPhoto = nil
         showingPhotos = false
         showingImageFile = false
@@ -298,6 +303,12 @@ struct EditorView: View {
                 case .margin: showingMargin = true
                 case .templates: showingTemplates = true
                 case .delete: deleting = true
+                case .flashcard:
+                    Task {
+                        guard let page = session.page, await session.flush(), isCurrentSession,
+                              session.page?.id == page.id else { return }
+                        studySource = StudySource(notebookID: session.notebook.id, pageID: page.id)
+                    }
                 }
             }, share: { sharedPDF = SharedPDF(url: $0) }
         ).make())

@@ -13,6 +13,7 @@ import PencilKit
         XCTAssertEqual(top.map(\.title), ["Add Page", "Focus Mode", "Export PDF", "Page", "Workspace"])
         let pageMenu = try XCTUnwrap(top.compactMap { $0 as? UIMenu }.first { $0.title == "Page" })
         XCTAssertTrue(pageMenu.children.contains { $0.title == "Page Template" })
+        XCTAssertTrue(pageMenu.children.contains { $0.title == "Create Flashcard" })
         XCTAssertFalse(pageMenu.children.contains { $0.title == "PDF Note Margin" })
         XCTAssertFalse(allActions(menu).contains { $0.title == "Settings" || $0.title == "Ruler" })
         let workspace = try XCTUnwrap(top.compactMap { $0 as? UIMenu }.first { $0.title == "Workspace" })

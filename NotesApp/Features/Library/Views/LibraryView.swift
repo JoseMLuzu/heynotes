@@ -158,7 +158,7 @@ struct LibraryView: View {
             }
             .navigationSplitViewColumnWidth(min: 230, ideal: 260, max: 320)
         } detail: {
-            NavigationStack {
+            NavigationStack(path: $navigation.studyPath) {
                 VStack(spacing: 0) {
                     if workspace.activeSession == nil && (!workspace.openNotebooks.isEmpty || backDestination != nil) {
                         DocumentTabBar(workspace: workspace, showLibrary: showLibrary, toggleSidebar: toggleSidebar,
@@ -177,8 +177,7 @@ struct LibraryView: View {
                         } else if navigation.selection == .trash {
                             LibraryTrashView(model: model)
                         } else if navigation.selection == .study {
-                            ContentUnavailableView("A little practice. A lasting memory.", systemImage: "rectangle.on.rectangle",
-                                                   description: Text("Study is coming soon. Your notebooks are ready for the ideas you want to keep."))
+                            StudyView(context: model.modelContext, openSource: openStudySource)
                         } else {
                             libraryContent
                                 .transition(reduceMotion ? .identity : .opacity)
@@ -189,6 +188,7 @@ struct LibraryView: View {
                 }
                 .onChange(of: workspace.activeID) { _, id in
                     focusMode.exit()
+                    if id != nil { navigation.studyPath.removeAll() }
                     if openingSource?.id != id { openingSource = nil }
                 }
                 .background(AppTheme.background)
@@ -221,6 +221,7 @@ struct LibraryView: View {
             }
         }
         .task { await workspace.restore() }
+        .onChange(of: navigation.selection) { _, _ in navigation.studyPath.removeAll() }
         .onChange(of: workspace.activeID, initial: true) { _, id in
             guard id != nil else { return }
             columnVisibility = .detailOnly
@@ -352,6 +353,19 @@ struct LibraryView: View {
             if isOpeningDocument { try? await Task.sleep(for: .seconds(DocumentOpeningZoom.duration + 0.02)) }
             isOpeningDocument = false
         }
+    }
+
+    private func openStudySource(_ source: StudySource) async {
+        let id = source.notebookID
+        do {
+            let request = FetchDescriptor<Notebook>(predicate: #Predicate { $0.id == id })
+            guard let notebook = try model.modelContext.fetch(request).first, !notebook.isInTrash,
+                  notebook.pages.contains(where: { $0.id == source.pageID }) else {
+                throw StudyError.unavailableSource
+            }
+            openingSource = nil
+            _ = await workspace.open(notebook, pageID: source.pageID)
+        } catch { workspace.errorMessage = error.localizedDescription }
     }
 
     private func toggleSidebar() {

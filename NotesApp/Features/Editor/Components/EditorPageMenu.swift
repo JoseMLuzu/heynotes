@@ -2,7 +2,7 @@ import UIKit
 
 /// Prebuilt native menu for the tab strip's ellipsis; document work stays in the session.
 @MainActor struct EditorPageMenu {
-    enum Destination { case content, margin, templates, delete, focus }
+    enum Destination { case content, margin, templates, delete, focus, flashcard }
     let session: EditorSession
     let workspace: DocumentWorkspace?
     let palette: QuickPalettePreferences
@@ -15,6 +15,7 @@ import UIKit
     func make() -> UIMenu {
         let ready = session.ready && !session.busy
         let pages: [UIMenuElement] = [
+            item("Create Flashcard", "rectangle.stack.badge.plus", enabled: ready) { present(.flashcard) },
             session.page?.pdfFilePath != nil
                 ? item("PDF Note Margin", "rectangle.righthalf.inset.filled", enabled: ready) { present(.margin) }
                 : item("Page Template", "square.grid.2x2", enabled: ready) { present(.templates) },

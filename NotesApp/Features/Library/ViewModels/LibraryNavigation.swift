@@ -7,6 +7,7 @@ enum LibrarySection: Hashable {
 
 @MainActor @Observable final class LibraryNavigation {
     var selection: LibrarySection? = .library
+    var studyPath: [StudyRoute] = []
 
     func folder(in folders: [Folder]) -> Folder? {
         guard case .folder(let id) = selection else { return nil }
