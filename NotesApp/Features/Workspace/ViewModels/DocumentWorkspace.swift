@@ -168,14 +168,22 @@ final class DocumentWorkspace {
         defer { isSwitching = false }
         if let closing = visibleSessions.first(where: { $0.notebook.id == id }) {
             guard await save(closing) else { return false }
-            release(closing)
-            if primarySession === closing { primarySession = nil } else { secondarySession = nil }
-            if session(in: focusedPane) == nil { focusedPane = primarySession == nil && secondarySession != nil ? .secondary : .primary }
-            openNotebooks.remove(at: index)
-            if activeSession == nil, !openNotebooks.isEmpty {
-                primarySession = await load(openNotebooks[min(index, openNotebooks.count - 1)])
-                focusedPane = .primary
+            let pane: WorkspacePane = primarySession === closing ? .primary : .secondary
+            let remaining = openNotebooks.filter { $0.id != id }
+            var incoming: EditorSession?
+            if visibleSessions.count == 1, !remaining.isEmpty {
+                let next = remaining[min(index, remaining.count - 1)]
+                // Keep the outgoing editor and its slot mounted across the asynchronous load.
+                // Publishing an empty workspace here briefly renders Library and rebuilds chrome.
+                guard validate(next), let loaded = await load(next) else { return false }
+                incoming = loaded
             }
+            release(closing)
+            if let incoming { assign(incoming, to: pane) }
+            else if pane == .primary { primarySession = nil }
+            else { secondarySession = nil }
+            if session(in: focusedPane) == nil { focusedPane = primarySession == nil && secondarySession != nil ? .secondary : .primary }
+            openNotebooks = remaining
         } else { openNotebooks.remove(at: index) }
         persist(); return true
     }

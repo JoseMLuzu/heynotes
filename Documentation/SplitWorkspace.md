@@ -16,6 +16,8 @@ WorkspaceSnapshot retains the shipped workspace.tabs.v1 preference key and its l
 
 ## Save and interaction safety
 
+Closing the only visible editor while other tabs remain first saves its ink and loads the successor without detaching the outgoing canvas. Once the successor is ready, it replaces the outgoing session in the same presentation slot. Library is never published as an intermediate state, and native editor controls remain mounted. A failed save or an invalid successor retains the current tab. Closing one of two visible editors keeps the other editor; closing the final tab intentionally returns to Library.
+
 Replacing/closing a visible pane flushes its actual native PencilKit drawing before detaching its canvas. Leaving for Library, keeping one focused document or forgetting an affected subtree validates the relevant saves before changing layout/references. A failed save retains the existing sessions and pending ink. Backgrounding requests each editor's existing save operation. Native pen/paging/zoom behavior stays inside the current PaperCanvas implementation. At most two editor sessions and their existing bounded neighbor caches are retained; memory warnings discard prepared pages for both editors.
 
 A passive native PaneTouchObserver receives the initial contact and fails immediately. It does not cancel/delay touches or prevent PencilKit/page gestures. This lets focus update before a Pencil stroke without overlay hit targets or a drag recognizer on the page. Only the focused editor processes Pencil double-tap; asynchronous image/card operations remain valid for their original visible session even if the user focuses the other pane. Source-note opening through Study uses the same explicit-page workspace API and save boundary.
