@@ -217,6 +217,17 @@
 			<key>isa</key>
 			<string>PBXBuildFile</string>
 		</dict>
+		<key>106DA166C549499D7AADA8B4</key>
+		<dict>
+			<key>isa</key>
+			<string>PBXFileReference</string>
+			<key>lastKnownFileType</key>
+			<string>sourcecode.swift</string>
+			<key>path</key>
+			<string>NotesApp/Features/Editor/Components/PageCanvasContainer.swift</string>
+			<key>sourceTree</key>
+			<string>SOURCE_ROOT</string>
+		</dict>
 		<key>11B4DB62A8871AE676CDB290</key>
 		<dict>
 			<key>isa</key>
@@ -1797,6 +1808,13 @@
 			<key>sourceTree</key>
 			<string>SOURCE_ROOT</string>
 		</dict>
+		<key>96AFE608187AEB8D3C7737C2</key>
+		<dict>
+			<key>fileRef</key>
+			<string>106DA166C549499D7AADA8B4</string>
+			<key>isa</key>
+			<string>PBXBuildFile</string>
+		</dict>
 		<key>976432A1CD46704764E7A7B7</key>
 		<dict>
 			<key>isa</key>
@@ -2306,6 +2324,7 @@
 				<string>BE251D2D77AB2F0A635BE246</string>
 				<string>D1CF24DC5446943F9AED6744</string>
 				<string>FC110BF767E725C4959C3656</string>
+				<string>96AFE608187AEB8D3C7737C2</string>
 				<string>2E0AC78E3D4506BE1752DA86</string>
 				<string>28AB7F808697D64AC394A9C4</string>
 				<string>BB25111A75FC3435B4207EEC</string>
@@ -2926,6 +2945,7 @@
 				<string>A18E037D41DE695BA41B21D4</string>
 				<string>B7F0ECEE46F795D3A77A8E9C</string>
 				<string>1CC90E52F01D7DAD4A47565C</string>
+				<string>106DA166C549499D7AADA8B4</string>
 				<string>FB933A6A834475C33552BFD7</string>
 				<string>D2F21FBCD742B9FA45326E17</string>
 				<string>5AFAFC5178B5640225EDB955</string>
