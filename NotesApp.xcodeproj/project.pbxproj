@@ -1008,6 +1008,7 @@
 				<string>1472EA157E92F7FA4AF99E7C</string>
 				<string>88BF26A974D46FB8EC12B3E8</string>
 				<string>7D7A5CD29E558F843F1B5EA6</string>
+				<string>D4D3DC74FC650A23CE7287EE</string>
 				<string>F3B24BE66BA94267A227F0BB</string>
 			</array>
 			<key>isa</key>
@@ -3174,6 +3175,13 @@
 			<key>isa</key>
 			<string>PBXBuildFile</string>
 		</dict>
+		<key>D4D3DC74FC650A23CE7287EE</key>
+		<dict>
+			<key>fileRef</key>
+			<string>DB17A4C5E4229E05876C8E7D</string>
+			<key>isa</key>
+			<string>PBXBuildFile</string>
+		</dict>
 		<key>D584F627A9E67C9B0B623D10</key>
 		<dict>
 			<key>fileRef</key>
@@ -3225,6 +3233,17 @@
 			<string>sourcecode.swift</string>
 			<key>path</key>
 			<string>NotesApp/Core/Models/PageOrdering.swift</string>
+			<key>sourceTree</key>
+			<string>SOURCE_ROOT</string>
+		</dict>
+		<key>DB17A4C5E4229E05876C8E7D</key>
+		<dict>
+			<key>isa</key>
+			<string>PBXFileReference</string>
+			<key>lastKnownFileType</key>
+			<string>sourcecode.swift</string>
+			<key>path</key>
+			<string>NotesAppDeviceTests/SplitWorkspaceTests.swift</string>
 			<key>sourceTree</key>
 			<string>SOURCE_ROOT</string>
 		</dict>
@@ -3504,6 +3523,7 @@
 				<string>3EF388E83F683007497D33C6</string>
 				<string>630A1CC2F31537ED3BA19450</string>
 				<string>29C8423124255F56F4314A43</string>
+				<string>DB17A4C5E4229E05876C8E7D</string>
 				<string>5DFB6D06EF10030A38094CAF</string>
 				<string>71F523531AE3C44D24F87D0E</string>
 				<string>A6FF88F516373C638E94CEBB</string>
