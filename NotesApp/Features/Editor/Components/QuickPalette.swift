@@ -165,6 +165,7 @@ struct QuickPalette: View {
             Button("Bottom Left") { palette.place(PalettePosition(x: 0, y: 1)) }
             Button("Bottom Right") { palette.place(PalettePosition(x: 1, y: 1)) }
         }
+        Button("Restore Position", systemImage: "arrow.counterclockwise") { palette.place(PalettePosition()) }
         if let onExitFocus {
             Button("Exit Focus Mode", systemImage: "arrow.down.right.and.arrow.up.left", action: onExitFocus)
         } else {

@@ -89,9 +89,8 @@ import PencilKit
         XCTAssertTrue(workspace.blocksNavigation)
         XCTAssertFalse(workspace.blocksTabControls)
         let placement = EditorToolbarPreferences(defaults: defaults)
-        let tools = ToolPreferences(defaults: defaults)
         let menu = EditorPageMenu(session: session, workspace: workspace,
-                                  palette: QuickPalettePreferences(defaults: defaults), tools: tools,
+                                  palette: QuickPalettePreferences(defaults: defaults),
                                   placement: placement, fingerDrawing: false,
                                   setFingerDrawing: { _ in }, present: { _ in }, share: { _ in }).make()
         let scene = try XCTUnwrap(UIApplication.shared.connectedScenes.compactMap { $0 as? UIWindowScene }.first)
@@ -120,7 +119,20 @@ import PencilKit
         // Actual navigation still checks the live recognizer, rather than a rendered hit-test flag.
         let library = await workspace.showLibrary(); XCTAssertFalse(library)
         XCTAssertEqual(workspace.activeID, notebook.id)
-        let positions = try XCTUnwrap(menu.children.compactMap { $0 as? UIMenu }.first { $0.title == "Toolbar Position" })
+        if #available(iOS 17.4, *) {
+            button.performPrimaryAction()
+            try await Task.sleep(for: .milliseconds(300))
+            let image = UIGraphicsImageRenderer(size: window.bounds.size).image { _ in
+                window.drawHierarchy(in: window.bounds, afterScreenUpdates: true)
+            }
+            let attachment = XCTAttachment(image: image)
+            attachment.name = "Compact-Editor-Menu"; attachment.lifetime = .keepAlways
+            add(attachment)
+            button.contextMenuInteraction?.dismissMenu()
+        }
+        let groups = menu.children.compactMap { $0 as? UIMenu }.flatMap(\.children)
+        let workspaceMenu = try XCTUnwrap(groups.compactMap { $0 as? UIMenu }.first { $0.title == "Workspace" })
+        let positions = try XCTUnwrap(workspaceMenu.children.compactMap { $0 as? UIMenu }.first { $0.title == "Toolbar Position" })
         let right = try XCTUnwrap(positions.children.compactMap { $0 as? UIAction }.first { $0.title == "Right" })
         let actionButton = UIButton(type: .system)
         actionButton.addAction(right, for: .primaryActionTriggered)

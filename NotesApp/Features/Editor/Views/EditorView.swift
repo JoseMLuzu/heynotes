@@ -24,7 +24,6 @@ struct EditorView: View {
     @State private var sharedPDF: SharedPDF?
     @State private var editingContent: EditorElementDraft?
     @State private var showingContent = false
-    @State private var showingSettings = false
     @State private var showingHandwritingStyle = false
     @State private var showingToolOptions = false
     @State private var showingMargin = false
@@ -121,7 +120,6 @@ struct EditorView: View {
                 return success
             }, remove: nil, restoreInk: { session.restoreOriginalInk(draft.element.id) })
         }
-        .sheet(isPresented: $showingSettings) { AppSettingsView() }
         .sheet(isPresented: $showingContent) { InsertedContentView(session: session) }
         .sheet(isPresented: $showingHandwritingStyle) { HandwritingStyleView(session: session) }
         .background(alignment: .topTrailing) {
@@ -193,7 +191,7 @@ struct EditorView: View {
     private func handlePencilDoubleTap(_ action: UIPencilPreferredAction) {
         guard isCurrentSession, session.ready, !session.busy, !session.exporting,
               workspace?.isSwitching != true, session.errorMessage == nil,
-              !showingPages, !showingTemplates, !showingSettings, !showingContent,
+              !showingPages, !showingTemplates, !showingContent,
               !showingHandwritingStyle, !showingMargin, !showingPhotos, !showingImageFile,
               editingContent == nil, sharedPDF == nil, !deleting,
               let result = controls.performPencilAction(action) else { return }
@@ -289,11 +287,10 @@ struct EditorView: View {
 
     private var pageOptions: some View {
         EditorMoreButton(title: "Page Options", identifier: "editor.pageOptions", menu: EditorPageMenu(
-            session: session, workspace: workspace, palette: quickPalette, tools: preferences,
+            session: session, workspace: workspace, palette: quickPalette,
             placement: toolbarPlacement, fingerDrawing: fingerDrawing,
             setFingerDrawing: { fingerDrawing = $0 }, present: { destination in
                 switch destination {
-                case .settings: showingSettings = true
                 case .focus: focusMode.enter()
                 case .content: showingContent = true
                 case .margin: showingMargin = true

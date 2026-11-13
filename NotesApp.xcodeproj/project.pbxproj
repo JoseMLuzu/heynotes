@@ -381,6 +381,17 @@
 			<key>isa</key>
 			<string>PBXBuildFile</string>
 		</dict>
+		<key>1CC90E52F01D7DAD4A47565C</key>
+		<dict>
+			<key>isa</key>
+			<string>PBXFileReference</string>
+			<key>lastKnownFileType</key>
+			<string>sourcecode.swift</string>
+			<key>path</key>
+			<string>NotesAppDeviceTests/EditorMenuTests.swift</string>
+			<key>sourceTree</key>
+			<string>SOURCE_ROOT</string>
+		</dict>
 		<key>1D98252BE56C83993D779E09</key>
 		<dict>
 			<key>fileRef</key>
@@ -759,6 +770,13 @@
 			<key>isa</key>
 			<string>PBXBuildFile</string>
 		</dict>
+		<key>4559EB2E1AD51C3692440314</key>
+		<dict>
+			<key>fileRef</key>
+			<string>B7F0ECEE46F795D3A77A8E9C</string>
+			<key>isa</key>
+			<string>PBXBuildFile</string>
+		</dict>
 		<key>45FBE086519972D35C1529F6</key>
 		<dict>
 			<key>isa</key>
@@ -815,6 +833,7 @@
 				<string>BDB7AC1EB5A1E3CD33C56E2C</string>
 				<string>5B03DBEE559243809BAB7737</string>
 				<string>4559EB2E1AD51C3692440314</string>
+				<string>495DD1AAF51C31E8DF6C5D71</string>
 			</array>
 			<key>isa</key>
 			<string>PBXSourcesBuildPhase</string>
@@ -836,6 +855,13 @@
 		<dict>
 			<key>fileRef</key>
 			<string>1F51202E47504685BFAA4129</string>
+			<key>isa</key>
+			<string>PBXBuildFile</string>
+		</dict>
+		<key>495DD1AAF51C31E8DF6C5D71</key>
+		<dict>
+			<key>fileRef</key>
+			<string>1CC90E52F01D7DAD4A47565C</string>
 			<key>isa</key>
 			<string>PBXBuildFile</string>
 		</dict>
@@ -2089,6 +2115,17 @@
 			<key>isa</key>
 			<string>PBXBuildFile</string>
 		</dict>
+		<key>B7F0ECEE46F795D3A77A8E9C</key>
+		<dict>
+			<key>isa</key>
+			<string>PBXFileReference</string>
+			<key>lastKnownFileType</key>
+			<string>sourcecode.swift</string>
+			<key>path</key>
+			<string>NotesAppDeviceTests/PencilDoubleTapTests.swift</string>
+			<key>sourceTree</key>
+			<string>SOURCE_ROOT</string>
+		</dict>
 		<key>BA0C727F114408F83B780E3F</key>
 		<dict>
 			<key>fileRef</key>
@@ -2823,6 +2860,7 @@
 				<string>0B49BD6C3CF16D5D58D482E5</string>
 				<string>A18E037D41DE695BA41B21D4</string>
 				<string>B7F0ECEE46F795D3A77A8E9C</string>
+				<string>1CC90E52F01D7DAD4A47565C</string>
 			</array>
 			<key>isa</key>
 			<string>PBXGroup</string>
@@ -3141,24 +3179,6 @@
 			<string>CCCFA8569F9D1BE0BE946F21</string>
 			<key>isa</key>
 			<string>PBXBuildFile</string>
-		</dict>
-		<key>B7F0ECEE46F795D3A77A8E9C</key>
-		<dict>
-			<key>isa</key>
-			<string>PBXFileReference</string>
-			<key>lastKnownFileType</key>
-			<string>sourcecode.swift</string>
-			<key>path</key>
-			<string>NotesAppDeviceTests/PencilDoubleTapTests.swift</string>
-			<key>sourceTree</key>
-			<string>SOURCE_ROOT</string>
-		</dict>
-		<key>4559EB2E1AD51C3692440314</key>
-		<dict>
-			<key>isa</key>
-			<string>PBXBuildFile</string>
-			<key>fileRef</key>
-			<string>B7F0ECEE46F795D3A77A8E9C</string>
 		</dict>
 	</dict>
 	<key>rootObject</key>
