@@ -1,7 +1,7 @@
 import PencilKit
 import UIKit
 
-struct PageLoadRequest: Sendable {
+struct PageLoadRequest: Sendable, Hashable {
     let drawingPath: String?
     let fallbackDrawingPath: String
     let pdfPath: String?
