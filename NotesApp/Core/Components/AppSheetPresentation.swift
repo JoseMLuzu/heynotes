@@ -16,4 +16,30 @@ struct AppSheetPresentation: ViewModifier {
 
 extension View {
     func appSheetPresentation() -> some View { modifier(AppSheetPresentation()) }
+    func compactAppSheetPresentation(idealHeight: CGFloat) -> some View {
+        modifier(CompactAppSheetPresentation(idealHeight: idealHeight))
+    }
+}
+
+/// Short dialogs fit their controls; long forms keep the existing expanded policy.
+private struct CompactAppSheetPresentation: ViewModifier {
+    @Environment(\.dynamicTypeSize) private var typeSize
+    @ScaledMetric private var idealHeight: CGFloat
+
+    init(idealHeight: CGFloat) {
+        _idealHeight = ScaledMetric(wrappedValue: idealHeight, relativeTo: .body)
+    }
+
+    @ViewBuilder func body(content: Content) -> some View {
+        if typeSize.isAccessibilitySize {
+            content.appSheetPresentation()
+        } else if #available(iOS 18.0, *) {
+            content
+                .frame(idealWidth: 440, idealHeight: idealHeight)
+                .presentationSizing(.fitted)
+                .presentationDetents([.height(idealHeight)])
+        } else {
+            content.presentationDetents([.height(idealHeight)])
+        }
+    }
 }

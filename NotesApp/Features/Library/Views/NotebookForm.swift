@@ -105,6 +105,6 @@ struct TitleForm: View {
                     }
                 }
         }
-        .appSheetPresentation()
+        .compactAppSheetPresentation(idealHeight: 200)
     }
 }

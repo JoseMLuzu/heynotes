@@ -29,7 +29,7 @@ struct FolderColorPicker: View {
                 Text("The previous folder color was preserved. Try again after closing this panel.")
             }
         }
-        .appSheetPresentation()
+        .compactAppSheetPresentation(idealHeight: 430)
         .tint(AppTheme.accent)
     }
 }

@@ -766,6 +766,17 @@
 			<key>sourceTree</key>
 			<string>&lt;group&gt;</string>
 		</dict>
+		<key>3F13BE3E460C5C106CDB07B2</key>
+		<dict>
+			<key>isa</key>
+			<string>PBXFileReference</string>
+			<key>lastKnownFileType</key>
+			<string>sourcecode.swift</string>
+			<key>path</key>
+			<string>NotesAppDeviceTests/PDFSelectiveImportTests.swift</string>
+			<key>sourceTree</key>
+			<string>SOURCE_ROOT</string>
+		</dict>
 		<key>40B1239ECD27488B403A76A9</key>
 		<dict>
 			<key>isa</key>
@@ -1763,6 +1774,13 @@
 			<string>NotesApp/Features/Templates/Views/TemplateGallery.swift</string>
 			<key>sourceTree</key>
 			<string>SOURCE_ROOT</string>
+		</dict>
+		<key>88BF26A974D46FB8EC12B3E8</key>
+		<dict>
+			<key>fileRef</key>
+			<string>3F13BE3E460C5C106CDB07B2</string>
+			<key>isa</key>
+			<string>PBXBuildFile</string>
 		</dict>
 		<key>89336BA51750B4DB4D501C22</key>
 		<dict>
@@ -3441,24 +3459,6 @@
 			<string>CCCFA8569F9D1BE0BE946F21</string>
 			<key>isa</key>
 			<string>PBXBuildFile</string>
-		</dict>
-		<key>3F13BE3E460C5C106CDB07B2</key>
-		<dict>
-			<key>isa</key>
-			<string>PBXFileReference</string>
-			<key>lastKnownFileType</key>
-			<string>sourcecode.swift</string>
-			<key>path</key>
-			<string>NotesAppDeviceTests/PDFSelectiveImportTests.swift</string>
-			<key>sourceTree</key>
-			<string>SOURCE_ROOT</string>
-		</dict>
-		<key>88BF26A974D46FB8EC12B3E8</key>
-		<dict>
-			<key>isa</key>
-			<string>PBXBuildFile</string>
-			<key>fileRef</key>
-			<string>3F13BE3E460C5C106CDB07B2</string>
 		</dict>
 	</dict>
 	<key>rootObject</key>

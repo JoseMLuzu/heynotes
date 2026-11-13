@@ -40,7 +40,7 @@ struct PDFMarginEditor: View {
                 Button("OK") { session.errorMessage = nil }
             } message: { Text(session.errorMessage ?? "") }
         }
-        .appSheetPresentation()
+        .compactAppSheetPresentation(idealHeight: 470)
         .tint(AppTheme.accent)
     }
 }

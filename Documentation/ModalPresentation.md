@@ -1,27 +1,31 @@
-# Expanded modal presentation
+# Modal presentation
 
-## Problem and behavior
+## Presentation policy
 
-Library forms and folder colors explicitly offered Medium and Large detents, so the system could open them halfway. Other app-owned forms used automatic sheet sizing, producing inconsistent usable height on iPad. Users had to expand panels before working through their contents.
+App-owned sheets use two policies. Long forms open expanded, avoiding the previous half-height presentation that required manual expansion. Short dialogs use a compact initial size so a single input does not sit above a large unused area.
 
-All app-owned sheet roots now use `AppSheetPresentation`. They open at the system's large height, with page sizing on iPadOS 18 or later and a large-detent fallback on iPadOS 17. There is no intermediate half-height stop. Native Form, List and ScrollView containers still scroll when content exceeds the available height, including with the keyboard or larger text. Navigation actions and native dismissal remain available.
+`appSheetPresentation()` retains page sizing and a single Large detent for New Notebook, Settings, Quick Palette, Palette Profiles, Edit Favorite, inserted-content editors, Handwriting Style and PDF page selection. Their native Form, List and ScrollView containers retain scrolling and keyboard avoidance.
 
-The policy is applied to New Notebook, folder creation/renaming, Folder Color, Settings, Quick Palette, Palette Profiles, Edit Favorite, PageElementEditor, Inserted Content, Handwriting Style and PDF Note Margin. Applying it to each sheet root also covers the existing nested palette/content editors. It does not add fixed screen dimensions or global UIKit appearance changes.
+`compactAppSheetPresentation(idealHeight:)` is used by:
 
-The native PDF share controller, photo/file pickers, alerts, tool popovers and existing full-screen cover/template galleries retain their platform-appropriate presentations. Their sizing is separate from app form sheets.
+| Form | Initial height at standard text size |
+| --- | --- |
+| Create folder/subfolder and rename dialogs (`TitleForm`) | 200 pt |
+| Folder Color | 430 pt |
+| PDF Note Margin | 470 pt |
+
+Compact sheets use a preferred width of 440 pt and a scaled ideal height on iPadOS 18 or later. These are layout preferences, not fixed view frames; the system can adapt to the presenting window and keyboard. Their single height detent also provides an iPadOS 17 fallback. The existing scroll containers handle content overflow. Accessibility text sizes use the expanded policy so controls and long labels remain reachable.
+
+The native PDF share controller, photo/file pickers, alerts, tool popovers and full-screen cover/template galleries retain their separate platform presentations. There are no global UIKit appearance changes, persistence changes or schema migrations.
 
 ## APIs and compatibility
 
-`presentationDetents` is available below the project's iPadOS 17 minimum. `presentationSizing` and `.page` are guarded with an iPadOS 18 availability check; availability was also checked against the installed Xcode SDK interface. Apple documents page sizing for informational/compositional content in [presentationSizing(_:)](https://developer.apple.com/documentation/swiftui/view/presentationsizing(_:)).
+The project targets iPadOS 17. `presentationDetents` is available at this target. `presentationSizing`, `.page` and `.fitted` are guarded with an iPadOS 18 availability check, verified against the installed SDK interface. Apple documents content-based ideal sizing in [FittedPresentationSizing](https://developer.apple.com/documentation/swiftui/fittedpresentationsizing) and [presentationSizing(_:)](https://developer.apple.com/documentation/swiftui/view/presentationsizing(_:)). NavigationStack and Form are flexible containers, so the compact policy supplies an ideal size for the fitted presentation.
 
-No metadata, drawing persistence, autosave or document migration changes are involved.
+## Verification and manual acceptance
 
-## Verification
+`ModalPresentationTests` presents actual app forms through native SwiftUI sheets. It checks compact versus expanded initial height, containment within the presenting window, keyboard focus/input visibility for title dialogs, landscape and narrow-window sizing, and the expanded accessibility-text fallback. Screenshot attachments support visual inspection of New Folder, Rename, Folder Color, PDF Note Margin, New Notebook and Settings.
 
-`ModalPresentationTests` presents the actual app forms through SwiftUI sheets, rather than rendering form contents as standalone hosting views. It checks their initially visible height without any expansion gesture and verifies their lower edge stays within the presenting window. Additional Settings cases use landscape and a narrow window; native presentation attachments support visual inspection.
+On iPad, open New Folder, New Subfolder and Rename: confirm the input and Cancel/Save actions are visible without expanding the sheet. Enter a long title, show the keyboard, rotate and use a narrow window. Check Folder Color and PDF Note Margin scrolling. Open New Notebook, Settings and PDF page selection to confirm long forms still have sufficient initial space. Repeat with larger accessibility text. Saving, cancelling and returning to the editor must preserve existing document data.
 
-Physical-device acceptance: open New Notebook, folder colors and Settings from the library; open palette management, favorite editing, handwriting style and inserted content from the editor. Confirm each starts expanded, scrolling works, controls remain reachable with the keyboard, nested editors dismiss back to their parent and the drawing remains unchanged after returning.
-
-Final automated validation (2026-11-10): all 81 native simulator tests pass, including two presentation tests that exercise the 11 real app forms and additional landscape/narrow-window cases. Native New Notebook and Settings presentation screenshots were visually inspected. The optimized signed Release device build succeeds. The iPadOS 17 fallback is compile-checked; runtime presentation checks used iPadOS 26.5.
-
-The Release update was successfully installed on the connected iPad over the existing app (CoreDevice installation sequence 2572), without uninstalling or resetting its data.
+Runtime validation uses iPadOS 26.5; the iPadOS 17 fallback is compile-checked rather than runtime-tested.

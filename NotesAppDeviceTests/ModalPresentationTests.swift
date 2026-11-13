@@ -29,6 +29,7 @@ import SwiftData
         let element = PageElement(kind: .text, rect: CGRect(x: 10, y: 10, width: 240, height: 180))
         let forms: [(String, AnyView)] = [
             ("New Notebook", AnyView(NotebookForm(folders: [folder], initialFolderID: nil) { _, _, _, _ in true })),
+            ("New Folder", AnyView(TitleForm(heading: "New Folder", title: "") { _ in true })),
             ("Rename", AnyView(TitleForm(heading: "Rename", title: "Biology") { _ in true })),
             ("Folder Color", AnyView(FolderColorPicker(folder: folder) { _ in true })),
             ("Settings", AnyView(AppSettingsView())),
@@ -41,7 +42,9 @@ import SwiftData
             ("PDF Margin", AnyView(PDFMarginEditor(session: session)))
         ]
         for (title, view) in forms {
-            try await verifyExpanded(view, name: title, size: CGSize(width: 820, height: 1180), capture: title == "Settings" || title == "New Notebook")
+            let short = ["New Folder", "Rename", "Folder Color", "PDF Margin", "New Deck"].contains(title)
+            try await verifyExpanded(view, name: title, size: CGSize(width: 820, height: 1180),
+                                     compact: short, capture: short || title == "Settings" || title == "New Notebook")
         }
         withExtendedLifetime(container) {}
     }
@@ -49,10 +52,15 @@ import SwiftData
     func testSettingsOpensExpandedInLandscapeAndNarrowWindow() async throws {
         for size in [CGSize(width: 1180, height: 820), CGSize(width: 540, height: 820)] {
             try await verifyExpanded(AnyView(AppSettingsView()), name: "Settings-\(Int(size.width))", size: size, capture: true)
+            try await verifyExpanded(AnyView(TitleForm(heading: "New Folder", title: "") { _ in true }),
+                                     name: "New-Folder-\(Int(size.width))", size: size, compact: true, capture: true)
         }
+        try await verifyExpanded(AnyView(TitleForm(heading: "New Folder", title: "") { _ in true }
+            .environment(\.dynamicTypeSize, .accessibility3)), name: "New-Folder-Large-Text",
+                                 size: CGSize(width: 820, height: 1180), capture: true)
     }
 
-    private func verifyExpanded(_ content: AnyView, name: String, size: CGSize, capture: Bool = false) async throws {
+    private func verifyExpanded(_ content: AnyView, name: String, size: CGSize, compact: Bool = false, capture: Bool = false) async throws {
         let scene = try XCTUnwrap(UIApplication.shared.connectedScenes.compactMap { $0 as? UIWindowScene }.first)
         let window = UIWindow(windowScene: scene); window.frame = CGRect(origin: .zero, size: size)
         let state = ModalTestState(), host = UIHostingController(rootView: ModalTestHost(state: state, content: content))
@@ -69,8 +77,24 @@ import SwiftData
         try await Task.sleep(for: .milliseconds(450))
         presented.view.layoutIfNeeded()
         let frame = presented.view.convert(presented.view.bounds, to: window)
-        XCTAssertGreaterThan(frame.height, window.bounds.height * 0.80,
-                             "\(name) opened too short: \(frame), available \(window.bounds)")
+        if compact {
+            XCTAssertLessThan(frame.height, window.bounds.height * 0.65,
+                              "\(name) leaves too much unused space: \(frame)")
+            XCTAssertGreaterThan(frame.height, 150)
+            if name.contains("Folder") || name == "Rename" {
+                if let input = descendants(presented.view).compactMap({ $0 as? UITextField }).first {
+                    XCTAssertTrue(input.becomeFirstResponder())
+                    try await Task.sleep(for: .milliseconds(100))
+                    presented.view.layoutIfNeeded()
+                    XCTAssertTrue(input.isFirstResponder)
+                    XCTAssertTrue(presented.view.bounds.contains(input.convert(input.bounds, to: presented.view)))
+                    input.resignFirstResponder()
+                }
+            }
+        } else {
+            XCTAssertGreaterThan(frame.height, window.bounds.height * 0.80,
+                                 "\(name) opened too short: \(frame), available \(window.bounds)")
+        }
         XCTAssertLessThanOrEqual(frame.maxY, window.bounds.maxY + 1, "\(name) extends below the window")
         if capture {
             let image = UIGraphicsImageRenderer(size: window.bounds.size).image { _ in
@@ -82,4 +106,5 @@ import SwiftData
         host.dismiss(animated: false)
         try await Task.sleep(for: .milliseconds(80))
     }
+    private func descendants(_ view: UIView) -> [UIView] { [view] + view.subviews.flatMap(descendants) }
 }
