@@ -95,6 +95,13 @@
 			<key>sourceTree</key>
 			<string>SOURCE_ROOT</string>
 		</dict>
+		<key>07E9343F82264A1FB633CC34</key>
+		<dict>
+			<key>fileRef</key>
+			<string>3082C265D0FEC63825BB36A3</string>
+			<key>isa</key>
+			<string>PBXBuildFile</string>
+		</dict>
 		<key>08281FE8CDF3A16CEB1A6164</key>
 		<dict>
 			<key>isa</key>
@@ -603,6 +610,17 @@
 			<key>name</key>
 			<string>Release</string>
 		</dict>
+		<key>3082C265D0FEC63825BB36A3</key>
+		<dict>
+			<key>isa</key>
+			<string>PBXFileReference</string>
+			<key>lastKnownFileType</key>
+			<string>sourcecode.swift</string>
+			<key>path</key>
+			<string>NotesApp/Features/Study/ViewModels/StudyReviewSession.swift</string>
+			<key>sourceTree</key>
+			<string>SOURCE_ROOT</string>
+		</dict>
 		<key>30CCBBD6C2AC2D15B0C98047</key>
 		<dict>
 			<key>fileRef</key>
@@ -1099,6 +1117,13 @@
 			<key>isa</key>
 			<string>PBXBuildFile</string>
 		</dict>
+		<key>5B338AE219211D258C4AB271</key>
+		<dict>
+			<key>fileRef</key>
+			<string>6CF7F1D54F555C39197DEB0C</string>
+			<key>isa</key>
+			<string>PBXBuildFile</string>
+		</dict>
 		<key>5DA26730F478F0B6DC8117A5</key>
 		<dict>
 			<key>isa</key>
@@ -1267,6 +1292,17 @@
 			<string>07E7F84314CB97756E658F3C</string>
 			<key>isa</key>
 			<string>PBXBuildFile</string>
+		</dict>
+		<key>6CF7F1D54F555C39197DEB0C</key>
+		<dict>
+			<key>isa</key>
+			<string>PBXFileReference</string>
+			<key>lastKnownFileType</key>
+			<string>sourcecode.swift</string>
+			<key>path</key>
+			<string>NotesApp/Features/Study/ViewModels/StudyViewModel.swift</string>
+			<key>sourceTree</key>
+			<string>SOURCE_ROOT</string>
 		</dict>
 		<key>6D05C5C76C7A683BEF9163B0</key>
 		<dict>
@@ -1915,6 +1951,17 @@
 			<key>sourceTree</key>
 			<string>SOURCE_ROOT</string>
 		</dict>
+		<key>95FE3DC708A02737174ACE9F</key>
+		<dict>
+			<key>isa</key>
+			<string>PBXFileReference</string>
+			<key>lastKnownFileType</key>
+			<string>sourcecode.swift</string>
+			<key>path</key>
+			<string>NotesApp/Features/Study/Services/ReviewScheduler.swift</string>
+			<key>sourceTree</key>
+			<string>SOURCE_ROOT</string>
+		</dict>
 		<key>96842E65035416557599CF6C</key>
 		<dict>
 			<key>isa</key>
@@ -2022,6 +2069,13 @@
 		<dict>
 			<key>fileRef</key>
 			<string>D3AE121B9C70354C6A2BC049</string>
+			<key>isa</key>
+			<string>PBXBuildFile</string>
+		</dict>
+		<key>A0365D1D6FCD114877881482</key>
+		<dict>
+			<key>fileRef</key>
+			<string>95FE3DC708A02737174ACE9F</string>
 			<key>isa</key>
 			<string>PBXBuildFile</string>
 		</dict>
@@ -2485,6 +2539,9 @@
 				<string>E6DEEABFB2CF32E1E457C49E</string>
 				<string>0D21F5D97DAA7964CB175E51</string>
 				<string>EB207AF9C83EAD183A681941</string>
+				<string>A0365D1D6FCD114877881482</string>
+				<string>07E9343F82264A1FB633CC34</string>
+				<string>5B338AE219211D258C4AB271</string>
 			</array>
 			<key>isa</key>
 			<string>PBXSourcesBuildPhase</string>
@@ -3149,6 +3206,9 @@
 				<string>144BD0F0BB7B4497075A4DC8</string>
 				<string>4C578EFBADCD9C53964D0DB9</string>
 				<string>F246AC41166085C8A3D73E42</string>
+				<string>95FE3DC708A02737174ACE9F</string>
+				<string>3082C265D0FEC63825BB36A3</string>
+				<string>6CF7F1D54F555C39197DEB0C</string>
 			</array>
 			<key>isa</key>
 			<string>PBXGroup</string>
