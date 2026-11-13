@@ -27,6 +27,13 @@ final class EditorSession {
     @ObservationIgnored private var savedRevision = 0
     @ObservationIgnored private var debounce: Task<Void, Never>?
     @ObservationIgnored private var saving: Task<Bool, Never>?
+    @ObservationIgnored let pagePreparation = PagePreparationService()
+    @ObservationIgnored private var neighboringPages: Task<Void, Never>?
+    @ObservationIgnored private var priorityPreparation: Task<Void, Never>?
+    @ObservationIgnored private(set) var preparedIdentity: UUID?
+    @ObservationIgnored private(set) var preparedNeighbors: [PreparedCanvasPage] = []
+    @ObservationIgnored var onPreparedNeighbor: ((PreparedCanvasPage) -> Void)?
+    @ObservationIgnored var onDiscardPreparedCanvases: (() -> Void)?
 
     init(notebook: Notebook, context: ModelContext, storage: DrawingStorage = .shared, handwriting: HandwritingAssistant? = nil) {
         self.notebook = notebook; self.context = context; self.storage = storage
@@ -40,9 +47,11 @@ final class EditorSession {
 
     func open(_ target: NotePage) async {
         guard !busy else { return }
+        let opening = PageTurnDiagnostics.signposter.beginInterval("PageOpen", id: PageTurnDiagnostics.signposter.makeSignpostID())
+        defer { PageTurnDiagnostics.signposter.endInterval("PageOpen", opening) }
         handwriting.cancel()
         busy = true
-        defer { busy = false }
+        defer { busy = false; priorityPreparation?.cancel(); priorityPreparation = nil }
         let previousIndex = page?.pageIndex
         let previousID = page?.id
         let request = PageLoadRequest(drawingPath: target.drawingFilePath,
@@ -50,25 +59,85 @@ final class EditorSession {
                                       pdfPath: target.pdfFilePath, pdfIndex: target.pdfPageIndex)
         // A different page can load while outgoing ink saves. Never race a same-file reload.
         let canOverlap = target.id != previousID && request.resolvedDrawingPath != path
-        let loading: Task<LoadedNotePage, Error>? = canOverlap ? Task { [storage] in
-            try await PageLoader.load(request, storage: storage)
+        let preparedRequest = PagePreparationRequest(pageID: target.id, source: request, objectsData: target.objectsData)
+        let loading: Task<PreparedPageContent, Error>? = canOverlap ? Task { [storage, pagePreparation] in
+            try await pagePreparation.content(preparedRequest, storage: storage)
         } : nil
-        guard await flush() else { loading?.cancel(); return }
+        let saving = PageTurnDiagnostics.signposter.beginInterval("FlushBeforeOpen", id: PageTurnDiagnostics.signposter.makeSignpostID())
+        let saved = await flush()
+        PageTurnDiagnostics.signposter.endInterval("FlushBeforeOpen", saving)
+        guard saved else { loading?.cancel(); return }
         do {
-            let content = try await PageLoader.elements(target.objectsData)
-            let images = try await PageImageService.load(content, storage: storage)
-            let loaded: LoadedNotePage
+            let loaded: PreparedPageContent
             if let loading { loaded = try await loading.value }
-            else { loaded = try await PageLoader.load(request, storage: storage) }
+            else { loaded = try await pagePreparation.content(preparedRequest, storage: storage) }
             // Keep the old canvas visible until the destination has loaded completely.
             pageTurnDirection = target.pageIndex >= (previousIndex ?? 0) ? 1 : -1
             page = target; drawing = loaded.drawing; pdfBackground = loaded.background
-            elements = content; objectImages = images; revealedTapes = []; selectedElementID = nil
+            preparedIdentity = loaded.identity
+            elements = loaded.elements; objectImages = loaded.images; revealedTapes = []; selectedElementID = nil
             handwriting.reset(to: loaded.drawing)
             revision = 0; savedRevision = 0; hasPendingSave = false
             if previousID != target.id { canvas = nil }
             ready = true; status = "Saved on iPad"
+            prepareNeighboringPages()
         } catch { loading?.cancel(); page = target; ready = false; canvas = nil; status = "Page unavailable"; errorMessage = "The page could not be opened. Its files have been preserved. \(error.localizedDescription)" }
+    }
+
+    private func preparationRequest(_ page: NotePage) -> PagePreparationRequest {
+        PagePreparationRequest(pageID: page.id,
+            source: PageLoadRequest(drawingPath: page.drawingFilePath,
+                                    fallbackDrawingPath: DrawingStorage.path(notebook: notebook.id, page: page.id),
+                                    pdfPath: page.pdfFilePath, pdfIndex: page.pdfPageIndex), objectsData: page.objectsData)
+    }
+
+    private func prepareNeighboringPages() {
+        neighboringPages?.cancel()
+        preparedNeighbors = []
+        guard let page else { return }
+        let originID = page.id
+        let requests = [1, -1].compactMap { direction in
+            notebook.pages.first { $0.pageIndex == page.pageIndex + direction }
+        }.filter {
+            ($0.drawingFilePath ?? DrawingStorage.path(notebook: notebook.id, page: $0.id)) != path
+        }.map(preparationRequest)
+        neighboringPages = Task(priority: .utility) { [weak self, pagePreparation, storage] in
+            await withTaskGroup(of: (UUID, PreparedPageContent?).self) { group in
+                for request in requests {
+                    group.addTask { (request.pageID, try? await pagePreparation.content(request, storage: storage)) }
+                }
+                for await (id, content) in group {
+                    guard !Task.isCancelled, let self, self.page?.id == originID,
+                          let content, let target = self.notebook.pages.first(where: { $0.id == id }) else { continue }
+                    let prepared = PreparedCanvasPage(page: target, content: content)
+                    self.preparedNeighbors.append(prepared)
+                    self.onPreparedNeighbor?(prepared)
+                }
+            }
+        }
+    }
+
+    func prioritizePageTurn(_ direction: Int) {
+        priorityPreparation?.cancel()
+        guard ready, !busy, let page,
+              let target = notebook.pages.first(where: { $0.pageIndex == page.pageIndex + direction }) else { return }
+        let request = preparationRequest(target)
+        guard request.source.resolvedDrawingPath != path else { return }
+        priorityPreparation = Task(priority: .userInitiated) { [pagePreparation, storage] in
+            _ = try? await pagePreparation.content(request, storage: storage)
+        }
+    }
+
+    func stopPreparingPages() {
+        neighboringPages?.cancel(); neighboringPages = nil
+        priorityPreparation?.cancel(); priorityPreparation = nil
+    }
+
+    func discardPreparedPages() {
+        stopPreparingPages()
+        preparedNeighbors = []
+        onDiscardPreparedCanvases?()
+        Task { await pagePreparation.clear() }
     }
 
     func changed(_ value: PKDrawing) {

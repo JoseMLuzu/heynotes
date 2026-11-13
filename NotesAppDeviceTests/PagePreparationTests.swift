@@ -99,6 +99,41 @@ import PencilKit
         XCTAssertEqual(stats.loads, 1); XCTAssertEqual(stats.cachedPages, 0); XCTAssertEqual(stats.consumers, 0)
     }
 
+    func testSessionPreparesNeighborsAndStillSavesNewestInkBeforeReturning() async throws {
+        let fixture = try PreparationFixture()
+        defer { fixture.cleanup() }
+        let container = try PersistenceController.makeContainer(inMemory: true)
+        let notebook = Notebook(title: "Prepared notebook")
+        container.mainContext.insert(notebook)
+        for index in 0..<3 {
+            let page = NotePage(pageIndex: index)
+            container.mainContext.insert(page); notebook.pages.append(page)
+        }
+        try container.mainContext.save()
+        let ordered = notebook.orderedPages
+        let session = EditorSession(notebook: notebook, context: container.mainContext, storage: fixture.storage)
+        defer { session.stopPreparingPages(); withExtendedLifetime(container) {} }
+        await session.open(ordered[1])
+        for _ in 0..<100 {
+            let stats = await session.pagePreparation.statistics()
+            if stats.cachedPages == 3 && stats.consumers == 0 { break }
+            try await Task.sleep(for: .milliseconds(5))
+        }
+        let prepared = await session.pagePreparation.statistics()
+        XCTAssertEqual(prepared.cachedPages, 3)
+        await session.turnPage(1)
+        XCTAssertEqual(session.page?.id, ordered[2].id)
+        let reused = await session.pagePreparation.statistics()
+        XCTAssertEqual(reused.loads, prepared.loads)
+        XCTAssertGreaterThan(reused.hits, prepared.hits)
+        session.changed(ink(3))
+        await session.turnPage(-1)
+        await session.turnPage(1)
+        XCTAssertEqual(session.drawing.strokes.count, 3)
+        let saved = try await fixture.storage.read(try XCTUnwrap(ordered[2].drawingFilePath))
+        XCTAssertEqual(try PKDrawing(data: saved).strokes.count, 3)
+    }
+
     func testRepeatedWarmPreparationAvoidsDrawingAndRichContentDecoding() async throws {
         let fixture = try PreparationFixture()
         defer { fixture.cleanup() }

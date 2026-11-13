@@ -219,6 +219,9 @@ struct LibraryView: View {
             }
         }
         .task { await workspace.restore() }
+        .onReceive(NotificationCenter.default.publisher(for: UIApplication.didReceiveMemoryWarningNotification)) { _ in
+            workspace.activeSession?.discardPreparedPages()
+        }
         .onChange(of: scenePhase) { _, phase in if phase != .active { workspace.backgroundSave() } }
 
         .overlay {

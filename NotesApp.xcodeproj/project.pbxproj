@@ -464,6 +464,13 @@
 			<key>sourceTree</key>
 			<string>SOURCE_ROOT</string>
 		</dict>
+		<key>28AB7F808697D64AC394A9C4</key>
+		<dict>
+			<key>fileRef</key>
+			<string>5AFAFC5178B5640225EDB955</string>
+			<key>isa</key>
+			<string>PBXBuildFile</string>
+		</dict>
 		<key>28B913327CACC5AD1B93E285</key>
 		<dict>
 			<key>fileRef</key>
@@ -985,6 +992,17 @@
 			<string>sourcecode.swift</string>
 			<key>path</key>
 			<string>NotesApp/Features/Editor/Services/PageGesturePolicy.swift</string>
+			<key>sourceTree</key>
+			<string>SOURCE_ROOT</string>
+		</dict>
+		<key>5AFAFC5178B5640225EDB955</key>
+		<dict>
+			<key>isa</key>
+			<string>PBXFileReference</string>
+			<key>lastKnownFileType</key>
+			<string>sourcecode.swift</string>
+			<key>path</key>
+			<string>NotesApp/Features/Editor/Components/PreparedCanvasPage.swift</string>
 			<key>sourceTree</key>
 			<string>SOURCE_ROOT</string>
 		</dict>
@@ -2116,6 +2134,17 @@
 			<key>sourceTree</key>
 			<string>SOURCE_ROOT</string>
 		</dict>
+		<key>B70C290BDCC75374CB64D6FA</key>
+		<dict>
+			<key>isa</key>
+			<string>PBXFileReference</string>
+			<key>lastKnownFileType</key>
+			<string>sourcecode.swift</string>
+			<key>path</key>
+			<string>NotesApp/Features/Editor/Services/PageTurnDiagnostics.swift</string>
+			<key>sourceTree</key>
+			<string>SOURCE_ROOT</string>
+		</dict>
 		<key>B72786B3C9DB958071827127</key>
 		<dict>
 			<key>fileRef</key>
@@ -2162,6 +2191,13 @@
 			<string>NotesApp/Features/PDF/Services/LibraryPDFImport.swift</string>
 			<key>sourceTree</key>
 			<string>SOURCE_ROOT</string>
+		</dict>
+		<key>BB25111A75FC3435B4207EEC</key>
+		<dict>
+			<key>fileRef</key>
+			<string>B70C290BDCC75374CB64D6FA</string>
+			<key>isa</key>
+			<string>PBXBuildFile</string>
 		</dict>
 		<key>BCE16DD0260827ECF338C787</key>
 		<dict>
@@ -2271,6 +2307,8 @@
 				<string>D1CF24DC5446943F9AED6744</string>
 				<string>FC110BF767E725C4959C3656</string>
 				<string>2E0AC78E3D4506BE1752DA86</string>
+				<string>28AB7F808697D64AC394A9C4</string>
+				<string>BB25111A75FC3435B4207EEC</string>
 			</array>
 			<key>isa</key>
 			<string>PBXSourcesBuildPhase</string>
@@ -2890,6 +2928,8 @@
 				<string>1CC90E52F01D7DAD4A47565C</string>
 				<string>FB933A6A834475C33552BFD7</string>
 				<string>D2F21FBCD742B9FA45326E17</string>
+				<string>5AFAFC5178B5640225EDB955</string>
+				<string>B70C290BDCC75374CB64D6FA</string>
 			</array>
 			<key>isa</key>
 			<string>PBXGroup</string>

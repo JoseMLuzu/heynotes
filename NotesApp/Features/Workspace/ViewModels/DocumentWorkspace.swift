@@ -143,6 +143,7 @@ final class DocumentWorkspace {
 
     private func saveCurrent() async -> Bool {
         guard let session = activeSession else { return true }
+        session.stopPreparingPages()
         session.handwriting.cancel()
         guard await session.flush() else { return false }
         if let page = session.page { saved.pages[session.notebook.id] = page.id }
@@ -165,6 +166,7 @@ final class DocumentWorkspace {
     }
 
     private func releaseCanvas() {
+        activeSession?.stopPreparingPages()
         activeSession?.handwriting.cancel()
         activeSession?.canvas?.delegate = nil
         activeSession?.canvas = nil
