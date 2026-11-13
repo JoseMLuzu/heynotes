@@ -4,7 +4,7 @@ import SwiftData
 @MainActor
 public enum PersistenceController {
     public static func makeContainer(inMemory: Bool = false, storeURL: URL? = nil) throws -> ModelContainer {
-        let schema = Schema(versionedSchema: NotesSchemaV5.self)
+        let schema = Schema(versionedSchema: NotesSchemaV6.self)
         let configuration: ModelConfiguration
         if let storeURL {
             configuration = ModelConfiguration(schema: schema, url: storeURL, cloudKitDatabase: .none)

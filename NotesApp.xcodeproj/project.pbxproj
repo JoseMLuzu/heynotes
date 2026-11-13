@@ -185,6 +185,13 @@
 			<key>isa</key>
 			<string>PBXBuildFile</string>
 		</dict>
+		<key>0D21F5D97DAA7964CB175E51</key>
+		<dict>
+			<key>fileRef</key>
+			<string>4C578EFBADCD9C53964D0DB9</string>
+			<key>isa</key>
+			<string>PBXBuildFile</string>
+		</dict>
 		<key>0D88EC6D96E4ECE2D8B1C717</key>
 		<dict>
 			<key>fileRef</key>
@@ -286,6 +293,17 @@
 			<string>sourcecode.swift</string>
 			<key>path</key>
 			<string>NotesApp/Core/Components/ColorChoiceButton.swift</string>
+			<key>sourceTree</key>
+			<string>SOURCE_ROOT</string>
+		</dict>
+		<key>144BD0F0BB7B4497075A4DC8</key>
+		<dict>
+			<key>isa</key>
+			<string>PBXFileReference</string>
+			<key>lastKnownFileType</key>
+			<string>sourcecode.swift</string>
+			<key>path</key>
+			<string>NotesApp/Core/Models/ReviewRecord.swift</string>
 			<key>sourceTree</key>
 			<string>SOURCE_ROOT</string>
 		</dict>
@@ -956,6 +974,17 @@
 			<string>folder.assetcatalog</string>
 			<key>path</key>
 			<string>NotesApp/Resources/Assets.xcassets</string>
+			<key>sourceTree</key>
+			<string>SOURCE_ROOT</string>
+		</dict>
+		<key>4C578EFBADCD9C53964D0DB9</key>
+		<dict>
+			<key>isa</key>
+			<string>PBXFileReference</string>
+			<key>lastKnownFileType</key>
+			<string>sourcecode.swift</string>
+			<key>path</key>
+			<string>NotesApp/Core/Models/StudyDeck.swift</string>
 			<key>sourceTree</key>
 			<string>SOURCE_ROOT</string>
 		</dict>
@@ -2452,6 +2481,10 @@
 				<string>871A62CEBA84CB41076B2EF4</string>
 				<string>7FA0C7EA131C0250ADA47910</string>
 				<string>A32D091312891376B645DF73</string>
+				<string>FC7058979E4EAE204CB33119</string>
+				<string>E6DEEABFB2CF32E1E457C49E</string>
+				<string>0D21F5D97DAA7964CB175E51</string>
+				<string>EB207AF9C83EAD183A681941</string>
 			</array>
 			<key>isa</key>
 			<string>PBXSourcesBuildPhase</string>
@@ -2880,6 +2913,17 @@
 			<key>sourceTree</key>
 			<string>SOURCE_ROOT</string>
 		</dict>
+		<key>DDCB5F7808958214B7F1C071</key>
+		<dict>
+			<key>isa</key>
+			<string>PBXFileReference</string>
+			<key>lastKnownFileType</key>
+			<string>sourcecode.swift</string>
+			<key>path</key>
+			<string>NotesApp/Core/Models/Flashcard.swift</string>
+			<key>sourceTree</key>
+			<string>SOURCE_ROOT</string>
+		</dict>
 		<key>DDECC733803939A9C8945CC2</key>
 		<dict>
 			<key>isa</key>
@@ -3101,6 +3145,10 @@
 				<string>A6ED62E97157A6E11C417DF6</string>
 				<string>E981EE579BCA8378A75EAE0B</string>
 				<string>3F13BE3E460C5C106CDB07B2</string>
+				<string>DDCB5F7808958214B7F1C071</string>
+				<string>144BD0F0BB7B4497075A4DC8</string>
+				<string>4C578EFBADCD9C53964D0DB9</string>
+				<string>F246AC41166085C8A3D73E42</string>
 			</array>
 			<key>isa</key>
 			<string>PBXGroup</string>
@@ -3135,6 +3183,13 @@
 			<string>XCBuildConfiguration</string>
 			<key>name</key>
 			<string>Release</string>
+		</dict>
+		<key>E6DEEABFB2CF32E1E457C49E</key>
+		<dict>
+			<key>fileRef</key>
+			<string>144BD0F0BB7B4497075A4DC8</string>
+			<key>isa</key>
+			<string>PBXBuildFile</string>
 		</dict>
 		<key>E7C3987A1B6BDA3B7760FB61</key>
 		<dict>
@@ -3189,6 +3244,13 @@
 			<string>NotesApp/Features/Settings/Views/AppSettingsView.swift</string>
 			<key>sourceTree</key>
 			<string>SOURCE_ROOT</string>
+		</dict>
+		<key>EB207AF9C83EAD183A681941</key>
+		<dict>
+			<key>fileRef</key>
+			<string>F246AC41166085C8A3D73E42</string>
+			<key>isa</key>
+			<string>PBXBuildFile</string>
 		</dict>
 		<key>EB48512B2F3A07BE66EE1AE6</key>
 		<dict>
@@ -3249,6 +3311,17 @@
 			<string>sourcecode.swift</string>
 			<key>path</key>
 			<string>NotesApp/Features/Editor/Services/QuickPalettePreferences.swift</string>
+			<key>sourceTree</key>
+			<string>SOURCE_ROOT</string>
+		</dict>
+		<key>F246AC41166085C8A3D73E42</key>
+		<dict>
+			<key>isa</key>
+			<string>PBXFileReference</string>
+			<key>lastKnownFileType</key>
+			<string>sourcecode.swift</string>
+			<key>path</key>
+			<string>NotesApp/Core/Persistence/SchemaV5.swift</string>
 			<key>sourceTree</key>
 			<string>SOURCE_ROOT</string>
 		</dict>
@@ -3432,6 +3505,13 @@
 		<dict>
 			<key>fileRef</key>
 			<string>8BC862231D329DAC736526E1</string>
+			<key>isa</key>
+			<string>PBXBuildFile</string>
+		</dict>
+		<key>FC7058979E4EAE204CB33119</key>
+		<dict>
+			<key>fileRef</key>
+			<string>DDCB5F7808958214B7F1C071</string>
 			<key>isa</key>
 			<string>PBXBuildFile</string>
 		</dict>

@@ -84,17 +84,20 @@ public enum NotesSchemaV1: VersionedSchema {
     }
 }
 
-public enum NotesSchemaV5: VersionedSchema {
-    public static var versionIdentifier: Schema.Version { .init(5, 0, 0) }
-    public static var models: [any PersistentModel.Type] { [Folder.self, Notebook.self, NotePage.self, NotebookSection.self] }
+public enum NotesSchemaV6: VersionedSchema {
+    public static var versionIdentifier: Schema.Version { .init(6, 0, 0) }
+    public static var models: [any PersistentModel.Type] {
+        [Folder.self, Notebook.self, NotePage.self, NotebookSection.self, StudyDeck.self, Flashcard.self, ReviewRecord.self]
+    }
 }
 
 public enum NotesMigrationPlan: SchemaMigrationPlan {
-    public static var schemas: [any VersionedSchema.Type] { [NotesSchemaV1.self, NotesSchemaV2.self, NotesSchemaV3.self, NotesSchemaV4.self, NotesSchemaV5.self] }
+    public static var schemas: [any VersionedSchema.Type] { [NotesSchemaV1.self, NotesSchemaV2.self, NotesSchemaV3.self, NotesSchemaV4.self, NotesSchemaV5.self, NotesSchemaV6.self] }
     public static var stages: [MigrationStage] {
         [.lightweight(fromVersion: NotesSchemaV1.self, toVersion: NotesSchemaV2.self),
          .lightweight(fromVersion: NotesSchemaV2.self, toVersion: NotesSchemaV3.self),
          .lightweight(fromVersion: NotesSchemaV3.self, toVersion: NotesSchemaV4.self),
-         .lightweight(fromVersion: NotesSchemaV4.self, toVersion: NotesSchemaV5.self)]
+         .lightweight(fromVersion: NotesSchemaV4.self, toVersion: NotesSchemaV5.self),
+         .lightweight(fromVersion: NotesSchemaV5.self, toVersion: NotesSchemaV6.self)]
     }
 }
