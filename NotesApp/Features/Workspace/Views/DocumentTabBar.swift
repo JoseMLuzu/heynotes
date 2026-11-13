@@ -111,6 +111,7 @@ struct DocumentTabBar<TrailingActions: View>: View {
 
     private func tab(_ notebook: Notebook, width: CGFloat) -> some View {
         let selected = workspace.activeID == notebook.id
+        let visibleSession = workspace.visibleSessions.first { $0.notebook.id == notebook.id }
         return HStack(spacing: 0) {
             Button { Task { await workspace.open(notebook) } } label: {
                 HStack(spacing: 7) {
@@ -118,7 +119,7 @@ struct DocumentTabBar<TrailingActions: View>: View {
                     Text(notebook.title).fontWeight(selected ? .semibold : .regular)
                         .foregroundStyle(selected ? .primary : .secondary)
                         .lineLimit(1).truncationMode(.tail)
-                    if selected, let session = workspace.activeSession {
+                    if let session = visibleSession {
                         Circle()
                             .fill(session.hasPendingSave || !session.ready ? Color.orange : Color.blue)
                             .frame(width: 7, height: 7)
@@ -148,6 +149,12 @@ struct DocumentTabBar<TrailingActions: View>: View {
                         Capsule().fill(notebook.coverColor.color).frame(height: 2).padding(.horizontal, 12)
                     }
             }
+        }
+        .contextMenu {
+            if workspace.activeSession != nil && workspace.activeID != notebook.id {
+                Button("Open Beside", systemImage: "rectangle.split.2x1") { Task { _ = await workspace.openBeside(notebook) } }
+            }
+            Button("Close Tab", systemImage: "xmark") { Task { _ = await workspace.close(notebook.id) } }
         }
     }
 }

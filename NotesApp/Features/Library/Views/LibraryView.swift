@@ -169,9 +169,8 @@ struct LibraryView: View {
                     }
                     Group {
                         if let session = workspace.activeSession {
-                            EditorView(session: session, onLibrary: showLibrary, workspace: workspace, toggleSidebar: toggleSidebar, focusMode: focusMode)
-                                .onChange(of: session.page?.id) { _, _ in workspace.rememberCurrentPage() }
-                                .disabled(workspace.isSwitching)
+                            WorkspaceEditorView(workspace: workspace, focusMode: focusMode,
+                                                showLibrary: showLibrary, toggleSidebar: toggleSidebar)
                                 .transition(openingTransition(for: session.notebook.id))
                                 .zIndex(1)
                         } else if navigation.selection == .trash {
@@ -187,7 +186,7 @@ struct LibraryView: View {
                     .animation(openingAnimation, value: workspace.activeID)
                 }
                 .onChange(of: workspace.activeID) { _, id in
-                    focusMode.exit()
+                    if id == nil || focusMode.documentID != id { focusMode.exit() }
                     if id != nil { navigation.studyPath.removeAll() }
                     if openingSource?.id != id { openingSource = nil }
                 }
@@ -228,7 +227,7 @@ struct LibraryView: View {
             compactColumn = .detail
         }
         .onReceive(NotificationCenter.default.publisher(for: UIApplication.didReceiveMemoryWarningNotification)) { _ in
-            workspace.activeSession?.discardPreparedPages()
+            workspace.discardPreparedPages()
         }
         .onChange(of: scenePhase) { _, phase in if phase != .active { workspace.backgroundSave() } }
 
@@ -375,6 +374,8 @@ struct LibraryView: View {
             columnVisibility = columnVisibility == .detailOnly ? .all : .detailOnly
         }
     }
+
+
 
     private func showLibrary() {
         Task { if await workspace.showLibrary() { model.reload() } }

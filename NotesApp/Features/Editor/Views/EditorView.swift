@@ -9,6 +9,8 @@ struct EditorView: View {
     let onLibrary: () -> Void
     var workspace: DocumentWorkspace? = nil
     var toggleSidebar: (() -> Void)? = nil
+    let showsWorkspaceTabs: Bool
+    let isSplitPane: Bool
     @Environment(\.horizontalSizeClass) private var sizeClass
     @StateObject private var controls: EditorControlPreferences
     private var preferences: ToolPreferences { controls.tools }
@@ -37,9 +39,11 @@ struct EditorView: View {
          workspace: DocumentWorkspace? = nil, toggleSidebar: (() -> Void)? = nil,
          toolbarPlacement: EditorToolbarPreferences? = nil, focusMode: EditorFocusMode? = nil,
          palette: QuickPalettePreferences? = nil, preferencesDefaults: UserDefaults = .standard,
-         controls: EditorControlPreferences? = nil) {
+         controls: EditorControlPreferences? = nil,
+         showsWorkspaceTabs: Bool = true, isSplitPane: Bool = false) {
         self.session = session; self.onLibrary = onLibrary
         self.workspace = workspace; self.toggleSidebar = toggleSidebar
+        self.showsWorkspaceTabs = showsWorkspaceTabs; self.isSplitPane = isSplitPane
         _toolbarPlacement = State(initialValue: toolbarPlacement ?? EditorToolbarPreferences.shared)
         _focusMode = State(initialValue: focusMode ?? EditorFocusMode())
         _controls = StateObject(wrappedValue: controls ?? EditorControlPreferences(defaults: preferencesDefaults, palette: palette))
@@ -50,7 +54,8 @@ struct EditorView: View {
             Group {
                 if session.ready {
                     EditorCanvasContent(session: session, tools: preferences, fingerDrawing: fingerDrawing,
-                                        onPencilDoubleTap: handlePencilDoubleTap)
+                                        onPencilDoubleTap: handlePencilDoubleTap,
+                                        onInteraction: { workspace?.focus(session.notebook.id) })
                         // Give the new notebook its own canvas without rebuilding the toolbar and tabs.
                         .id(session.notebook.id)
                         .allowsHitTesting(!session.busy)
@@ -84,7 +89,7 @@ struct EditorView: View {
         .toolbar(.hidden, for: .navigationBar)
         .statusBarHidden(focusMode.isActive)
         .persistentSystemOverlays(focusMode.isActive ? .hidden : .automatic)
-        .background(FocusSplitViewPolicy(focused: focusMode.isActive))
+        .background(FocusSplitViewPolicy(focused: focusMode.isActive && (workspace == nil || showsWorkspaceTabs)))
         .safeAreaInset(edge: .bottom, spacing: 0) {
             if !focusMode.isActive && toolbarPlacement.position == .bottom {
                 toolBar.frame(height: 52).padding(.horizontal, 12).padding(.vertical, 8)
@@ -100,7 +105,7 @@ struct EditorView: View {
         .safeAreaInset(edge: .top, spacing: 0) {
             if !focusMode.isActive {
                 VStack(spacing: 0) {
-                    if let workspace {
+                    if showsWorkspaceTabs, let workspace {
                         DocumentTabBar(workspace: workspace, showLibrary: onLibrary,
                                        toggleSidebar: toggleSidebar ?? onLibrary, showsRecents: false) {
                             pageOptions.labelStyle(.iconOnly).frame(width: 44, height: 44)
@@ -190,11 +195,12 @@ struct EditorView: View {
         } message: { Text("The page will be removed from this notebook. Its drawing file is retained locally for recovery.") }
     }
 
-    private var isCurrentSession: Bool { workspace == nil || workspace?.activeSession === session }
+    private var isCurrentSession: Bool { workspace == nil || workspace?.contains(session) == true }
     private var canFinishImport: Bool { isCurrentSession && workspace?.isSwitching != true }
 
     private func handlePencilDoubleTap(_ action: UIPencilPreferredAction) {
-        guard isCurrentSession, session.ready, !session.busy, !session.exporting,
+        guard isCurrentSession, workspace == nil || workspace?.activeSession === session,
+              session.ready, !session.busy, !session.exporting,
               workspace?.isSwitching != true, session.errorMessage == nil,
               !showingPages, !showingTemplates, !showingContent,
               !showingHandwritingStyle, !showingMargin, !showingPhotos, !showingImageFile, studySource == nil,
@@ -229,14 +235,15 @@ struct EditorView: View {
     private var editorHeader: some View {
         VStack(spacing: 4) {
             HStack(spacing: 8) {
-                Button(action: onLibrary) {
+                if !isSplitPane { Button(action: onLibrary) {
                     Image(systemName: "chevron.left").frame(width: 44, height: 44)
                 }
                 .accessibilityLabel("Back to Library")
                 .modifier(EditorGlassSurface(shape: Circle()))
                 .allowsHitTesting(!session.busy)
+                }
 
-                if sizeClass == .compact || toolbarPlacement.position != .top {
+                if isSplitPane || sizeClass == .compact || toolbarPlacement.position != .top {
                     Spacer(minLength: 0)
                 } else {
                     toolBar.frame(minWidth: 44, maxWidth: .infinity).frame(height: 52)
@@ -255,7 +262,7 @@ struct EditorView: View {
                     Divider().frame(height: 20).padding(.horizontal, 4)
                     bookmarkButton
                     pageControls
-                    if workspace == nil {
+                    if workspace == nil || !showsWorkspaceTabs {
                         pageOptions.labelStyle(.iconOnly).frame(width: 44, height: 44)
                     }
                 }
@@ -265,12 +272,13 @@ struct EditorView: View {
 
             }
             // Narrow iPad windows keep all actions at the top without squeezing the tools.
-            if sizeClass == .compact && toolbarPlacement.position == .top { toolBar.frame(height: 52) }
+            if (isSplitPane || sizeClass == .compact) && toolbarPlacement.position == .top { toolBar.frame(height: 52) }
         }
         .buttonStyle(EditorToolbarButtonStyle())
         .padding(.horizontal, 12)
         .padding(.vertical, 6)
         .background(AppTheme.headerBackground)
+        .simultaneousGesture(TapGesture().onEnded { workspace?.focus(session.notebook.id) })
     }
 
     private var bookmarkButton: some View {
@@ -298,7 +306,9 @@ struct EditorView: View {
             placement: toolbarPlacement, fingerDrawing: fingerDrawing,
             setFingerDrawing: { fingerDrawing = $0 }, present: { destination in
                 switch destination {
-                case .focus: focusMode.enter()
+                case .focus:
+                    workspace?.focus(session.notebook.id)
+                    focusMode.enter(documentID: session.notebook.id)
                 case .content: showingContent = true
                 case .margin: showingMargin = true
                 case .templates: showingTemplates = true

@@ -10,6 +10,13 @@
 	<string>56</string>
 	<key>objects</key>
 	<dict>
+		<key>00C07AE719436B6B4EC852F6</key>
+		<dict>
+			<key>fileRef</key>
+			<string>29C8423124255F56F4314A43</string>
+			<key>isa</key>
+			<string>PBXBuildFile</string>
+		</dict>
 		<key>00E9E6EF56219CD5ABCF2836</key>
 		<dict>
 			<key>isa</key>
@@ -545,6 +552,17 @@
 			<string>7A0D578ABE2A24472D8F29A9</string>
 			<key>isa</key>
 			<string>PBXBuildFile</string>
+		</dict>
+		<key>29C8423124255F56F4314A43</key>
+		<dict>
+			<key>isa</key>
+			<string>PBXFileReference</string>
+			<key>lastKnownFileType</key>
+			<string>sourcecode.swift</string>
+			<key>path</key>
+			<string>NotesApp/Features/Workspace/Views/WorkspaceEditorView.swift</string>
+			<key>sourceTree</key>
+			<string>SOURCE_ROOT</string>
 		</dict>
 		<key>2AF75DA208E8481EB9A632BA</key>
 		<dict>
@@ -1257,6 +1275,17 @@
 			<key>isa</key>
 			<string>PBXBuildFile</string>
 		</dict>
+		<key>630A1CC2F31537ED3BA19450</key>
+		<dict>
+			<key>isa</key>
+			<string>PBXFileReference</string>
+			<key>lastKnownFileType</key>
+			<string>sourcecode.swift</string>
+			<key>path</key>
+			<string>NotesApp/Features/Workspace/Views/SplitDocumentPicker.swift</string>
+			<key>sourceTree</key>
+			<string>SOURCE_ROOT</string>
+		</dict>
 		<key>639A7CA24D39909E713B47F7</key>
 		<dict>
 			<key>buildSettings</key>
@@ -1372,6 +1401,13 @@
 		<dict>
 			<key>fileRef</key>
 			<string>82C3BFAB538CAC81ED47B2E9</string>
+			<key>isa</key>
+			<string>PBXBuildFile</string>
+		</dict>
+		<key>687E21616DB1774242557C3E</key>
+		<dict>
+			<key>fileRef</key>
+			<string>630A1CC2F31537ED3BA19450</string>
 			<key>isa</key>
 			<string>PBXBuildFile</string>
 		</dict>
@@ -2763,6 +2799,8 @@
 				<string>E338477DB750193C0B89B13B</string>
 				<string>C5CE2B3B3DBAC3F8CBA85B50</string>
 				<string>E8E938A107242C0AE12043D0</string>
+				<string>687E21616DB1774242557C3E</string>
+				<string>00C07AE719436B6B4EC852F6</string>
 				<string>DCA2CBFC94A7FECB14AB95C3</string>
 				<string>B037D916690E274048F4B2FF</string>
 				<string>0850111ABE3A881AFD3DEEB9</string>
@@ -3464,6 +3502,8 @@
 				<string>8960E77BCDFC247A3003C519</string>
 				<string>6E2296555AAA39B54D31A066</string>
 				<string>3EF388E83F683007497D33C6</string>
+				<string>630A1CC2F31537ED3BA19450</string>
+				<string>29C8423124255F56F4314A43</string>
 				<string>5DFB6D06EF10030A38094CAF</string>
 				<string>71F523531AE3C44D24F87D0E</string>
 				<string>A6FF88F516373C638E94CEBB</string>
