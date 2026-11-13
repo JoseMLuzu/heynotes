@@ -5,6 +5,67 @@ import PencilKit
 @testable import NotesApp
 
 @MainActor final class LibraryNavigationTests: XCTestCase {
+    func testPortraitSidebarPreservesContentSpaceAndRestoresLandscapeLayout() async throws {
+        let container = try PersistenceController.makeContainer(inMemory: true)
+        let context = container.mainContext
+        for title in ["University", "Personal", "Projects"] { context.insert(Folder(title: title)) }
+        let notebook = Notebook(title: "Biology"), page = NotePage(pageIndex: 0)
+        context.insert(notebook); context.insert(page); notebook.pages = [page]
+        try context.save()
+        let suite = "PortraitSidebar.\(UUID())", defaults = try XCTUnwrap(UserDefaults(suiteName: suite))
+        defer { defaults.removePersistentDomain(forName: suite) }
+        let workspace = DocumentWorkspace(context: context, defaults: defaults)
+        let navigation = LibraryNavigation()
+        await workspace.restore()
+        let scene = try XCTUnwrap(UIApplication.shared.connectedScenes.compactMap { $0 as? UIWindowScene }.first)
+        let window = UIWindow(windowScene: scene)
+        window.frame = CGRect(x: 0, y: 0, width: 1180, height: 820)
+        let host = UIHostingController(rootView: LibraryView(context: context, workspace: workspace, navigation: navigation, columnVisibility: .all)
+            .modelContainer(container))
+        window.rootViewController = host; window.isHidden = false
+        defer { window.isHidden = true; window.rootViewController = nil }
+        host.view.frame = window.bounds
+        try await settle(host.view)
+        let split = try XCTUnwrap(controllers(host).compactMap { $0 as? UISplitViewController }.first)
+        XCTAssertEqual(split.displayMode, .oneBesideSecondary)
+        for size in [CGSize(width: 820, height: 1180), CGSize(width: 1032, height: 1376), CGSize(width: 620, height: 820)] {
+            window.frame.size = size; host.view.frame = window.bounds
+            try await settleSidebar(host.view)
+            if !split.isCollapsed { XCTAssertEqual(split.displayMode, .secondaryOnly, "Width: \(size.width)") }
+            let detail = try XCTUnwrap(split.viewController(for: .secondary)?.view)
+            XCTAssertGreaterThanOrEqual(detail.bounds.width, size.width - 40)
+            capture(window, name: "Library-Portrait-\(Int(size.width))-Closed")
+            if !split.isCollapsed {
+                split.show(.primary)
+                try await settleSidebar(host.view)
+                let sidebar = try XCTUnwrap(split.viewController(for: .primary)?.view)
+                XCTAssertLessThanOrEqual(sidebar.bounds.width, 250)
+                capture(window, name: "Library-Portrait-\(Int(size.width))-Open")
+                let folder = try XCTUnwrap(try context.fetch(FetchDescriptor<Folder>()).first)
+                navigation.open(folder)
+                try await settleSidebar(host.view)
+                XCTAssertEqual(split.displayMode, .secondaryOnly)
+                navigation.selection = .library
+            }
+            window.frame.size = CGSize(width: 1180, height: 820); host.view.frame = window.bounds
+            try await settleSidebar(host.view)
+            XCTAssertEqual(split.displayMode, .oneBesideSecondary)
+        }
+        // Layout changes must not recreate an active handwriting canvas.
+        _ = await workspace.open(notebook)
+        try await settle(host.view)
+        let canvas = try XCTUnwrap(workspace.activeSession?.canvas)
+        window.frame.size = CGSize(width: 820, height: 1180); host.view.frame = window.bounds
+        try await settle(host.view)
+        XCTAssertTrue(workspace.activeSession?.canvas === canvas)
+        XCTAssertEqual(split.displayMode, .secondaryOnly)
+        window.frame.size = CGSize(width: 1180, height: 820); host.view.frame = window.bounds
+        try await settle(host.view)
+        XCTAssertTrue(workspace.activeSession?.canvas === canvas)
+        XCTAssertEqual(split.displayMode, .secondaryOnly)
+        withExtendedLifetime(container) {}
+    }
+
     func testRestoringAnOpenEditorWithLibrarySortingRemainsResponsive() async throws {
         let defaults = UserDefaults.standard
         let previousSort = defaults.object(forKey: "library.sortOrder")
@@ -198,6 +259,19 @@ import PencilKit
         view.layoutIfNeeded()
         try await Task.sleep(for: .milliseconds(180))
         view.layoutIfNeeded()
+    }
+
+    private func controllers(_ controller: UIViewController) -> [UIViewController] {
+        [controller] + controller.children.flatMap(controllers)
+    }
+    private func settleSidebar(_ view: UIView) async throws {
+        view.layoutIfNeeded(); try await Task.sleep(for: .milliseconds(500)); view.layoutIfNeeded()
+    }
+    private func capture(_ window: UIWindow, name: String) {
+        let image = UIGraphicsImageRenderer(size: window.bounds.size).image { _ in
+            window.drawHierarchy(in: window.bounds, afterScreenUpdates: true)
+        }
+        let attachment = XCTAttachment(image: image); attachment.name = name; attachment.lifetime = .keepAlways; add(attachment)
     }
 
     private func backButton(in view: UIView) -> UIButton? {

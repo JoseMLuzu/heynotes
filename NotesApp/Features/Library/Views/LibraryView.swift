@@ -36,6 +36,8 @@ struct LibraryView: View {
     @State private var coloringFolder: Folder?
     @State private var showingSettings = false
     @State private var columnVisibility: NavigationSplitViewVisibility = .automatic
+    @State private var wideColumnVisibility: NavigationSplitViewVisibility = .automatic
+    @State private var compactSidebar = false
     @State private var compactColumn: NavigationSplitViewColumn = .detail
     @Environment(\.horizontalSizeClass) private var sizeClass
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
@@ -49,6 +51,7 @@ struct LibraryView: View {
         _workspace = State(initialValue: workspace ?? DocumentWorkspace(context: context))
         _focusMode = State(initialValue: focusMode ?? EditorFocusMode())
         _columnVisibility = State(initialValue: columnVisibility)
+        _wideColumnVisibility = State(initialValue: columnVisibility)
     }
 
     // Focus overrides presentation, retaining the user's normal layout for restoration.
@@ -103,12 +106,20 @@ struct LibraryView: View {
     }
 
     var body: some View {
+        GeometryReader { geometry in
+            content
+                .onChange(of: geometry.size.width < 1000 || geometry.size.height > geometry.size.width, initial: true) { _, compact in
+                    adaptSidebar(compact: compact)
+                }
+        }
+    }
+
+    private var content: some View {
         NavigationSplitView(columnVisibility: focusColumnVisibility, preferredCompactColumn: focusCompactColumn) {
             List(selection: Binding(get: { navigation.selection }, set: { destination in
                 Task {
                     if await workspace.showLibrary() {
                         navigation.selection = destination ?? .library; model.reload()
-                        if sizeClass == .compact { compactColumn = .detail }
                     }
                 }
             })) {
@@ -149,14 +160,17 @@ struct LibraryView: View {
             .navigationTitle("Notes")
             .toolbar(removing: .sidebarToggle)
             .toolbar {
-                if sizeClass == .compact {
+                if compactSidebar || sizeClass == .compact {
                     ToolbarItem(placement: .topBarTrailing) {
                         Button(action: toggleSidebar) { Image(systemName: "sidebar.left") }
                             .accessibilityLabel("Close Sidebar")
+                            .accessibilityIdentifier("library.closeSidebar")
                     }
                 }
             }
-            .navigationSplitViewColumnWidth(min: 230, ideal: 260, max: 320)
+            .navigationSplitViewColumnWidth(min: compactSidebar ? 220 : 230,
+                                            ideal: compactSidebar ? 236 : 260,
+                                            max: compactSidebar ? 250 : 320)
         } detail: {
             NavigationStack(path: $navigation.studyPath) {
                 VStack(spacing: 0) {
@@ -220,10 +234,17 @@ struct LibraryView: View {
             }
         }
         .task { await workspace.restore() }
-        .onChange(of: navigation.selection) { _, _ in navigation.studyPath.removeAll() }
+        .onChange(of: navigation.selection) { _, _ in
+            navigation.studyPath.removeAll()
+            if compactSidebar || sizeClass == .compact {
+                columnVisibility = .detailOnly
+                compactColumn = .detail
+            }
+        }
         .onChange(of: workspace.activeID, initial: true) { _, id in
             guard id != nil else { return }
             columnVisibility = .detailOnly
+            wideColumnVisibility = .detailOnly
             compactColumn = .detail
         }
         .onReceive(NotificationCenter.default.publisher(for: UIApplication.didReceiveMemoryWarningNotification)) { _ in
@@ -375,7 +396,18 @@ struct LibraryView: View {
         }
     }
 
-
+    private func adaptSidebar(compact: Bool) {
+        guard compactSidebar != compact else { return }
+        compactSidebar = compact
+        if compact {
+            wideColumnVisibility = columnVisibility
+            columnVisibility = .detailOnly
+            compactColumn = .detail
+        } else {
+            columnVisibility = wideColumnVisibility
+            compactColumn = .detail
+        }
+    }
 
     private func showLibrary() {
         Task { if await workspace.showLibrary() { model.reload() } }
