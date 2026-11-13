@@ -58,7 +58,27 @@ import Testing
         #expect(!session.canRepeat(in: model) && !session.repeatPractice(in: model))
     }
 
-
+    @Test func sampleDeckIsExplicitAndRepeatedCreationPreservesReviewsAndTrash() throws {
+        let container = try PersistenceController.makeContainer(inMemory: true)
+        StudySampleDeck.createIfRequested(in: container)
+        #expect(try container.mainContext.fetchCount(FetchDescriptor<StudyDeck>()) == 0)
+        let result = try StudySampleDeck.create(in: container, now: now)
+        #expect(result.cardCount == 8 && !result.trashed)
+        let model = StudyViewModel(container: container)
+        let card = try #require(model.cards.first)
+        #expect(model.due(at: now).count == 8)
+        try model.review(card.id, rating: .good, at: now)
+        let repeated = try StudySampleDeck.create(in: container, now: now.addingTimeInterval(10))
+        #expect(repeated.id == result.id && repeated.cardCount == 8)
+        let fresh = StudyViewModel(container: container)
+        #expect(fresh.decks.count == 1 && fresh.cards.count == 8)
+        #expect(fresh.cards.first { $0.id == card.id }?.reviews.count == 1)
+        #expect(fresh.due(at: now).count == 7)
+        let deck = try #require(fresh.decks.first)
+        try fresh.trash(deck)
+        #expect(try StudySampleDeck.create(in: container).trashed)
+        #expect(try container.mainContext.fetchCount(FetchDescriptor<Notebook>()) == 0)
+    }
 
     @Test func schedulerIntervalsProgressionLapsesAndBounds() {
         let scheduler = SimpleReviewScheduler(), initial = ReviewProgress()

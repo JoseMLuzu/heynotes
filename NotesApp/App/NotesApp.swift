@@ -5,7 +5,11 @@ struct NotesApp: App {
     private let startup: Result<AppDependencies, Error>
 
     init() {
-        startup = Result { try AppDependencies() }
+        startup = Result {
+            let dependencies = try AppDependencies()
+            StudySampleDeck.createIfRequested(in: dependencies.container)
+            return dependencies
+        }
     }
 
     var body: some Scene {
