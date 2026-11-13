@@ -4,6 +4,8 @@ The colored library navigation band extends 16 points downward below its control
 
 The sidebar removes NavigationSplitView's default toggle using the public iPadOS 17 `toolbar(removing: .sidebarToggle)` API. The library supplies its own leading toolbar button; an open editor supplies its tab-row button. This leaves one toggle in the visible detail area. Compact-width sidebars retain a Close Sidebar action, and selecting a library destination returns to the detail column. See Apple's [toolbar removal documentation](https://developer.apple.com/documentation/swiftui/view/toolbar(removing:)).
 
+Activating a notebook or PDF automatically selects the detail-only split layout and the detail column in compact windows. This also covers switching document tabs, opening recents and restoring an active document. Folder browsing does not hide the sidebar. Its button can reopen it while editing; it stays open until another document is activated. Navigation blocked before activation leaves the current layout alone. Changing the split layout does not reload the active canvas or change saved document data.
+
 ## Fixed Pages index
 
 The page counter opens a fixed popover anchored to that control. The panel has no drag grip, movement gesture or stored position. NotebookIndexView retains a 20-point horizontal header inset with additional vertical spacing. Done, selecting a page, tapping outside the popover or toggling the counter closes it. Existing section, bookmark and page context-menu operations remain available.

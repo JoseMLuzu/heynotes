@@ -221,6 +221,11 @@ struct LibraryView: View {
             }
         }
         .task { await workspace.restore() }
+        .onChange(of: workspace.activeID, initial: true) { _, id in
+            guard id != nil else { return }
+            columnVisibility = .detailOnly
+            compactColumn = .detail
+        }
         .onReceive(NotificationCenter.default.publisher(for: UIApplication.didReceiveMemoryWarningNotification)) { _ in
             workspace.activeSession?.discardPreparedPages()
         }
