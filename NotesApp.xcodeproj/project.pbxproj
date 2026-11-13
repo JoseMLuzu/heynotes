@@ -124,6 +124,13 @@
 			<key>sourceTree</key>
 			<string>SOURCE_ROOT</string>
 		</dict>
+		<key>0850111ABE3A881AFD3DEEB9</key>
+		<dict>
+			<key>fileRef</key>
+			<string>5E6CCFB61748E970D5FD614D</string>
+			<key>isa</key>
+			<string>PBXBuildFile</string>
+		</dict>
 		<key>0978EF6EA3F78A522B6AA521</key>
 		<dict>
 			<key>isa</key>
@@ -1153,6 +1160,17 @@
 			<key>sourceTree</key>
 			<string>SOURCE_ROOT</string>
 		</dict>
+		<key>5DFB6D06EF10030A38094CAF</key>
+		<dict>
+			<key>isa</key>
+			<string>PBXFileReference</string>
+			<key>lastKnownFileType</key>
+			<string>sourcecode.swift</string>
+			<key>path</key>
+			<string>NotesApp/Features/Study/Views/StudyReviewCard.swift</string>
+			<key>sourceTree</key>
+			<string>SOURCE_ROOT</string>
+		</dict>
 		<key>5E420CDAE26B4EFDB41F349E</key>
 		<dict>
 			<key>isa</key>
@@ -1161,6 +1179,17 @@
 			<string>sourcecode.swift</string>
 			<key>path</key>
 			<string>NotesApp/Features/Editor/Views/NotebookIndexView.swift</string>
+			<key>sourceTree</key>
+			<string>SOURCE_ROOT</string>
+		</dict>
+		<key>5E6CCFB61748E970D5FD614D</key>
+		<dict>
+			<key>isa</key>
+			<string>PBXFileReference</string>
+			<key>lastKnownFileType</key>
+			<string>sourcecode.swift</string>
+			<key>path</key>
+			<string>NotesApp/Features/Study/Views/StudyReviewAnchors.swift</string>
 			<key>sourceTree</key>
 			<string>SOURCE_ROOT</string>
 		</dict>
@@ -1457,6 +1486,17 @@
 			<string>A7B76FCEBE5D590BDF1CC5CC</string>
 			<key>isa</key>
 			<string>PBXBuildFile</string>
+		</dict>
+		<key>71F523531AE3C44D24F87D0E</key>
+		<dict>
+			<key>isa</key>
+			<string>PBXFileReference</string>
+			<key>lastKnownFileType</key>
+			<string>sourcecode.swift</string>
+			<key>path</key>
+			<string>NotesApp/Features/Study/Views/StudyReviewControls.swift</string>
+			<key>sourceTree</key>
+			<string>SOURCE_ROOT</string>
 		</dict>
 		<key>7209683D7D031149ED8ABB07</key>
 		<dict>
@@ -2320,6 +2360,13 @@
 			<key>isa</key>
 			<string>PBXBuildFile</string>
 		</dict>
+		<key>B037D916690E274048F4B2FF</key>
+		<dict>
+			<key>fileRef</key>
+			<string>71F523531AE3C44D24F87D0E</string>
+			<key>isa</key>
+			<string>PBXBuildFile</string>
+		</dict>
 		<key>B0782546041015720FD97BB0</key>
 		<dict>
 			<key>fileRef</key>
@@ -2592,6 +2639,9 @@
 				<string>3A2401DC297C973454315F5E</string>
 				<string>6A2A72192E94AADDF4B0C20E</string>
 				<string>E6E251415DB29BA0E8BD3071</string>
+				<string>DCA2CBFC94A7FECB14AB95C3</string>
+				<string>B037D916690E274048F4B2FF</string>
+				<string>0850111ABE3A881AFD3DEEB9</string>
 			</array>
 			<key>isa</key>
 			<string>PBXSourcesBuildPhase</string>
@@ -3020,6 +3070,13 @@
 			<key>sourceTree</key>
 			<string>SOURCE_ROOT</string>
 		</dict>
+		<key>DCA2CBFC94A7FECB14AB95C3</key>
+		<dict>
+			<key>fileRef</key>
+			<string>5DFB6D06EF10030A38094CAF</string>
+			<key>isa</key>
+			<string>PBXBuildFile</string>
+		</dict>
 		<key>DDCB5F7808958214B7F1C071</key>
 		<dict>
 			<key>isa</key>
@@ -3262,6 +3319,9 @@
 				<string>AF376DD4476B5D834140C1D7</string>
 				<string>040BE81769CBEC78B04C214A</string>
 				<string>68B0B493C72011A8826AC612</string>
+				<string>5DFB6D06EF10030A38094CAF</string>
+				<string>71F523531AE3C44D24F87D0E</string>
+				<string>5E6CCFB61748E970D5FD614D</string>
 			</array>
 			<key>isa</key>
 			<string>PBXGroup</string>
