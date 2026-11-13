@@ -52,6 +52,8 @@ final class CanvasHost: UIScrollView, UIScrollViewDelegate {
     private let zoomContent: UIView
     private let pageSurface: UIView
     var onPageSwipe: ((Int, Bool) -> Void)?
+    var onPagePull: ((CGFloat) -> Void)?
+    var onPagePullCancelled: (() -> Void)?
     var onCreationProgress: ((Double?) -> Void)?
     var hasNextPage = true
     var hasPreviousPage = false
@@ -67,6 +69,14 @@ final class CanvasHost: UIScrollView, UIScrollViewDelegate {
     private var turnCommitted = false
     private var creationHold = PageCreationHold()
     private var creationTask: Task<Void, Never>?
+    private var pullAnimator: UIViewPropertyAnimator?
+    var isPagePullAnimating: Bool { pullAnimator != nil }
+    private(set) var pageSwipeVelocity: CGFloat = 0
+    var visiblePageOffset: CGFloat {
+        let moving = pullAnimator != nil || transitionPausesInk
+        let transform = moving ? (pageSurface.layer.presentation()?.affineTransform() ?? pageSurface.transform) : pageSurface.transform
+        return transform.tx * zoomScale
+    }
     init(pageSize: CGSize = PageGeometry.size) {
         self.pageSize = pageSize
         zoomContent = UIView(frame: CGRect(origin: .zero, size: pageSize))
@@ -134,9 +144,11 @@ final class CanvasHost: UIScrollView, UIScrollViewDelegate {
         let insets = UIEdgeInsets(top: max(12, (bounds.height - zoomContent.frame.height) / 2), left: max(12, (bounds.width - zoomContent.frame.width) / 2), bottom: 12, right: 12)
         if contentInset != insets { contentInset = insets }
     }
-    @objc private func handlePagePan(_ pan: UIPanGestureRecognizer) {
+    @objc func handlePagePan(_ pan: UIPanGestureRecognizer) {
         switch pan.state {
         case .began:
+            if isDecelerating { setContentOffset(contentOffset, animated: false) }
+            if !transitionPausesInk { stopPagePullAnimation() }
             startingOffset = contentOffset
             gestureViewport = bounds.size; gesturePageID = ink.pageID
             turnCommitted = false; creationHold.reset()
@@ -145,33 +157,34 @@ final class CanvasHost: UIScrollView, UIScrollViewDelegate {
             guard !turnCommitted else { return }
             updatePagePull(pan)
         case .ended:
+            pageSwipeVelocity = pan.velocity(in: self).x
             cancelPendingPageCreation()
             guard !turnCommitted else { return }
             let direction = PageSwipe.direction(translation: pan.translation(in: self), velocity: pan.velocity(in: self), viewportWidth: bounds.width)
             if validPageContext, let direction, (direction == 1 ? hasNextPage : hasPreviousPage), let onPageSwipe {
                 turnCommitted = true; onPageSwipe(direction, false)
-            } else { settlePagePull() }
+            } else { cancelInteractivePull() }
         case .cancelled, .failed:
             cancelPendingPageCreation()
-            if !turnCommitted { settlePagePull() }
+            if !turnCommitted { cancelInteractivePull() }
         default: break
         }
     }
 
     private func updatePagePull(_ pan: UIPanGestureRecognizer) {
         lastTranslation = pan.translation(in: self)
-        // Include the first pan sample: a fast pull can already qualify when recognition begins.
-        let pull = !hasNextPage && validPageContext ? max(-100, min(0, lastTranslation.x)) * 0.2 : 0
-        contentOffset = CGPoint(x: startingOffset.x - pull, y: startingOffset.y)
-        updateCreationHold()
-        // Commit existing-page intent while the finger is still moving, not only on release.
-        if !turnCommitted, validPageContext,
-           let direction = PageSwipe.direction(translation: lastTranslation, velocity: pan.velocity(in: self), viewportWidth: bounds.width),
-           (direction == 1 ? hasNextPage : hasPreviousPage), let onPageSwipe {
-            turnCommitted = true
-            cancelPendingPageCreation()
-            onPageSwipe(direction, false)
+        pageSwipeVelocity = pan.velocity(in: self).x
+        if validPageContext && !transitionPausesInk && !UIAccessibility.isReduceMotionEnabled {
+            let destination = lastTranslation.x < 0 ? hasNextPage : hasPreviousPage
+            setPageOffset(PageTurnMotion.pull(lastTranslation.x, hasDestination: destination, viewportWidth: bounds.width))
+            onPagePull?(lastTranslation.x)
         }
+        updateCreationHold()
+        // Existing-page turns commit on release, so reversing a drag never changes the page ID.
+    }
+
+    private func cancelInteractivePull() {
+        if let onPagePullCancelled { onPagePullCancelled() } else { settlePagePull() }
     }
 
     private var validPageContext: Bool {
@@ -218,7 +231,21 @@ final class CanvasHost: UIScrollView, UIScrollViewDelegate {
     deinit { creationTask?.cancel() }
 
     func settlePagePull() {
-        setContentOffset(startingOffset, animated: !UIAccessibility.isReduceMotionEnabled)
+        stopPagePullAnimation()
+        contentOffset = startingOffset
+        guard !UIAccessibility.isReduceMotionEnabled, abs(visiblePageOffset) > 0.1 else { setPageOffset(0); return }
+        let animation = UIViewPropertyAnimator(duration: 0.18, dampingRatio: 1) { [weak self] in self?.setPageOffset(0) }
+        animation.addCompletion { [weak self, weak animation] _ in
+            if self?.pullAnimator === animation { self?.pullAnimator = nil }
+        }
+        pullAnimator = animation
+        animation.startAnimation()
+    }
+
+    func stopPagePullAnimation() {
+        let offset = visiblePageOffset
+        pullAnimator?.stopAnimation(true); pullAnimator = nil
+        setPageOffset(offset)
     }
 
     func viewForZooming(in scrollView: UIScrollView) -> UIView? { zoomContent }
@@ -245,9 +272,14 @@ struct PaperCanvas: UIViewRepresentable {
 
     static func dismantleUIView(_ container: PageCanvasContainer, coordinator: Coordinator) {
         coordinator.pencil.detach()
+        container.discardPreparedCanvases()
+        coordinator.session.onPreparedNeighbor = nil
+        coordinator.session.onDiscardPreparedCanvases = nil
     }
 
     func updateUIView(_ container: PageCanvasContainer, context: Context) {
+        session.onPreparedNeighbor = { [weak container] in container?.prepare($0) }
+        session.onDiscardPreparedCanvases = { [weak container] in container?.discardPreparedCanvases() }
         context.coordinator.pencil.interaction.isEnabled = isEnabled && session.ready && !session.busy
         context.coordinator.pencil.onTap = { [weak container, weak session] action in
             guard let host = container?.current, let session,
@@ -260,10 +292,11 @@ struct PaperCanvas: UIViewRepresentable {
         guard let page = session.page else { return }
         if container.pageID != page.id || container.current?.pageSize != page.logicalSize {
             let pageID = page.id
-            let host = CanvasHost(pageSize: page.logicalSize)
+            let host = container.takePreparedCanvas(pageID: pageID, identity: session.preparedIdentity, size: page.logicalSize)
+                ?? CanvasHost(pageSize: page.logicalSize)
             host.paper.pdfImage = session.pdfBackground
             host.ink.pageID = pageID
-            host.ink.drawing = session.drawing
+            if host.ink.drawing != session.drawing { host.ink.drawing = session.drawing }
             host.ink.delegate = context.coordinator
             host.objectControls.onCommit = { [weak session] item, new in
                 guard let session else { return false }
@@ -273,30 +306,43 @@ struct PaperCanvas: UIViewRepresentable {
             host.objectControls.onSelect = { [weak session] in session?.selectedElementID = $0 }
             host.objectControls.onReveal = { [weak session] in session?.toggleTape($0) }
             host.onCreationProgress = { [weak container] in container?.showCreationProgress($0) }
+            host.onPagePull = { [weak container] in container?.updateInteractivePull(from: pageID, translation: $0) }
+            host.onPagePullCancelled = { [weak container] in container?.cancelInteractivePull() }
             host.onPageSwipe = { [weak session, weak host, weak container] direction, allowCreation in
-                Task {
-                    guard session?.page?.id == pageID, session?.ready == true, session?.busy == false,
-                          host?.window != nil, host?.pagePan.isEnabled == true,
-                          host?.ink.drawingGestureRecognizer.state != .began,
-                          host?.ink.drawingGestureRecognizer.state != .changed,
-                          session?.canvas === host?.ink else {
-                        host?.settlePagePull(); return
-                    }
-                    let originalID = session?.page?.id
-                    container?.prepareTurn(from: pageID, direction: direction, reduceMotion: UIAccessibility.isReduceMotionEnabled)
-                    host?.editorAllowsInk = false
-                    await session?.turnPage(direction, creatingIfNeeded: allowCreation)
-                    // Keep the pull continuous into a successful turn; spring back on a boundary/failure.
-                    if session?.page?.id == originalID || session?.ready != true {
-                        host?.settlePagePull(); container?.cancelPendingTurn(from: pageID)
-                        host?.editorAllowsInk = session?.ready == true && session?.busy == false && host?.pagePan.isEnabled == true
+                if !allowCreation { session?.prioritizePageTurn(direction) }
+                container?.afterCurrentTurn { [weak session, weak host, weak container] in
+                    Task {
+                        guard session?.page?.id == pageID, session?.ready == true, session?.busy == false,
+                              host?.window != nil, host?.pagePan.isEnabled == true,
+                              host?.ink.drawingGestureRecognizer.state != .began,
+                              host?.ink.drawingGestureRecognizer.state != .changed,
+                              session?.canvas === host?.ink else {
+                            container?.rejectPull(from: pageID); return
+                        }
+                        let originalID = session?.page?.id
+                        container?.prepareTurn(from: pageID, direction: direction, reduceMotion: UIAccessibility.isReduceMotionEnabled,
+                                               velocity: host?.pageSwipeVelocity ?? 0)
+                        host?.editorAllowsInk = false
+                        await session?.turnPage(direction, creatingIfNeeded: allowCreation)
+                        // Keep the pull continuous into a successful turn; spring back on a boundary/failure.
+                        if session?.page?.id == originalID || session?.ready != true {
+                            container?.cancelPendingTurn(from: pageID)
+                            host?.editorAllowsInk = session?.ready == true && session?.busy == false && host?.pagePan.isEnabled == true
+                        }
                     }
                 }
             }
             session.canvas = host.ink
-            container.show(host, pageID: pageID, direction: session.pageTurnDirection, reduceMotion: reduceMotion)
+            container.show(host, pageID: pageID, direction: session.pageTurnDirection, reduceMotion: reduceMotion,
+                           identity: session.preparedIdentity)
         }
         guard let host = container.current else { return }
+        var neighborIDs: [Int: UUID] = [:]
+        for direction in [-1, 1] {
+            neighborIDs[direction] = session.notebook.pages.first { $0.pageIndex == page.pageIndex + direction }?.id
+        }
+        container.retainNeighbors(neighborIDs)
+        for prepared in session.preparedNeighbors { container.prepare(prepared) }
         // Tool/metadata updates never replace the live drawing or its undo history.
         if !sameTool(host.ink.tool, tool) { host.ink.tool = tool }
         host.hasNextPage = page.pageIndex < session.notebook.pages.count - 1
@@ -332,7 +378,8 @@ struct PaperCanvas: UIViewRepresentable {
         init(session: EditorSession) { self.session = session }
         func canvasViewDrawingDidChange(_ canvasView: PKCanvasView) {
             // Late callbacks from an outgoing page must never overwrite the incoming page.
-            guard (canvasView as? InkCanvas)?.pageID == session.page?.id else { return }
+            guard session.canvas === canvasView, (canvasView as? InkCanvas)?.pageID == session.page?.id,
+                  canvasView.drawing != session.drawing else { return }
             session.changed(canvasView.drawing)
         }
     }
