@@ -5,6 +5,183 @@ import SwiftData
 @testable import NotesApp
 
 @MainActor final class InteractivePageTests: XCTestCase {
+    func testNativeUnchangedDrawingCallbacksDoNotScheduleFalseSaves() async throws {
+        let fixture = try InteractiveFixture()
+        defer { fixture.cleanup() }
+        let session = EditorSession(notebook: fixture.notebook, context: fixture.store.mainContext, storage: fixture.storage)
+        defer { session.discardPreparedPages() }
+        await session.open(fixture.pages[1])
+        let canvas = InkCanvas(); canvas.pageID = fixture.pages[1].id; canvas.drawing = session.drawing
+        session.canvas = canvas
+        let coordinator = PaperCanvas.Coordinator(session: session)
+        for _ in 0..<20 { coordinator.canvasViewDrawingDidChange(canvas) }
+        XCTAssertFalse(session.hasPendingSave)
+        XCTAssertNil(fixture.pages[1].drawingFilePath)
+        canvas.drawing = fixture.drawing
+        coordinator.canvasViewDrawingDidChange(canvas)
+        XCTAssertTrue(session.hasPendingSave)
+        let saved = await session.flush(); XCTAssertTrue(saved)
+        coordinator.canvasViewDrawingDidChange(canvas)
+        XCTAssertFalse(session.hasPendingSave)
+        let disk = try await fixture.storage.read(try XCTUnwrap(fixture.pages[1].drawingFilePath))
+        XCTAssertEqual(try PKDrawing(data: disk), fixture.drawing)
+    }
+
+    func testRapidFlicksUseRealPageCallbacksWithoutLeavingAStrandedPreview() async throws {
+        let fixture = try InteractiveFixture()
+        defer { fixture.cleanup() }
+        let session = EditorSession(notebook: fixture.notebook, context: fixture.store.mainContext, storage: fixture.storage)
+        defer { session.discardPreparedPages() }
+        await session.open(fixture.pages[1])
+        let scene = try XCTUnwrap(UIApplication.shared.connectedScenes.compactMap { $0 as? UIWindowScene }.first)
+        let window = UIWindow(windowScene: scene)
+        window.frame = CGRect(x: 0, y: 0, width: 640, height: 840)
+        let controller = UIHostingController(rootView: ObservedTestCanvas(session: session))
+        window.rootViewController = controller; window.isHidden = false
+        defer { window.isHidden = true; window.rootViewController = nil }
+        try await wait { self.findContainer(controller.view)?.preparedCanvasCount == 2 }
+        let container = try XCTUnwrap(findContainer(controller.view))
+        let startingCanvas = container.current
+        for (index, direction) in [1, -1, -1, 1, 1, -1, -1, 1].enumerated() {
+            try await wait { !session.busy && container.current?.pagePan.isEnabled == true }
+            let originalID = try XCTUnwrap(session.page?.id)
+            let source = try XCTUnwrap(container.current)
+            let pan = ControlledPagePan()
+            pan.speed = CGFloat(-direction) * 1800; pan.x = CGFloat(-direction) * 24
+            pan.sampleState = .began; source.handlePagePan(pan)
+            pan.sampleState = .ended; source.handlePagePan(pan)
+            try await wait { session.page?.id != originalID && container.pageID == session.page?.id && !session.busy }
+            XCTAssertTrue(session.canvas === container.current?.ink)
+            if index == 1 { XCTAssertTrue(container.current === startingCanvas, "A clean return must reuse the actual outgoing canvas") }
+            XCTAssertNil(container.interactiveNeighbor)
+        }
+        try await wait { container.animator == nil && container.current?.transitionPausesInk == false }
+        XCTAssertEqual(session.page?.id, fixture.pages[1].id)
+        XCTAssertEqual(container.current?.visiblePageOffset ?? -1, 0, accuracy: 0.01)
+        XCTAssertFalse(session.hasPendingSave)
+    }
+
+    func testRealFailedSaveRollsBackMovingPreviewWithoutPublishingDestination() async throws {
+        let fixture = try InteractiveFixture()
+        defer { fixture.cleanup() }
+        let session = EditorSession(notebook: fixture.notebook, context: fixture.store.mainContext, storage: fixture.storage)
+        defer { session.discardPreparedPages() }
+        await session.open(fixture.pages[1])
+        let scene = try XCTUnwrap(UIApplication.shared.connectedScenes.compactMap { $0 as? UIWindowScene }.first)
+        let window = UIWindow(windowScene: scene)
+        window.frame = CGRect(x: 0, y: 0, width: 640, height: 840)
+        let controller = UIHostingController(rootView: ObservedTestCanvas(session: session))
+        window.rootViewController = controller; window.isHidden = false
+        defer { window.isHidden = true; window.rootViewController = nil }
+        try await wait { self.findContainer(controller.view)?.preparedCanvasCount == 2 }
+        let container = try XCTUnwrap(findContainer(controller.view)), source = try XCTUnwrap(container.current)
+        source.ink.drawing = fixture.drawing; session.changed(fixture.drawing)
+        // A file where the storage directory belongs forces the existing atomic save to fail.
+        try Data([1]).write(to: fixture.root)
+        source.setPageOffset(-120)
+        container.updateInteractivePull(from: fixture.pages[1].id, translation: -120)
+        source.onPageSwipe?(1, false)
+        try await wait { session.errorMessage != nil && !session.busy }
+        try await wait { container.animator == nil && !source.transitionPausesInk }
+        XCTAssertEqual(session.page?.id, fixture.pages[1].id)
+        XCTAssertTrue(container.current === source); XCTAssertTrue(session.canvas === source.ink)
+        XCTAssertEqual(source.visiblePageOffset, 0, accuracy: 0.01)
+        XCTAssertEqual(source.ink.drawing, fixture.drawing)
+        XCTAssertTrue(session.hasPendingSave); XCTAssertNil(container.interactiveNeighbor)
+    }
+
+    func testRejectedPullAndChangedDestinationCannotRetainStalePreview() async throws {
+        let fixture = try InteractiveFixture()
+        defer { fixture.cleanup() }
+        let container = fixture.container, source = try XCTUnwrap(container.current), next = fixture.prepared(2)
+        container.prepare(next)
+        try await wait { container.preparedCanvasCount == 1 }
+        source.setPageOffset(-80)
+        container.updateInteractivePull(from: fixture.pages[1].id, translation: -80)
+        container.rejectPull(from: fixture.pages[1].id)
+        let rollback = try XCTUnwrap(container.animator)
+        rollback.stopAnimation(false); rollback.finishAnimation(at: .end)
+        XCTAssertNil(container.interactiveNeighbor)
+        source.setPageOffset(-80)
+        container.updateInteractivePull(from: fixture.pages[1].id, translation: -80)
+        let stale = try XCTUnwrap(container.interactiveNeighbor)
+        container.prepareTurn(from: fixture.pages[1].id, direction: 1, reduceMotion: false)
+        XCTAssertNil(container.takePreparedCanvas(pageID: next.id, identity: UUID(), size: next.size))
+        let replacement = CanvasHost(); replacement.ink.pageID = next.id; replacement.ink.drawing = fixture.drawing
+        container.show(replacement, pageID: next.id, direction: 1, reduceMotion: false)
+        let motion = try XCTUnwrap(container.animator)
+        motion.stopAnimation(false); motion.finishAnimation(at: .end)
+        XCTAssertNil(stale.superview); XCTAssertNil(source.superview)
+        XCTAssertTrue(container.current === replacement)
+        XCTAssertEqual(replacement.visiblePageOffset, 0, accuracy: 0.01)
+        XCTAssertFalse(replacement.transitionPausesInk)
+    }
+
+    func testReleaseStartsPreparedMotionAndValidatedPageAdoptsSameRunningAnimator() async throws {
+        let fixture = try InteractiveFixture()
+        defer { fixture.cleanup() }
+        let container = fixture.container, source = try XCTUnwrap(container.current)
+        let next = fixture.prepared(2)
+        container.prepare(next)
+        try await wait { container.preparedCanvasCount == 1 }
+        source.setPageOffset(-120)
+        container.updateInteractivePull(from: fixture.pages[1].id, translation: -120)
+        let preview = try XCTUnwrap(container.interactiveNeighbor)
+        container.prepareTurn(from: fixture.pages[1].id, direction: 1, reduceMotion: false, velocity: -900)
+        let animation = try XCTUnwrap(container.animator, "Release must move the prepared sheet before a save/load finishes")
+        XCTAssertEqual(container.pageID, fixture.pages[1].id)
+        XCTAssertTrue(container.current === source)
+        XCTAssertFalse(preview.ink.isUserInteractionEnabled)
+        animation.pauseAnimation(); animation.fractionComplete = 0.35
+        let prepared = try XCTUnwrap(container.takePreparedCanvas(pageID: next.id, identity: next.content.identity, size: next.size))
+        container.show(prepared, pageID: next.id, direction: 1, reduceMotion: false)
+        XCTAssertTrue(container.animator === animation, "Validation must not restart or snap the motion")
+        XCTAssertEqual(animation.fractionComplete, 0.35, accuracy: 0.001)
+        animation.stopAnimation(false); animation.finishAnimation(at: .end)
+        XCTAssertTrue(container.current === preview)
+        XCTAssertEqual(preview.visiblePageOffset, 0, accuracy: 0.01)
+        XCTAssertFalse(preview.transitionPausesInk)
+        XCTAssertNil(source.superview)
+    }
+
+    func testFinishedPreviewWaitsForValidationAndFailedSaveReturnsToOriginalInk() async throws {
+        let fixture = try InteractiveFixture()
+        defer { fixture.cleanup() }
+        let container = fixture.container, source = try XCTUnwrap(container.current)
+        let next = fixture.prepared(2)
+        container.prepare(next)
+        try await wait { container.preparedCanvasCount == 1 }
+        source.setPageOffset(-90)
+        container.updateInteractivePull(from: fixture.pages[1].id, translation: -90)
+        let preview = try XCTUnwrap(container.interactiveNeighbor)
+        container.prepareTurn(from: fixture.pages[1].id, direction: 1, reduceMotion: false)
+        let forward = try XCTUnwrap(container.animator)
+        forward.stopAnimation(false); forward.finishAnimation(at: .end)
+        XCTAssertEqual(container.pageID, fixture.pages[1].id)
+        XCTAssertTrue(container.current === source)
+        XCTAssertFalse(preview.ink.isUserInteractionEnabled)
+        container.cancelPendingTurn(from: fixture.pages[1].id)
+        let rollback = try XCTUnwrap(container.animator)
+        rollback.stopAnimation(false); rollback.finishAnimation(at: .end)
+        XCTAssertEqual(source.visiblePageOffset, 0, accuracy: 0.01)
+        XCTAssertTrue(container.current === source)
+        XCTAssertEqual(source.ink.drawing, fixture.drawing)
+        XCTAssertNil(container.interactiveNeighbor)
+        XCTAssertFalse(source.transitionPausesInk)
+    }
+
+    func testPreparedPageWithReduceMotionAlwaysBecomesVisibleAtZeroOffset() async throws {
+        let fixture = try InteractiveFixture()
+        defer { fixture.cleanup() }
+        let container = fixture.container, next = fixture.prepared(2)
+        container.prepare(next)
+        try await wait { container.preparedCanvasCount == 1 }
+        let prepared = try XCTUnwrap(container.takePreparedCanvas(pageID: next.id, identity: next.content.identity, size: next.size))
+        container.show(prepared, pageID: next.id, direction: 1, reduceMotion: true)
+        XCTAssertEqual(prepared.visiblePageOffset, 0, accuracy: 0.01)
+        XCTAssertNil(container.animator)
+    }
+
     func testDragDoesNotCommitUntilReleaseAndReverseCanCancel() {
         let host = CanvasHost()
         host.ink.pageID = UUID(); host.hasNextPage = true
