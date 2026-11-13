@@ -24,6 +24,7 @@ actor PDFDocumentService {
     static let shared = PDFDocumentService()
     // Gallery work cannot sit in front of a full-size page render on the same actor.
     static let thumbnails = PDFDocumentService(imageByteLimit: 4 * 1024 * 1024, documentLimit: 1)
+    static let importPreviews = PDFDocumentService(imageByteLimit: 4 * 1024 * 1024, documentLimit: 1)
 
     private struct ImageKey: Hashable {
         let source: FileFingerprint

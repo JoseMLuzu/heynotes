@@ -777,6 +777,13 @@
 			<key>sourceTree</key>
 			<string>SOURCE_ROOT</string>
 		</dict>
+		<key>413AC42AAD67B1B8AB14E940</key>
+		<dict>
+			<key>fileRef</key>
+			<string>D0E591794B0262828F97EF30</string>
+			<key>isa</key>
+			<string>PBXBuildFile</string>
+		</dict>
 		<key>415C6AC280B131C275D20674</key>
 		<dict>
 			<key>isa</key>
@@ -946,6 +953,17 @@
 			<string>836B23A40932222B661C7199</string>
 			<key>isa</key>
 			<string>PBXBuildFile</string>
+		</dict>
+		<key>503588A50C65E26BD6793D48</key>
+		<dict>
+			<key>isa</key>
+			<string>PBXFileReference</string>
+			<key>lastKnownFileType</key>
+			<string>sourcecode.swift</string>
+			<key>path</key>
+			<string>NotesApp/Features/PDF/Services/PDFImportStaging.swift</string>
+			<key>sourceTree</key>
+			<string>SOURCE_ROOT</string>
 		</dict>
 		<key>510348BC128805ED6507A309</key>
 		<dict>
@@ -1163,6 +1181,17 @@
 			<string>sourcecode.swift</string>
 			<key>path</key>
 			<string>NotesApp/Features/Library/Views/PDFDocumentCover.swift</string>
+			<key>sourceTree</key>
+			<string>SOURCE_ROOT</string>
+		</dict>
+		<key>65F0767559DB262F6E820476</key>
+		<dict>
+			<key>isa</key>
+			<string>PBXFileReference</string>
+			<key>lastKnownFileType</key>
+			<string>sourcecode.swift</string>
+			<key>path</key>
+			<string>NotesApp/Features/PDF/Services/PDFPageSelection.swift</string>
 			<key>sourceTree</key>
 			<string>SOURCE_ROOT</string>
 		</dict>
@@ -1553,6 +1582,13 @@
 			<key>isa</key>
 			<string>PBXBuildFile</string>
 		</dict>
+		<key>7FA0C7EA131C0250ADA47910</key>
+		<dict>
+			<key>fileRef</key>
+			<string>A6ED62E97157A6E11C417DF6</string>
+			<key>isa</key>
+			<string>PBXBuildFile</string>
+		</dict>
 		<key>7FAAF003DE36512BA6558272</key>
 		<dict>
 			<key>explicitFileType</key>
@@ -1688,6 +1724,13 @@
 		<dict>
 			<key>fileRef</key>
 			<string>B3F0736535F7D8969A09371B</string>
+			<key>isa</key>
+			<string>PBXBuildFile</string>
+		</dict>
+		<key>871A62CEBA84CB41076B2EF4</key>
+		<dict>
+			<key>fileRef</key>
+			<string>65F0767559DB262F6E820476</string>
 			<key>isa</key>
 			<string>PBXBuildFile</string>
 		</dict>
@@ -2007,6 +2050,17 @@
 			<string>sourcecode.swift</string>
 			<key>path</key>
 			<string>NotesAppDeviceTests/LibraryNavigationTests.swift</string>
+			<key>sourceTree</key>
+			<string>SOURCE_ROOT</string>
+		</dict>
+		<key>A6ED62E97157A6E11C417DF6</key>
+		<dict>
+			<key>isa</key>
+			<string>PBXFileReference</string>
+			<key>lastKnownFileType</key>
+			<string>sourcecode.swift</string>
+			<key>path</key>
+			<string>NotesApp/Features/PDF/ViewModels/PDFImportSelection.swift</string>
 			<key>sourceTree</key>
 			<string>SOURCE_ROOT</string>
 		</dict>
@@ -2368,6 +2422,9 @@
 				<string>BB25111A75FC3435B4207EEC</string>
 				<string>0D88EC6D96E4ECE2D8B1C717</string>
 				<string>413AC42AAD67B1B8AB14E940</string>
+				<string>EA0F5A0CAE9CDBBE4273AB15</string>
+				<string>871A62CEBA84CB41076B2EF4</string>
+				<string>7FA0C7EA131C0250ADA47910</string>
 			</array>
 			<key>isa</key>
 			<string>PBXSourcesBuildPhase</string>
@@ -2652,6 +2709,17 @@
 			<string>sourcecode.swift</string>
 			<key>path</key>
 			<string>NotesApp/Features/Editor/Services/EditorSession.swift</string>
+			<key>sourceTree</key>
+			<string>SOURCE_ROOT</string>
+		</dict>
+		<key>D0E591794B0262828F97EF30</key>
+		<dict>
+			<key>isa</key>
+			<string>PBXFileReference</string>
+			<key>lastKnownFileType</key>
+			<string>sourcecode.swift</string>
+			<key>path</key>
+			<string>NotesApp/Features/Editor/Services/NotebookPageDrag.swift</string>
 			<key>sourceTree</key>
 			<string>SOURCE_ROOT</string>
 		</dict>
@@ -3001,6 +3069,9 @@
 				<string>F4A5CCA781439291BE6DE0F9</string>
 				<string>6D3F2A1A0941347F2DFE5689</string>
 				<string>D0E591794B0262828F97EF30</string>
+				<string>503588A50C65E26BD6793D48</string>
+				<string>65F0767559DB262F6E820476</string>
+				<string>A6ED62E97157A6E11C417DF6</string>
 			</array>
 			<key>isa</key>
 			<string>PBXGroup</string>
@@ -3053,6 +3124,13 @@
 			<string>NotesApp/Features/PDF/Services/PDFRendering.swift</string>
 			<key>sourceTree</key>
 			<string>SOURCE_ROOT</string>
+		</dict>
+		<key>EA0F5A0CAE9CDBBE4273AB15</key>
+		<dict>
+			<key>fileRef</key>
+			<string>503588A50C65E26BD6793D48</string>
+			<key>isa</key>
+			<string>PBXBuildFile</string>
 		</dict>
 		<key>EA470D8A40125168696481DE</key>
 		<dict>
@@ -3341,24 +3419,6 @@
 			<string>CCCFA8569F9D1BE0BE946F21</string>
 			<key>isa</key>
 			<string>PBXBuildFile</string>
-		</dict>
-		<key>D0E591794B0262828F97EF30</key>
-		<dict>
-			<key>isa</key>
-			<string>PBXFileReference</string>
-			<key>lastKnownFileType</key>
-			<string>sourcecode.swift</string>
-			<key>path</key>
-			<string>NotesApp/Features/Editor/Services/NotebookPageDrag.swift</string>
-			<key>sourceTree</key>
-			<string>SOURCE_ROOT</string>
-		</dict>
-		<key>413AC42AAD67B1B8AB14E940</key>
-		<dict>
-			<key>isa</key>
-			<string>PBXBuildFile</string>
-			<key>fileRef</key>
-			<string>D0E591794B0262828F97EF30</string>
 		</dict>
 	</dict>
 	<key>rootObject</key>
