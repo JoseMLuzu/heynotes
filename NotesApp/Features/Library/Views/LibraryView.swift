@@ -25,6 +25,8 @@ struct LibraryView: View {
     @Environment(\.scenePhase) private var scenePhase
     @State private var showingImporter = false
     @State private var importing = false
+    @State private var stagedPDF: PDFImportDraft?
+    @State private var pdfImportFolder: Folder?
     @State private var sheet: LibrarySheet?
     @State private var pendingTemplate: PaperTemplate?
     @State private var showingTemplateGallery = false
@@ -225,18 +227,32 @@ struct LibraryView: View {
         .onChange(of: scenePhase) { _, phase in if phase != .active { workspace.backgroundSave() } }
 
         .overlay {
-            if importing { ProgressView("Importing PDF…").padding(24).background(.regularMaterial, in: RoundedRectangle(cornerRadius: 16)) }
+            if importing { ProgressView("Opening PDF…").padding(24).background(.regularMaterial, in: RoundedRectangle(cornerRadius: 16)) }
         }
         .disabled(importing || model.isWorking || workspace.isSwitching)
         .allowsHitTesting(!isOpeningDocument)
         .fileImporter(isPresented: $showingImporter, allowedContentTypes: [.pdf]) { result in
             switch result {
             case .success(let url):
-                let folder = selectedFolder
+                pdfImportFolder = selectedFolder
                 importing = true
-                Task { await model.importPDF(from: url, folder: folder); importing = false }
+                Task {
+                    defer { importing = false }
+                    do { stagedPDF = try await PDFImportStaging.shared.prepare(url) }
+                    catch { model.errorMessage = "The PDF could not be opened. \(error.localizedDescription)" }
+                }
             case .failure(let error): model.errorMessage = error.localizedDescription
             }
+        }
+        .sheet(item: $stagedPDF) { draft in
+            PDFPageSelectionView(draft: draft, close: { stagedPDF = nil }) { indices in
+                let success = await model.importPDF(from: draft.sourceURL, folder: pdfImportFolder,
+                                                   selectedPageIndices: indices, title: draft.title)
+                let error = success ? nil : model.errorMessage ?? "Please try importing this PDF again."
+                model.errorMessage = nil
+                return error
+            }
+            .onDisappear { Task { await PDFImportStaging.shared.discard(draft) } }
         }
         .fullScreenCover(isPresented: $showingTemplateGallery, onDismiss: {
             if let template = pendingTemplate { pendingTemplate = nil; sheet = .notebook(template) }
@@ -275,7 +291,7 @@ struct LibraryView: View {
                 } message: { Text(model.errorMessage ?? "") }
         }
         .alert("Library Error", isPresented: Binding(
-            get: { (model.errorMessage != nil || workspace.errorMessage != nil) && sheet == nil && changingCover == nil && coloringFolder == nil && !showingSettings },
+            get: { (model.errorMessage != nil || workspace.errorMessage != nil) && sheet == nil && stagedPDF == nil && changingCover == nil && coloringFolder == nil && !showingSettings },
             set: { if !$0 { model.errorMessage = nil; workspace.errorMessage = nil } }
         )) {
             Button("OK") { model.errorMessage = nil; workspace.errorMessage = nil }

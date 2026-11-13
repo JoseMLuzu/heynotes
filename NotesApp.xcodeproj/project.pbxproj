@@ -883,6 +883,7 @@
 				<string>D6C984D80675E45A945B4E83</string>
 				<string>D584F627A9E67C9B0B623D10</string>
 				<string>1472EA157E92F7FA4AF99E7C</string>
+				<string>88BF26A974D46FB8EC12B3E8</string>
 			</array>
 			<key>isa</key>
 			<string>PBXSourcesBuildPhase</string>
@@ -2024,6 +2025,13 @@
 			<key>sourceTree</key>
 			<string>SOURCE_ROOT</string>
 		</dict>
+		<key>A32D091312891376B645DF73</key>
+		<dict>
+			<key>fileRef</key>
+			<string>E981EE579BCA8378A75EAE0B</string>
+			<key>isa</key>
+			<string>PBXBuildFile</string>
+		</dict>
 		<key>A66591DBC603AB033A5B144F</key>
 		<dict>
 			<key>isa</key>
@@ -2425,6 +2433,7 @@
 				<string>EA0F5A0CAE9CDBBE4273AB15</string>
 				<string>871A62CEBA84CB41076B2EF4</string>
 				<string>7FA0C7EA131C0250ADA47910</string>
+				<string>A32D091312891376B645DF73</string>
 			</array>
 			<key>isa</key>
 			<string>PBXSourcesBuildPhase</string>
@@ -3072,6 +3081,8 @@
 				<string>503588A50C65E26BD6793D48</string>
 				<string>65F0767559DB262F6E820476</string>
 				<string>A6ED62E97157A6E11C417DF6</string>
+				<string>E981EE579BCA8378A75EAE0B</string>
+				<string>3F13BE3E460C5C106CDB07B2</string>
 			</array>
 			<key>isa</key>
 			<string>PBXGroup</string>
@@ -3122,6 +3133,17 @@
 			<string>sourcecode.swift</string>
 			<key>path</key>
 			<string>NotesApp/Features/PDF/Services/PDFRendering.swift</string>
+			<key>sourceTree</key>
+			<string>SOURCE_ROOT</string>
+		</dict>
+		<key>E981EE579BCA8378A75EAE0B</key>
+		<dict>
+			<key>isa</key>
+			<string>PBXFileReference</string>
+			<key>lastKnownFileType</key>
+			<string>sourcecode.swift</string>
+			<key>path</key>
+			<string>NotesApp/Features/PDF/Views/PDFPageSelectionView.swift</string>
 			<key>sourceTree</key>
 			<string>SOURCE_ROOT</string>
 		</dict>
@@ -3419,6 +3441,24 @@
 			<string>CCCFA8569F9D1BE0BE946F21</string>
 			<key>isa</key>
 			<string>PBXBuildFile</string>
+		</dict>
+		<key>3F13BE3E460C5C106CDB07B2</key>
+		<dict>
+			<key>isa</key>
+			<string>PBXFileReference</string>
+			<key>lastKnownFileType</key>
+			<string>sourcecode.swift</string>
+			<key>path</key>
+			<string>NotesAppDeviceTests/PDFSelectiveImportTests.swift</string>
+			<key>sourceTree</key>
+			<string>SOURCE_ROOT</string>
+		</dict>
+		<key>88BF26A974D46FB8EC12B3E8</key>
+		<dict>
+			<key>isa</key>
+			<string>PBXBuildFile</string>
+			<key>fileRef</key>
+			<string>3F13BE3E460C5C106CDB07B2</string>
 		</dict>
 	</dict>
 	<key>rootObject</key>
