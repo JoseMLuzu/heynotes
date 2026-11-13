@@ -1,0 +1,47 @@
+# Prepared neighboring pages
+
+## Opening pipeline
+
+EditorSession prepares the previous and next page while the active page is available for reading. Only immutable source paths, page IDs and object-data snapshots cross tasks. PagePreparationService shares decoded PencilKit drawing, PDF background, inserted elements and display-prepared images between a preload and a later foreground open. A finger gesture prioritizes its destination immediately, including while the previous sheet is still animating.
+
+The preparation store is an actor owned by one editor session. It retains at most three prepared entries with a 32 MiB estimated cost limit, plus a three-entry/4 MiB metadata cache. Estimated cost includes drawing-file bytes, object-data bytes and retained bitmap row bytes. This is a retention budget, not a cap on total application memory or an exact measure of PencilKit internals. Existing PDF/thumbnail caches and native canvases have independent lifetimes. No drawing snapshot rasterization or disk cache is added.
+
+## Prepared native canvases and interactive paging
+
+PageCanvasContainer also prepares up to two real CanvasHost/PKCanvasView neighbors beside the active canvas. Main-actor PreparedCanvasPage snapshots carry geometry, paper, decoded ink, PDF background and inserted content without retaining SwiftData models. Allocations yield between pages and wait while a Pencil stroke, finger page pan or sheet animation is active. Prepared canvases have no drawing delegate, input or accessibility focus. There can additionally be one outgoing canvas during a short completed turn; obsolete neighbors are removed when the active page changes. The count limit does not establish a hard RAM cap on PencilKit internals.
+
+Each decoded result has an opaque identity retained across cache hits. Foreground opening still validates source fingerprints and flushes outgoing ink before publication. A prepared canvas is adopted only when its page ID, decoded-content identity and logical dimensions match that validated result. A changed or evicted result creates a fresh canvas; it cannot substitute an old checkpoint. The active canvas retains its live drawing and undo history during tool changes and cancelled pulls. Delegate callbacks must match both the active canvas object and permanent page ID.
+
+While dragging at fit zoom, both real sheets move in viewport coordinates, with a stationary background. Crossing the old flick threshold no longer commits while the finger is down. Reversing switches the preview or returns to the original page; a decisive reverse flick cancels. Release uses the existing short-flick/slow-swipe policy. An already-prepared destination immediately continues its visual movement while the foreground save/load runs. The active page ID and editable canvas are published only after that save and validated load, adopting the same running animator rather than restarting it. If visual movement finishes first, the preview stays read-only until validation. A failed save returns both sheets to the original page and retains pending ink. A different validated content identity replaces the speculative host from the visible pose. When no neighbor is prepared, direct outgoing movement still works and foreground opening supplies the destination. Cold pages and required saves can therefore still add latency before editing is available. The last-page 0.5-second creation hold remains separate.
+
+Completed turns retain the outgoing native canvas as a neighbor when its ID remains adjacent and no prepared replacement already exists. Its old decoded identity is still checked against foreground source fingerprints before reuse; changed drawing/object/PDF sources reject it. It has no drawing delegate or editing permission while inactive. Pending warm-up checks the identity again before allocating, so it cannot rebuild an identical retained canvas. Warming also waits for edge-return animations, scroll deceleration and a pending validation. Returning immediately to a clean page can therefore reuse its actual PKCanvasView rather than allocate another one. The count stays bounded to two neighbors.
+
+Rejected queued gestures settle both sheets, including their preview reference, instead of returning only the outgoing sheet. Native drawing callbacks with the same active PKDrawing are ignored rather than triggering a false dirty revision/checkpoint. Beginning a fitted page gesture stops existing native scroll deceleration. Reduce Motion explicitly puts a prepared canvas at zero offset before exposing it.
+
+Cancelled previews settle together. Rotation clears the interactive preview and fits retained neighbors to the new viewport without changing the active page or input permission. Memory warnings clear pending snapshots and prepared hosts, while retaining the active drawing; representable teardown cancels warming and detaches callbacks. Main-actor allocations are deferred, not moved to a background thread.
+
+## Local performance markers
+
+Use Instruments Points of Interest with subsystem `com.local.notesapp`, category `PageTurning`. `PageOpen` surrounds the foreground load, `FlushBeforeOpen` isolates the mandatory save, `PrepareNeighborCanvas` measures native view construction/layout, and `ReleaseToSettledSheet` runs from the accepted release through validated sheet completion (or cancellation). Events identify neighbor preparation, prepared canvas reuse, outgoing-canvas retention and active canvas installation. There are no titles, file paths, ink samples or external telemetry. Canvas installation/animator completion markers do not measure actual display presentation or establish frame rate. Capture Animation Hitches/Core Animation alongside these intervals on a real iPad for frame pacing.
+
+## Freshness and cancellation
+
+Before reuse, ink/PDF/image sources are checked by private URL, size, modification date and inode. Keys also include the page's permanent ID, relative drawing/PDF paths, PDF page index and exact object-data snapshot. Missing explicit ink, missing PDF/image sources and corrupt replacements still fail when opened. A nil drawing path with no fallback file remains a legitimate blank page. Fresh loads check source versions again before insertion; a changing source gets one bounded retry.
+
+Foreground opening retains the existing flush-before-publication boundary. Same-page and aliased drawing-path loads wait for the save before checking prepared content. Neighbor speculation skips a source aliased to the current drawing. Reopening after edits therefore cannot return a checkpoint prepared before the latest save.
+
+In-flight loads track individual consumers. Cancelling an obsolete preload removes only its consumer; a foreground open sharing that task keeps it alive. The last cancellation cancels the worker. Tab/library navigation cancels speculative work before saving/loading the next document. Memory warnings discard reusable entries and invalidate the cache generation without aborting an active foreground open or clearing visible/unsaved data. A worker started before a clear cannot refill that cleared generation.
+
+## Follow-up flicks
+
+The full-sheet animation is retained. A rapid follow-up uses the same active UIViewPropertyAnimator and visible position, but its remaining motion is retimed to at most 60 ms, never longer than its original remaining duration. A repeated request replaces the single queued action rather than repeatedly restarting that tail. Destination preparation begins before waiting for this boundary, and source/session/gesture checks still run before changing the page. The 0.5-second new-page hold and Reduce Motion behavior remain unchanged.
+
+UIKit's public pauseAnimation/continueAnimation APIs adjust the current motion; the implementation does not force it to its endpoint to accept another flick. See [continueAnimation](https://developer.apple.com/documentation/uikit/uiviewpropertyanimator/continueanimation%28withtimingparameters%3Adurationfactor%3A%29).
+
+## Verification
+
+PagePreparationTests covers replaced/missing/corrupt ink, changed object metadata, replaced/corrupt images, identity freshness, count/byte limits, memory clearing, shared-consumer cancellation, prepared neighboring pages and returning to the newest saved ink. InteractivePageTests exercises release-only commit, reversing/cancelling, both preview directions, rotation, memory release and stale canvas rejection. A real SwiftUI-hosted test asserts that the prepared PKCanvasView object becomes the session's active canvas after outgoing ink reaches disk, then returns to the newest saved drawing. Existing aliased-path, same-page reload, pending-save failure, page-turn geometry, queued gesture, PDF export, Pencil and recovery tests remain in the native suite.
+
+A fixed simulator workload loads a 20-stroke page with 150 KB of archived object ink 20 times, then repeats 20 accesses after preparation. One full-suite sample measured 7.787 ms unprepared versus 5.173 ms prepared, with exactly one prepared load and 20 reuse hits. These aggregate simulator timings do not establish device latency/FPS. The primary assertions are reuse counts, freshness, cancellation and ink preservation. First-time rendering, cache eviction and a required save may still take time; physical gesture feel must be checked with real handwritten and PDF pages.
+
+Changes are packaged in local scoped commits after user authorization; no push is performed.
