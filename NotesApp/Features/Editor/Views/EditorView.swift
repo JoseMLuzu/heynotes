@@ -136,6 +136,7 @@ struct EditorView: View {
             session.handwriting.setTool(preferences.selected, session: session)
         }
         .onChange(of: preferences.selected) { _, value in session.handwriting.setTool(value, session: session) }
+        .onChange(of: focusMode.isActive) { _, active in if active { showingPages = false } }
         .onDisappear { session.handwriting.cancel() }
         .sheet(isPresented: $showingMargin) { PDFMarginEditor(session: session) }
         .photosPicker(isPresented: $showingPhotos, selection: $selectedPhoto, matching: .images)
@@ -305,7 +306,7 @@ struct EditorView: View {
     }
 
     private var pageControls: some View {
-        Button { showingPages = true } label: {
+        Button { showingPages.toggle() } label: {
             Text("\((session.page?.pageIndex ?? 0) + 1) / \(session.notebook.pages.count)")
                 .font(.system(.caption, weight: .medium).monospacedDigit())
                 .foregroundStyle(.secondary)
@@ -316,13 +317,12 @@ struct EditorView: View {
                 .contentShape(Rectangle())
         }
         .accessibilityLabel("Page \((session.page?.pageIndex ?? 0) + 1) of \(session.notebook.pages.count). Show all pages")
+        .accessibilityIdentifier("editor.pages")
         .help("Show pages and bookmarks")
-        .popover(isPresented: $showingPages, arrowEdge: .top) { pageBrowser }
+        .popover(isPresented: $showingPages, arrowEdge: .top) {
+            NotebookPagesPanel(session: session) { showingPages = false }
+        }
         .allowsHitTesting(!session.busy)
-    }
-
-    private var pageBrowser: some View {
-        NotebookIndexView(session: session) { showingPages = false }
     }
 
     private func navigatePage(_ offset: Int) {

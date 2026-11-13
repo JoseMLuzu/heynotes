@@ -317,6 +317,21 @@ final class EditorSession {
         _ = commit()
     }
 
+    /// Dropping on a thumbnail takes its original slot and adopts that page's section.
+    /// Only metadata changes: the live canvas, permanent IDs and binary paths stay intact.
+    @discardableResult
+    func reorderPage(_ source: NotebookPageDrag, onto targetID: UUID) -> Bool {
+        guard ready, !busy, source.notebookID == notebook.id, source.pageID != targetID else { return false }
+        let pages = notebook.orderedPages
+        guard let from = pages.firstIndex(where: { $0.id == source.pageID }),
+              let to = pages.firstIndex(where: { $0.id == targetID }) else { return false }
+        pages[from].section = pages[to].section
+        PageOrdering.move(pages[from], in: notebook, offset: to - from)
+        guard commit() else { return false }
+        prepareNeighboringPages()
+        return true
+    }
+
     func changeTemplate(_ template: PaperTemplate) {
         guard let page, ready, !busy, page.pdfFilePath == nil,
               page.paperTemplateRawValue != template.rawValue else { return }

@@ -5,6 +5,7 @@ struct PageThumbnail: View {
     let page: NotePage
     let notebookID: UUID
     let selected: Bool
+    let storage: DrawingStorage
     @State private var image: UIImage?
     @State private var failed = false
 
@@ -30,7 +31,7 @@ struct PageThumbnail: View {
                                            fallbackPath: DrawingStorage.path(notebook: notebookID, page: page.id),
                                            pdfPath: page.pdfFilePath, pdfIndex: page.pdfPageIndex,
                                            pdfContentSize: page.contentSize, elements: try PageElementsCodec.decode(page.objectsData))
-                let result = try await PageThumbnailService.shared.thumbnail(request)
+                let result = try await PageThumbnailService.shared.thumbnail(request, storage: storage)
                 try Task.checkCancellation()
                 image = result; failed = false
             } catch is CancellationError {

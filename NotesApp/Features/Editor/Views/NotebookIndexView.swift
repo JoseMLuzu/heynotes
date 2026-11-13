@@ -8,6 +8,7 @@ struct NotebookIndexView: View {
     @State private var title = ""
     @State private var deleting: NotebookSection?
     @State private var deletingPageID: UUID?
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     init(session: EditorSession, bookmarksOnly: Bool = false, close: @escaping () -> Void) {
         self.session = session
         self.close = close
@@ -32,7 +33,7 @@ struct NotebookIndexView: View {
                     Button("Add Page", systemImage: "plus") { Task { await session.addPage(); if session.ready { close() } } }
                 } label: { Image(systemName: "plus").frame(width: 44, height: 44) }.accessibilityLabel("Add page or section")
                 Button("Done", action: close).frame(minHeight: 44)
-            }.padding(.horizontal, 12)
+            }.padding(.horizontal, 20).padding(.vertical, 8)
             HStack {
                 Button { Task { await session.turnPage(-1) } } label: { Image(systemName: "chevron.left").frame(width: 44, height: 44) }
                     .disabled(session.page?.pageIndex == 0).accessibilityLabel("Previous page")
@@ -41,7 +42,7 @@ struct NotebookIndexView: View {
                 Spacer()
                 Button { Task { await session.turnPage(1) } } label: { Image(systemName: "chevron.right").frame(width: 44, height: 44) }
                     .disabled(session.page?.pageIndex == session.notebook.pages.count - 1).accessibilityLabel("Next page")
-            }.padding(.horizontal, 8)
+            }.padding(.horizontal, 16)
             if let page = session.page {
                 Button {
                     title = page.bookmarkTitle ?? "Page \(page.pageIndex + 1)"
@@ -88,8 +89,6 @@ struct NotebookIndexView: View {
         }
         .buttonStyle(.plain).tint(AppTheme.accent)
         .allowsHitTesting(!session.busy)
-        .frame(width: 360, height: 520)
-        .presentationCompactAdaptation(.popover)
         .alert(naming?.heading ?? "Name", isPresented: Binding(get: { naming != nil }, set: { if !$0 { naming = nil } })) {
             if let action = naming {
                 TextField("Name", text: $title)
@@ -125,10 +124,11 @@ struct NotebookIndexView: View {
                     Task { await session.open(page); if session.ready, session.page?.id == page.id { close() } }
                 } label: {
                     VStack(spacing: 4) {
-                        PageThumbnail(page: page, notebookID: session.notebook.id, selected: page.id == session.page?.id)
+                        PageThumbnail(page: page, notebookID: session.notebook.id, selected: page.id == session.page?.id, storage: session.storage)
                         if let name = page.bookmarkTitle { Label(name, systemImage: "bookmark.fill").font(.caption2).lineLimit(2) }
                     }.frame(minWidth: 76, minHeight: 108)
                 }
+                .modifier(NotebookPageReordering(session: session, pageID: page.id))
                 .contextMenu {
                     Button(page.bookmarkTitle == nil ? "Add Bookmark" : "Rename Bookmark", systemImage: "bookmark") { title = page.bookmarkTitle ?? ""; naming = .bookmark(page.id) }
                     if page.bookmarkTitle != nil { Button("Remove Bookmark") { _ = session.bookmark(page, title: nil) } }
@@ -148,6 +148,7 @@ struct NotebookIndexView: View {
                 }
             }
         }
+        .animation(reduceMotion ? nil : .easeOut(duration: 0.18), value: pages.map(\.id))
     }
     private func saveName(_ action: NameAction) {
         switch action {
