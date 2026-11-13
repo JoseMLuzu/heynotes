@@ -6,7 +6,7 @@ The app should feel native, warm and personal while giving handwriting the most 
 
 - Library notebook covers sit directly on the background instead of inside a second card. A spine, fine page edge and single title initial give a book-like identity without textures or bitmap assets. Notebook titles appear once below the cover. PDF and favorite states are real metadata.
 - Adaptive grid columns are narrower, with more separation and a comfortable maximum content width.
-- Empty Library and Favorites states explain their actual next action. Search uses the native no-results state. Study remains clearly marked as coming soon.
+- Empty Library and Favorites states explain their actual next action. Search uses the native no-results state. Study uses real due counts, a restrained deck grid, native forms and readable review cards.
 - Notebook creation shows a live cover preview and directly selectable color circles with checkmarks. Cover color is never the only indication of selection. Preview dimensions are explicit so its GeometryReader cannot overlap neighboring form rows.
 - The editor keeps the existing single-row header and 52-point page bar. A small cover-colored mark ties it to its notebook; tools sit in a quiet control surface and their selected background moves briefly between tools.
 - A pale blue-gray canvas surround and subtle paper shadow separate the sheet from controls. Dark mode uses blue-gray surfaces and a brighter blue accent for contrast. Paper uses its template background.

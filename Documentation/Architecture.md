@@ -101,3 +101,17 @@ The organization milestone introduced NotesSchemaV3; current metadata is NotesSc
 ## Current student-tools schema (V4)
 
 V3 is now frozen in SchemaV3.swift. NotesSchemaV4 adds NotebookSection and optional page bookmark/section/object-envelope/right-margin metadata through a tested lightweight V3 → V4 migration. The previous sections describe historical phase decisions; implemented storage, PDF and organization capabilities supersede their early plans. See StudentTools.md for current layering, image lifecycle, section ordering, migration evidence and export semantics. Flashcard models and content search remain unimplemented.
+
+
+## Phase 4 implemented schema (V6)
+
+The current schema is NotesSchemaV6. V5 is frozen in SchemaV5.swift, and the existing migration plan adds a lightweight V5 → V6 stage. StudyDeck, Flashcard and ReviewRecord are real stored models. Deck-to-card and card-to-review ownership uses cascade relationships; notebook/page references are optional permanent UUIDs, preserving study data if source notes disappear. Deck/card deletion is recoverable with trashedAt. Notebook, page and drawing-file layouts are unchanged.
+
+StudyViewModel owns a dedicated explicit-save ModelContext; a failed Study transaction rolls back only that context. StudyReviewSession advances only after card progress and history save together. ReviewScheduling is a pure Sendable boundary with explicit Date input, allowing a later FSRS implementation. The V1 algorithm uses elapsed seconds instead of calendar-midnight rounding. Source lookup uses current metadata and opens through DocumentWorkspace's flush-before-navigation boundary. Typed Study routes are cleared when a document opens so a pushed deck cannot cover the editor.
+
+The earlier Study proposal and phase gates above are historical. See [Study.md](Study.md) for the final model, exact algorithm, test evidence and current limitations. Global handwriting/content search remains deferred.
+
+
+## Two-document workspace
+
+DocumentWorkspace now retains up to two live EditorSessions in stable primary/secondary presentation slots, with activeSession representing the focused editor. WorkspaceSnapshot extends the existing tab preference with optional pane IDs, display order and fraction; it does not change SwiftData entities. WorkspaceEditorView keeps slot identity through focus, resizing, swaps and keeping the secondary document alone, while existing single-pane tab switches preserve their toolbar control identity. Closing or replacing an editor requires its pending native ink to flush; Library/background and subtree cleanup cover both sessions. Same-document dual views and aliased editable drawing paths are rejected. See [SplitWorkspace.md](SplitWorkspace.md) for exact UI, lifecycle, restoration, touch behavior and tests.

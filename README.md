@@ -1,10 +1,10 @@
 # HeyNotes — Write. Study. Remember.
 
-A native, offline-first iPad notes app. **Phases 1, 2 and 3 are implemented.** There are no accounts, analytics, networking services, dependencies, payments, or cloud entitlements.
+A native, offline-first iPad notes app. **Phases 1–4 are implemented.** There are no accounts, analytics, networking services, dependencies, payments, or cloud entitlements.
 
 ## Student tools
 
-Study tape, native ruler/vector shapes, named page bookmarks, notebook sections, extended PDF note margins, typed text and image insertion are implemented. All editor controls remain at the top. See [StudentTools.md](Documentation/StudentTools.md) for usage, V4 migration, export behavior, tests and incremental limits. Flashcards and handwriting/content search remain deferred.
+Study tape, native ruler/vector shapes, named page bookmarks, notebook sections, extended PDF note margins, typed text and image insertion are implemented. The toolbar supports top, bottom and side placement. See [StudentTools.md](Documentation/StudentTools.md) for usage, V4 migration, export behavior, tests and incremental limits. Flashcards are implemented in Phase 4; handwriting/content search remains deferred.
 
 ## Requirements and verified environment
 
@@ -36,7 +36,7 @@ The standard-library-only helper `python3 Scripts/generate_project.py` registers
 - System light/dark surfaces, Dynamic Type, SF Symbols, and accessible notebook labels.
 - Opening a notebook launches the real PencilKit editor described below.
 
-Study explains its scheduled phase. PDF import and export are implemented; flashcards remain in Phase 4. The app does not insert sample content.
+Study provides real decks, cards, due reviews and source-note links. PDF import/export is implemented. The app does not insert sample content.
 
 ## Source map
 
@@ -49,6 +49,7 @@ Study explains its scheduled phase. PDF import and export are implemented; flash
 | `NotesApp/Features/Library/ViewModels/` | Validated metadata mutations, saves and rollback |
 | `NotesApp/Features/Library/Views/` | Sidebar, grid, forms and cards |
 | `NotesApp/Features/Editor/` | PencilKit bridge, tools, save coordination and page management |
+| `NotesApp/Features/Study/` | Deck/card editing, deterministic review scheduler, recoverable deletion and source links |
 | `NotesAppTests/` | Host-side Swift Testing tests against the production metadata code |
 | `Documentation/Architecture.md` | Relationships, storage design, risks and phase gates |
 | `Documentation/Validation.md` | Automated results, environment limitations and manual checklist |
@@ -67,7 +68,7 @@ swift test
 
 The Swift package is a **macOS host test harness for metadata only**, not a Mac version of the app. It compiles the same model, persistence and view model sources and runs without an iPad simulator. Open `Package.swift` separately in Xcode to use its test UI. The native NotesApp scheme additionally includes NotesAppDeviceTests (PencilKit, save flushing and recovery); run those with ⌘U and an iPad simulator.
 
-Continue with Phase 4 only after an explicit request.
+Phase 4 was explicitly authorized and implemented. Further phases require a new request.
 
 ## Phase 2 — Handwriting
 
@@ -118,7 +119,7 @@ Open several notebooks from Library and switch between their tabs above the edit
 
 ## Organization — first milestone
 
-Folders now support nested subfolders, full-path moves, folder favorites and recoverable Trash. Inbox shows unfiled notebooks without duplicating files. Trash preserves folder/document/page relationships and binary files; restore returns items to their original locations. The V3 schema has tested migrations from the earlier stores. Home/All Notes/dated Recents/Quick Note, notebook sections and real Study remain later milestones. See [organization plan and recovery semantics](Documentation/Organization.md).
+Folders now support nested subfolders, full-path moves, folder favorites and recoverable Trash. Inbox shows unfiled notebooks without duplicating files. Trash preserves folder/document/page relationships and binary files; restore returns items to their original locations. The V3 schema has tested migrations from the earlier stores. Home/All Notes/dated Recents/Quick Note remain later milestones. Notebook sections and Study are implemented. See [organization plan and recovery semantics](Documentation/Organization.md).
 
 ## Templates
 
@@ -127,3 +128,17 @@ Open **Templates** in the Library sidebar to browse 16 backgrounds across Notes 
 ## Notebook covers
 
 Use **New Notebook → Browse Covers** or a notebook's context menu → **Change Cover**. The gallery includes the 40 supplied designs in Linen, Waves, Patterns, Botanical and Textures, plus the five original colors. Covers remain offline, persist through reopening/duplication, and leave pages and PDF originals unchanged. See [cover collections, compatibility and verification](Documentation/Covers.md).
+
+
+## Phase 4 — Study and flashcards
+
+Open **Study** in the sidebar, use **+** to create a deck, optionally link a notebook, then add question/answer cards. A card can reference a notebook page by permanent UUID. From the editor, **… → Page → Create Flashcard** opens manual creation with the current page already linked. New cards are immediately due.
+
+Use **Review Due Cards** for scheduled ratings (Again, Hard, Good or Easy), or **Practice All** to repeat the whole deck anytime without changing dates. Practice reveals each answer and advances with Next Card; completion offers Practice Again. Each successful rating saves its schedule and history together. Close/relaunch to continue with remaining due cards. **Open Source Note** opens the exact original page; missing/trashed sources show a recoverable message. Deck/card removal goes to **Study Trash**, preserving review history for restoration.
+
+V6 adds StudyDeck, Flashcard and ReviewRecord through the versioned migration plan, preserving V5 notebook/page metadata and document files. The scheduler is a simple replaceable V1 interval algorithm, not FSRS. Counts come from stored cards; there are no generated sample cards. See [Study.md](Documentation/Study.md) for exact intervals, model relationships, validation and manual checks. Handwritten-selection capture, AI generation and review notifications remain outside this phase.
+
+
+## Two documents at once
+
+Use the split icon beside the editor tabs to open another notebook or PDF beside the focused document. An existing tab also offers **Open Beside** in its context menu. Each pane has independent handwriting, page navigation, tools, Undo, zoom and saves. Drag the divider, swap panes or keep only the focused document from Split View Options. Narrow windows stack the two editors. The existing tab preference gains backward-compatible optional fields; the SwiftData schema and file layout are unchanged. See [SplitWorkspace.md](Documentation/SplitWorkspace.md) for save boundaries, restoration, source safety, limits and acceptance checks.
