@@ -6,10 +6,11 @@ struct EditorCanvasContent: View {
     let tools: ToolPreferences
     let fingerDrawing: Bool
     var onPencilDoubleTap: ((UIPencilPreferredAction) -> Void)? = nil
+    var onInteraction: (() -> Void)? = nil
 
     var body: some View {
         PaperCanvas(session: session, tool: tools.tool, fingerDrawing: fingerDrawing,
                     editorTool: tools.selected, inkStyle: tools.ink, rulerEnabled: tools.rulerEnabled,
-                    onPencilDoubleTap: onPencilDoubleTap)
+                    onPencilDoubleTap: onPencilDoubleTap, onInteraction: onInteraction)
     }
 }

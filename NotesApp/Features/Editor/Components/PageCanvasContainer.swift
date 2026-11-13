@@ -3,6 +3,13 @@ import os
 
 /// One active canvas and up to two prepared neighbors. Ink stays editable, without raster snapshots.
 final class PageCanvasContainer: UIView {
+    let paneTouchObserver = PaneTouchObserver(target: nil, action: nil)
+    var onInteraction: (() -> Void)? {
+        didSet {
+            paneTouchObserver.onTouch = onInteraction
+            if paneTouchObserver.isEnabled != (onInteraction != nil) { paneTouchObserver.isEnabled = onInteraction != nil }
+        }
+    }
     private(set) var current: CanvasHost?
     private(set) var pageID: UUID?
     private var currentIdentity: UUID?
@@ -45,6 +52,11 @@ final class PageCanvasContainer: UIView {
         super.init(frame: frame)
         backgroundColor = AppTheme.canvasUIColor; isOpaque = true
         addSubview(creationIndicator)
+        paneTouchObserver.cancelsTouchesInView = false
+        paneTouchObserver.delaysTouchesBegan = false; paneTouchObserver.delaysTouchesEnded = false
+        paneTouchObserver.requiresExclusiveTouchType = false
+        paneTouchObserver.isEnabled = false
+        addGestureRecognizer(paneTouchObserver)
     }
     required init?(coder: NSCoder) { fatalError("init(coder:) is not supported") }
     func showCreationProgress(_ progress: Double?) { creationIndicator.show(progress: progress) }

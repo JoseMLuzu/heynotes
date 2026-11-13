@@ -260,6 +260,7 @@ struct PaperCanvas: UIViewRepresentable {
     var inkStyle = InkStyle()
     var rulerEnabled = false
     var onPencilDoubleTap: ((UIPencilPreferredAction) -> Void)? = nil
+    var onInteraction: (() -> Void)? = nil
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.isEnabled) private var isEnabled
 
@@ -271,6 +272,7 @@ struct PaperCanvas: UIViewRepresentable {
     }
 
     static func dismantleUIView(_ container: PageCanvasContainer, coordinator: Coordinator) {
+        container.onInteraction = nil
         coordinator.pencil.detach()
         container.discardPreparedCanvases()
         coordinator.session.onPreparedNeighbor = nil
@@ -278,6 +280,7 @@ struct PaperCanvas: UIViewRepresentable {
     }
 
     func updateUIView(_ container: PageCanvasContainer, context: Context) {
+        container.onInteraction = onInteraction
         session.onPreparedNeighbor = { [weak container] in container?.prepare($0) }
         session.onDiscardPreparedCanvases = { [weak container] in container?.discardPreparedCanvases() }
         context.coordinator.pencil.interaction.isEnabled = isEnabled && session.ready && !session.busy

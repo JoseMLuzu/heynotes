@@ -849,6 +849,17 @@
 			<key>sourceTree</key>
 			<string>&lt;group&gt;</string>
 		</dict>
+		<key>3EF388E83F683007497D33C6</key>
+		<dict>
+			<key>isa</key>
+			<string>PBXFileReference</string>
+			<key>lastKnownFileType</key>
+			<string>sourcecode.swift</string>
+			<key>path</key>
+			<string>NotesApp/Features/Workspace/Views/PaneTouchObserver.swift</string>
+			<key>sourceTree</key>
+			<string>SOURCE_ROOT</string>
+		</dict>
 		<key>3F13BE3E460C5C106CDB07B2</key>
 		<dict>
 			<key>isa</key>
@@ -2751,6 +2762,7 @@
 				<string>E6E251415DB29BA0E8BD3071</string>
 				<string>E338477DB750193C0B89B13B</string>
 				<string>C5CE2B3B3DBAC3F8CBA85B50</string>
+				<string>E8E938A107242C0AE12043D0</string>
 				<string>DCA2CBFC94A7FECB14AB95C3</string>
 				<string>B037D916690E274048F4B2FF</string>
 				<string>0850111ABE3A881AFD3DEEB9</string>
@@ -3451,6 +3463,7 @@
 				<string>68B0B493C72011A8826AC612</string>
 				<string>8960E77BCDFC247A3003C519</string>
 				<string>6E2296555AAA39B54D31A066</string>
+				<string>3EF388E83F683007497D33C6</string>
 				<string>5DFB6D06EF10030A38094CAF</string>
 				<string>71F523531AE3C44D24F87D0E</string>
 				<string>A6FF88F516373C638E94CEBB</string>
@@ -3521,6 +3534,13 @@
 			<string>NotesApp/Features/PDF/Services/PDFRendering.swift</string>
 			<key>sourceTree</key>
 			<string>SOURCE_ROOT</string>
+		</dict>
+		<key>E8E938A107242C0AE12043D0</key>
+		<dict>
+			<key>fileRef</key>
+			<string>3EF388E83F683007497D33C6</string>
+			<key>isa</key>
+			<string>PBXBuildFile</string>
 		</dict>
 		<key>E981EE579BCA8378A75EAE0B</key>
 		<dict>
