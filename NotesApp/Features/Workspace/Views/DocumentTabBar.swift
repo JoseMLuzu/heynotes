@@ -31,6 +31,8 @@ struct DocumentTabBar<TrailingActions: View>: View {
                         .frame(width: 44, height: rowHeight)
                 }
                 .accessibilityLabel("Toggle Sidebar")
+                .accessibilityIdentifier("workspace.sidebar")
+                .modifier(EditorGlassSurface(shape: Circle()))
                 .help("Show or hide the library sidebar")
             }
 

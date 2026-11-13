@@ -104,7 +104,10 @@ struct LibraryView: View {
         NavigationSplitView(columnVisibility: focusColumnVisibility, preferredCompactColumn: focusCompactColumn) {
             List(selection: Binding(get: { navigation.selection }, set: { destination in
                 Task {
-                    if await workspace.showLibrary() { navigation.selection = destination ?? .library; model.reload() }
+                    if await workspace.showLibrary() {
+                        navigation.selection = destination ?? .library; model.reload()
+                        if sizeClass == .compact { compactColumn = .detail }
+                    }
                 }
             })) {
                 Section {
@@ -142,6 +145,15 @@ struct LibraryView: View {
             .background(AppTheme.background)
             .allowsHitTesting(!workspace.blocksTabControls)
             .navigationTitle("Notes")
+            .toolbar(removing: .sidebarToggle)
+            .toolbar {
+                if sizeClass == .compact {
+                    ToolbarItem(placement: .topBarTrailing) {
+                        Button(action: toggleSidebar) { Image(systemName: "sidebar.left") }
+                            .accessibilityLabel("Close Sidebar")
+                    }
+                }
+            }
             .navigationSplitViewColumnWidth(min: 230, ideal: 260, max: 320)
         } detail: {
             NavigationStack {
@@ -149,6 +161,9 @@ struct LibraryView: View {
                     if workspace.activeSession == nil && (!workspace.openNotebooks.isEmpty || backDestination != nil) {
                         DocumentTabBar(workspace: workspace, showLibrary: showLibrary, toggleSidebar: toggleSidebar,
                                        backButton: NavigationBackButton(destination: backDestination, action: goBack)) { EmptyView() }
+                    }
+                    if workspace.activeSession == nil {
+                        AppTheme.headerBackground.frame(height: 16).accessibilityHidden(true)
                     }
                     Group {
                         if let session = workspace.activeSession {
@@ -181,6 +196,13 @@ struct LibraryView: View {
                 .toolbarBackground(.visible, for: .navigationBar)
                 .toolbar(workspace.activeSession == nil ? .visible : .hidden, for: .navigationBar)
                 .toolbar {
+                    if workspace.activeSession == nil {
+                        ToolbarItem(placement: .topBarLeading) {
+                            Button(action: toggleSidebar) { Image(systemName: "sidebar.left") }
+                                .accessibilityLabel("Toggle Sidebar")
+                                .accessibilityIdentifier("library.sidebar")
+                        }
+                    }
                     if navigation.selection != .study && navigation.selection != .trash && workspace.activeSession == nil {
                         ToolbarItem(placement: .primaryAction) {
                             Button { showingImporter = true } label: { Label("Import PDF", systemImage: "square.and.arrow.down") }

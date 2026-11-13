@@ -227,6 +227,7 @@ struct EditorView: View {
                     Image(systemName: "chevron.left").frame(width: 44, height: 44)
                 }
                 .accessibilityLabel("Back to Library")
+                .modifier(EditorGlassSurface(shape: Circle()))
                 .allowsHitTesting(!session.busy)
 
                 if sizeClass == .compact || toolbarPlacement.position != .top {
