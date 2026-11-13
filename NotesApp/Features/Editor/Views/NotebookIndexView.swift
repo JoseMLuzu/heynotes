@@ -7,6 +7,7 @@ struct NotebookIndexView: View {
     @State private var naming: NameAction?
     @State private var title = ""
     @State private var deleting: NotebookSection?
+    @State private var deletingPageID: UUID?
     init(session: EditorSession, bookmarksOnly: Bool = false, close: @escaping () -> Void) {
         self.session = session
         self.close = close
@@ -102,6 +103,17 @@ struct NotebookIndexView: View {
         .confirmationDialog("Delete this section?", isPresented: Binding(get: { deleting != nil }, set: { if !$0 { deleting = nil } }), titleVisibility: .visible, presenting: deleting) { section in
             Button("Delete Section", role: .destructive) { session.deleteSection(section) }
         } message: { _ in Text("Its pages will remain in this notebook under Unsectioned Pages.") }
+        .confirmationDialog("Delete this page?", isPresented: Binding(
+            get: { deletingPageID != nil }, set: { if !$0 { deletingPageID = nil } }
+        ), titleVisibility: .visible) {
+            Button("Delete Page", role: .destructive) {
+                if let id = deletingPageID, let page = session.notebook.pages.first(where: { $0.id == id }) {
+                    Task { await session.deletePage(page) }
+                }
+                deletingPageID = nil
+            }
+            Button("Cancel", role: .cancel) { deletingPageID = nil }
+        } message: { Text("The page will be removed from this notebook. Its drawing file is retained locally for recovery.") }
         .alert("Could Not Update Notebook", isPresented: Binding(get: { session.errorMessage != nil }, set: { if !$0 { session.errorMessage = nil } })) {
             Button("OK") { session.errorMessage = nil }
         } message: { Text(session.errorMessage ?? "") }
@@ -124,6 +136,15 @@ struct NotebookIndexView: View {
                         Button("Unsectioned Pages") { session.assign(page, to: nil) }
                         ForEach(session.notebook.orderedSections) { section in Button(section.title) { session.assign(page, to: section) } }
                     }
+                    Divider()
+                    Button("Duplicate Page", systemImage: "plus.square.on.square") { Task { await session.duplicatePage(page) } }
+                        .disabled(!session.ready)
+                    Button("Move Page Earlier", systemImage: "arrow.left") { session.movePage(-1, target: page) }
+                        .disabled(page.pageIndex == 0)
+                    Button("Move Page Later", systemImage: "arrow.right") { session.movePage(1, target: page) }
+                        .disabled(page.pageIndex == session.notebook.pages.count - 1)
+                    Button("Delete Page", systemImage: "trash", role: .destructive) { deletingPageID = page.id }
+                        .disabled(session.notebook.pages.count <= 1)
                 }
             }
         }

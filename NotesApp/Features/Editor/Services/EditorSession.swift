@@ -193,8 +193,9 @@ final class EditorSession {
         if success { await open(new) }
     }
 
-    func duplicatePage() async {
-        guard !busy, ready, let source = page else { return }
+    func duplicatePage(_ target: NotePage? = nil) async {
+        guard !busy, ready, let source = target ?? page,
+              notebook.pages.contains(where: { $0.id == source.id }) else { return }
         busy = true
         guard await flush() else { busy = false; return }
         let new = NotePage(pageIndex: notebook.pages.count, paperTemplate: source.paperTemplate)
@@ -205,13 +206,14 @@ final class EditorSession {
             var objects = try PageElementsCodec.decode(source.objectsData)
             for index in objects.indices { objects[index].id = UUID() }
             new.objectsData = try PageElementsCodec.encode(objects)
-            if let sourcePath = source.drawingFilePath {
+            let sourcePath = source.drawingFilePath ?? DrawingStorage.path(notebook: notebook.id, page: source.id)
+            if try await storage.exists(sourcePath) {
                 let data = try await storage.read(sourcePath)
                 _ = try PKDrawing(data: data)
                 let destination = DrawingStorage.path(notebook: notebook.id, page: new.id)
                 try await storage.write(data, to: destination)
                 new.drawingFilePath = destination
-            }
+            } else if source.drawingFilePath != nil { throw CocoaError(.fileNoSuchFile) }
             context.insert(new); notebook.pages.append(new)
             NotebookOrganization.normalize(notebook)
             let success = commit()
@@ -220,25 +222,29 @@ final class EditorSession {
         } catch { busy = false; errorMessage = error.localizedDescription }
     }
 
-    func deletePage() async {
-        guard !busy, let page, notebook.pages.count > 1 else { return }
+    func deletePage(_ target: NotePage? = nil) async {
+        guard !busy, let target = target ?? page, notebook.pages.count > 1,
+              notebook.pages.contains(where: { $0.id == target.id }) else { return }
         busy = true
         guard await flush() else { busy = false; return }
+        let wasCurrent = page?.id == target.id
         // File bytes and their backup are deliberately retained for recovery.
-        notebook.pages.removeAll { $0.id == page.id }
-        context.delete(page)
+        notebook.pages.removeAll { $0.id == target.id }
+        if wasCurrent { page = nil }
+        context.delete(target)
         PageOrdering.normalize(notebook.orderedPages)
         let success = commit()
         busy = false
-        guard success else { return }
-        if let first = notebook.orderedPages.first { await open(first) }
+        guard success else { if wasCurrent { page = target }; return }
+        if wasCurrent, let first = notebook.orderedPages.first { await open(first) }
     }
 
-    func movePage(_ offset: Int) {
-        guard let page, !busy else { return }
+    func movePage(_ offset: Int, target: NotePage? = nil) {
+        guard let target = target ?? page, !busy else { return }
         let pages = notebook.orderedPages
-        if let index = pages.firstIndex(where: { $0.id == page.id }), pages.indices.contains(index + offset) { page.section = pages[index + offset].section }
-        PageOrdering.move(page, in: notebook, offset: offset)
+        guard let index = pages.firstIndex(where: { $0.id == target.id }), pages.indices.contains(index + offset) else { return }
+        target.section = pages[index + offset].section
+        PageOrdering.move(target, in: notebook, offset: offset)
         _ = commit()
     }
 
