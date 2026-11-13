@@ -1424,6 +1424,17 @@
 			<key>sourceTree</key>
 			<string>SOURCE_ROOT</string>
 		</dict>
+		<key>6E2296555AAA39B54D31A066</key>
+		<dict>
+			<key>isa</key>
+			<string>PBXFileReference</string>
+			<key>lastKnownFileType</key>
+			<string>sourcecode.swift</string>
+			<key>path</key>
+			<string>NotesApp/Features/Workspace/ViewModels/WorkspaceSnapshot.swift</string>
+			<key>sourceTree</key>
+			<string>SOURCE_ROOT</string>
+		</dict>
 		<key>6ED7A87C705790294E1BDD48</key>
 		<dict>
 			<key>isa</key>
@@ -2720,6 +2731,7 @@
 				<string>67547A1BA02F8DD49C541219</string>
 				<string>E6E251415DB29BA0E8BD3071</string>
 				<string>E338477DB750193C0B89B13B</string>
+				<string>C5CE2B3B3DBAC3F8CBA85B50</string>
 				<string>DCA2CBFC94A7FECB14AB95C3</string>
 				<string>B037D916690E274048F4B2FF</string>
 				<string>0850111ABE3A881AFD3DEEB9</string>
@@ -2858,6 +2870,13 @@
 			<string>NotesApp/Features/Editor/Components/ToolbarQuickControls.swift</string>
 			<key>sourceTree</key>
 			<string>SOURCE_ROOT</string>
+		</dict>
+		<key>C5CE2B3B3DBAC3F8CBA85B50</key>
+		<dict>
+			<key>fileRef</key>
+			<string>6E2296555AAA39B54D31A066</string>
+			<key>isa</key>
+			<string>PBXBuildFile</string>
 		</dict>
 		<key>C6046F34054679457FEB9DBB</key>
 		<dict>
@@ -3411,6 +3430,7 @@
 				<string>5561D9CA09C0AA470CD56108</string>
 				<string>68B0B493C72011A8826AC612</string>
 				<string>8960E77BCDFC247A3003C519</string>
+				<string>6E2296555AAA39B54D31A066</string>
 				<string>5DFB6D06EF10030A38094CAF</string>
 				<string>71F523531AE3C44D24F87D0E</string>
 				<string>A6FF88F516373C638E94CEBB</string>
