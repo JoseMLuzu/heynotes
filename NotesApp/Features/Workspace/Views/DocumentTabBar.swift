@@ -6,14 +6,17 @@ struct DocumentTabBar<TrailingActions: View>: View {
     let toggleSidebar: () -> Void
     let showsRecents: Bool
     let backButton: NavigationBackButton?
+    let leadingInset: CGFloat
     let trailingActions: TrailingActions
     init(workspace: DocumentWorkspace, showLibrary: @escaping () -> Void,
          toggleSidebar: @escaping () -> Void, showsRecents: Bool = true,
          backButton: NavigationBackButton? = nil,
+         leadingInset: CGFloat = 12,
          @ViewBuilder trailingActions: () -> TrailingActions) {
         self.workspace = workspace; self.showLibrary = showLibrary
         self.toggleSidebar = toggleSidebar; self.showsRecents = showsRecents
         self.backButton = backButton
+        self.leadingInset = leadingInset
         self.trailingActions = trailingActions()
     }
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
@@ -44,7 +47,8 @@ struct DocumentTabBar<TrailingActions: View>: View {
         }
         .font(.subheadline)
         .buttonStyle(.plain)
-        .padding(.horizontal, 12)
+        .padding(.leading, leadingInset)
+        .padding(.trailing, 12)
         .padding(.top, 6)
         // Combined with the tool row's six-point inset, this leaves an eight-point gap.
         .padding(.bottom, 2)

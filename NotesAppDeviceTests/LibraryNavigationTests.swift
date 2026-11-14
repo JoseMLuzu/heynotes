@@ -5,6 +5,41 @@ import PencilKit
 @testable import NotesApp
 
 @MainActor final class LibraryNavigationTests: XCTestCase {
+    func testBackAndSidebarButtonsShareTheirHorizontalCenter() async throws {
+        let container = try PersistenceController.makeContainer(inMemory: true)
+        let context = container.mainContext
+        let folder = Folder(title: "University"), notebook = Notebook(title: "Ideas"), page = NotePage(pageIndex: 0)
+        context.insert(folder); context.insert(notebook); context.insert(page); notebook.pages = [page]
+        try context.save()
+        let suite = "HeaderAlignment.\(UUID())", defaults = try XCTUnwrap(UserDefaults(suiteName: suite))
+        defer { defaults.removePersistentDomain(forName: suite) }
+        let workspace = DocumentWorkspace(context: context, defaults: defaults), navigation = LibraryNavigation()
+        await workspace.restore(); _ = await workspace.open(notebook); _ = await workspace.showLibrary()
+        let scene = try XCTUnwrap(UIApplication.shared.connectedScenes.compactMap { $0 as? UIWindowScene }.first)
+        let window = UIWindow(windowScene: scene); window.frame = CGRect(x: 0, y: 0, width: 1180, height: 820)
+        let host = UIHostingController(rootView: LibraryView(context: context, workspace: workspace, navigation: navigation, columnVisibility: .detailOnly)
+            .modelContainer(container))
+        window.rootViewController = host; window.isHidden = false
+        defer { window.isHidden = true; window.rootViewController = nil }
+        host.view.frame = window.bounds
+        try await settleSidebar(host.view)
+        let split = try XCTUnwrap(controllers(host).compactMap { $0 as? UISplitViewController }.first)
+        for size in [CGSize(width: 1180, height: 820), CGSize(width: 820, height: 1180)] {
+            window.frame.size = size; host.view.frame = window.bounds
+            for expanded in [false, true] {
+                if expanded { split.show(.primary) } else { split.hide(.primary) }
+                try await settleSidebar(host.view)
+                let back = try XCTUnwrap(backButton(in: host.view))
+                let sidebar = try XCTUnwrap(descendants(host.view).first { $0.accessibilityIdentifier == "library.sidebar" })
+                XCTAssertEqual(back.convert(back.bounds, to: window).midX,
+                               sidebar.convert(sidebar.bounds, to: window).midX, accuracy: 0.5,
+                               "Width \(size.width), sidebar expanded \(expanded)")
+                capture(window, name: "Header-Aligned-\(Int(size.width))-\(expanded)")
+            }
+        }
+        withExtendedLifetime(container) {}
+    }
+
     func testPortraitSidebarPreservesContentSpaceAndRestoresLandscapeLayout() async throws {
         let container = try PersistenceController.makeContainer(inMemory: true)
         let context = container.mainContext

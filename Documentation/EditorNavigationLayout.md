@@ -6,6 +6,12 @@ The sidebar removes NavigationSplitView's default toggle using the public iPadOS
 
 Activating a notebook or PDF automatically selects the detail-only split layout and the detail column in compact windows. This also covers switching document tabs, opening recents and restoring an active document. Folder browsing in wide landscape windows does not hide the sidebar; constrained layouts dismiss it after a selection as described below. Its button can reopen it while editing; it stays open until another document is activated or a constrained-layout destination is selected. Navigation blocked before activation leaves the current layout alone. Changing the split layout does not reload the active canvas or change saved document data.
 
+## Library navigation button alignment
+
+The native library toolbar changes its leading margin when the sidebar opens. The back button below it now follows the measured horizontal center of the native sidebar control instead of using a fixed 12-point leading inset. Only the library tab row receives that inset; editor rows keep their existing layout. Both controls retain their 44-point hit areas and existing actions. The row's trailing inset remains unchanged.
+
+The library observes only the sidebar control's horizontal center and the detail area's horizontal bounds with the single-value [onGeometryChange](https://developer.apple.com/documentation/swiftui/view/ongeometrychange(for:of:action:)) overload, available from iPadOS 16 and compatible with the iPadOS 17 target. Measurements do not depend on the adjusted tab-row padding, avoiding a layout feedback loop. The derived inset supports right-to-left layout and bounds transient values during resizing. No view hierarchy, navigation state, canvas or persistence changes are involved.
+
 ## Portrait and narrow-window sidebar
 
 Library measures its own available window, without relying on device-orientation notifications. Portrait windows or widths below 1,000 points start with detail only. The existing sidebar button reopens navigation, and choosing a destination dismisses it again in that layout. An explicit Close Sidebar control is also available there. Regular-width portrait sidebars request a 220–250-point column with a 236-point ideal; landscape keeps the existing 230–320-point range and 260-point ideal. The system retains control of native compact-column collapse and presentation through NavigationSplitView.

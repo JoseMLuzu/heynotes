@@ -38,9 +38,12 @@ struct LibraryView: View {
     @State private var columnVisibility: NavigationSplitViewVisibility = .automatic
     @State private var wideColumnVisibility: NavigationSplitViewVisibility = .automatic
     @State private var compactSidebar = false
+    @State private var sidebarCenterX: CGFloat?
+    @State private var detailHorizontalFrame: CGRect?
     @State private var compactColumn: NavigationSplitViewColumn = .detail
     @Environment(\.horizontalSizeClass) private var sizeClass
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.layoutDirection) private var layoutDirection
     @State private var openingSource: DocumentOpeningSource?
     @State private var isOpeningDocument = false
 
@@ -66,6 +69,15 @@ struct LibraryView: View {
 
     private var selectedFolder: Folder? { navigation.folder(in: model.folders) }
     private var backDestination: String? { navigation.backDestination(in: model.folders) }
+
+    private var navigationLeadingInset: CGFloat {
+        guard let sidebarCenterX, let detailHorizontalFrame else { return 12 }
+        let distance = layoutDirection == .leftToRight
+            ? sidebarCenterX - detailHorizontalFrame.minX
+            : detailHorizontalFrame.maxX - sidebarCenterX
+        // Follow the native toolbar's center; bound transient measurements during resizing.
+        return min(44, max(0, distance - 22))
+    }
 
     private var title: String {
         switch navigation.selection {
@@ -176,7 +188,8 @@ struct LibraryView: View {
                 VStack(spacing: 0) {
                     if workspace.activeSession == nil && (!workspace.openNotebooks.isEmpty || backDestination != nil) {
                         DocumentTabBar(workspace: workspace, showLibrary: showLibrary, toggleSidebar: toggleSidebar,
-                                       backButton: NavigationBackButton(destination: backDestination, action: goBack)) { EmptyView() }
+                                       backButton: NavigationBackButton(destination: backDestination, action: goBack),
+                                       leadingInset: navigationLeadingInset) { EmptyView() }
                     }
                     if workspace.activeSession == nil {
                         AppTheme.headerBackground.frame(height: 16).accessibilityHidden(true)
@@ -199,6 +212,10 @@ struct LibraryView: View {
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
                     .animation(openingAnimation, value: workspace.activeID)
                 }
+                .onGeometryChange(for: CGRect.self, of: { geometry in
+                    let frame = geometry.frame(in: .global)
+                    return CGRect(x: frame.minX, y: 0, width: frame.width, height: 0)
+                }) { detailHorizontalFrame = $0 }
                 .onChange(of: workspace.activeID) { _, id in
                     if id == nil || focusMode.documentID != id { focusMode.exit() }
                     if id != nil { navigation.studyPath.removeAll() }
@@ -216,6 +233,9 @@ struct LibraryView: View {
                             Button(action: toggleSidebar) { Image(systemName: "sidebar.left") }
                                 .accessibilityLabel("Toggle Sidebar")
                                 .accessibilityIdentifier("library.sidebar")
+                                .onGeometryChange(for: CGFloat.self, of: {
+                                    ($0.frame(in: .global).midX * 2).rounded() / 2
+                                }) { sidebarCenterX = $0 }
                         }
                     }
                     if navigation.selection != .study && navigation.selection != .trash && workspace.activeSession == nil {
