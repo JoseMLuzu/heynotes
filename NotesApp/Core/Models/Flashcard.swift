@@ -6,6 +6,8 @@ import SwiftData
     public var deck: StudyDeck?
     public var question: String
     public var answer: String
+    public var questionImagePath: String? = nil
+    public var answerImagePath: String? = nil
     public var sourceNotebookID: UUID?
     public var sourcePageID: UUID?
     public var createdAt: Date
