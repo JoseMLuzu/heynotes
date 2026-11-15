@@ -233,3 +233,82 @@ The supplied iPad captures showed different leading margins for the native sideb
 All nine focused native LibraryNavigation, FocusMode and TabCloseTransition tests passed after the change. The new regression measures actual rendered controls within 0.5 points in landscape and portrait with the sidebar open and closed. Landscape open/closed and portrait open screenshots were exported and visually inspected. The signed optimized Release build passed. Device installation was attempted but failed with CoreDevice error 3002 / NSPOSIXErrorDomain 28: the iPad has no space to create installation staging data. The corrected build was not installed; free device storage before retrying. No user data was removed, and no commit or push was performed. See [EditorNavigationLayout.md](EditorNavigationLayout.md) for the measured alignment and iPadOS 17 availability policy.
 
 The subsequent user-requested installation retry succeeded with sequence 2992. The same tested Release build then launched successfully through devicectl on the physical iPad. The previous storage-related installation block is resolved; physical alignment acceptance remains the user's check.
+
+
+## Local library backups — 2026-11-14
+
+The first CloudKit preparation milestone adds actual complete-library backup and additive restore in Settings. The V6 SwiftData schema, existing store and local-only configuration are unchanged. No CloudKit entitlement, upload or sync UI is enabled.
+
+- **PASS:** 45 host tests (13 suites), including six new backup tests. Coverage includes disk-store reopening; nested folders, favorites and Trash; editable drawing bytes and checkpoints; 2.1 MB streamed images; immutable PDF bytes; original-ink object payloads; deterministic drawing recovery; duplicate-ID remapping; source-note links and review history.
+- **PASS:** 18 targeted native simulator tests on iPad Pro 13-inch (M5), iPadOS 26.5: four new LibraryBackupIntegrationTests plus SplitWorkspaceTests, StudyIntegrationTests and ModalPresentationTests. Both live canvases flush uncaptured native ink before export, blocked saves retain pending ink, a real PDF round-trips and exports with its dimensions, Study references remain valid, and dismissed previews/native picker completion cleanup is verified.
+- **PASS:** malformed/truncated archives, checksum mismatch, future format versions, missing assets, unsafe/duplicate paths, symlinks, cycles, staged tampering, cancellation and injected metadata-save failure leave existing data intact.
+- **PASS:** simulator Debug build (arm64/x86_64), signed physical-iPad Release build, and `git diff --check`. No external dependencies were added.
+- **PASS:** signed Release installed and launched on the connected iPad Air (5th generation), retaining existing application data (installation sequence 3028).
+- Backup settings were visually inspected from a native portrait rendering. Restore previews were rendered in dark landscape and large-text narrow layouts and retained as test attachments.
+
+Commands and results: `/private/tmp/heynotes-backup-host-tests.log`, `/private/tmp/heynotes-backup-native-tests.log`, `/private/tmp/heynotes-backups-release.log`; native result bundle `/private/tmp/heynotes-backups-sim/Logs/Test/Test-NotesApp-2026.11.14_16-37-23--0500.xcresult`.
+
+Physical Files-provider export/import, large production libraries and minimum-iPadOS-17 runtime acceptance remain manual checks. No real user library was used as a test fixture or uploaded. Backups are uncompressed and unencrypted; metadata and file-count limits and the filesystem/SQLite interruption window are documented in [LibraryBackups.md](LibraryBackups.md). See [CloudKitPreparation.md](CloudKitPreparation.md) for the following milestones.
+
+
+## Full release-readiness audit — 2026-11-14
+
+The owner confirmed offline v1.0, with iCloud after launch. This task audited and documented the product; it did not implement release tasks, commit/push, upload, or publish.
+
+- **PASS:** all 45 host tests in 13 suites, current working tree. Log: `/private/tmp/heynotes-audit-host-tests.log`.
+- **PASS:** all 151 native tests on iPad Pro 13-inch (M5), iPadOS 26.5, 99.771 seconds; this supersedes the prior 18-test focused backup run as the current full regression baseline. Log: `/private/tmp/heynotes-audit-native-tests.log`; result: `/private/tmp/heynotes-backups-sim/Logs/Test/Test-NotesApp-2026.11.14_20-27-09--0500.xcresult`.
+- Inspected the existing signed Release artifact: display name Notes, bundle com.local.notesapp, version 0.1.0/build 1, minimum 17.0, SDK 27.2, iPad only. AppIcon is present; no bundled `.xcprivacy` manifest was found. Settings lacks privacy/support links. No App Store archive validation or account-state verification was performed.
+- Full-suite logs contain SQLite open-file-unlink warnings from temporary test-store teardown; test cleanup should release contexts/stores before removing those fixtures. These isolated warnings do not establish corruption of production user data.
+- Physical Pencil/Files-provider/large-library/recovery/accessibility acceptance and minimum-OS runtime checks remain open. Development install/launch from the previous milestone is not completion of those gates.
+- Updated all six existing PlainJot project documents, added an iCloud-after-launch roadmap and validation plan, and created six proposed Inbox tickets. All references and map parent chains validated; original notes preserved under the vault’s `.history` directory.
+
+See [ReleaseReadiness.md](ReleaseReadiness.md) for inventory, blockers, estimate assumptions, App Store references and release gates. The 4–6-week planning range is an estimate with conditional assumptions, not a promised ship date or Apple review duration.
+
+
+## Toolbar-to-palette dragging — 2026-11-14
+
+Direct tool icons can be dragged into Quick Palette with their own captured settings; favorites can be reordered in place. The existing v2 preferences and document schema remain unchanged. Same-profile reorder retains IDs/settings; insert/cross-profile/cross-pane copy creates a new favorite; full/invalid/stale/busy drops preserve existing favorites. Palette-only hover/reorder feedback preserves the live canvas.
+
+- **PASS:** all 157 native tests, including six new PaletteToolDragTests; `/private/tmp/heynotes-palette-drag-full-tests.log`, result `/private/tmp/heynotes-backups-sim/Logs/Test/Test-NotesApp-2026.11.14_21-13-35--0500.xcresult`. The earlier host baseline remains 45 passing tests; this change lives in the iPad editor target.
+- **PASS:** actual NSItemProvider encode/decode/async receive, inactive-tool snapshot without selection/defaults writes, persisted insertion/order, six-favorite limit, independent IDs/source profiles, changed destination rejection, blocked/malformed/multiple items, native drag/drop interaction presence at all four toolbar positions, and unchanged PKCanvasView identity/page timestamps.
+- **PASS:** signed iPad Release build; screenshot after adding a sixth favorite with the side toolbar visually inspected; Info.plist and `git diff --check` pass.
+- The first focused regression run passed all six new cases but failed the FocusMode sidebar-gesture assertion once. The subsequent full 157-test run passed on identical focus code. Track this as a timing-sensitive validation finding; no production focus workaround was added in the drag feature.
+- Physical long-press/finger gesture feel and fast-tap acceptance remain manual checks. See [QuickPalette.md](QuickPalette.md) for the exact workflow, local data boundary and device checklist. No commit or push was performed.
+
+## Expanded student tools — November 14, 2026
+
+- Host: **50 tests passed** (`/private/tmp/heynotes-expanded-host-tests.log`). Real frozen V6 store migration preserves IDs, drawing bytes, source links and review schedule/history. Captured-card assets survive backup/remapped restore; record format 1 remains readable.
+- Simulator: **172 tests passed, zero failures**, including 15 new expanded-tool tests (`/private/tmp/heynotes-expanded-verified-tests.log`; result bundle `Test-NotesApp-2026.11.14_22-09-59--0500.xcresult`). Existing native gestures, editor persistence/export, Study and workspace regressions pass.
+- New coverage includes whole-marker-only erasing with masks/transforms, source-ink recovery and combined Undo, stale-page rejection, folded note persistence, selectable PDF line geometry checked against actual cropped/rotated raster output, independent PNG crops/card images, live secondary-canvas flush, correct clear/Undo behavior and failure retention.
+- Inspected native attachments for both window orientations, region-card creation/review and PDF highlighting. Final fit/centering refinements receive a focused tool-suite rerun. Physical Pencil latency/hold/region gestures still need hands-on acceptance.
+- Xcode 27.2, Swift 6.4.2, SDK 27.2; deployment remains iPadOS 17. Signed Release build succeeds. No commit or push is part of this work.
+
+Final layout check: all **15 expanded-tool native tests passed again** (`/private/tmp/heynotes-expanded-final-layout.log`, result `Test-NotesApp-2026.11.14_22-12-20--0500.xcresult`); inspected the centered crop form and fitted writing window. Final signed Release build: `/private/tmp/heynotes-expanded-release-ready.log`, **BUILD SUCCEEDED**. Physical installation was attempted but CoreDevice rejected developer-disk mounting because the iPad was locked (12040 → 10003). The previously installed app was not removed. Unlocking the iPad is required to complete installation; physical Pencil acceptance remains pending.
+
+Physical installation retry succeeded: CoreDevice installed the signed Release build on the iPad Air (5th generation), installation sequence 3084, and launched `com.local.notesapp` successfully. This supersedes the locked-device installation blocker above. Hands-on Pencil and gesture acceptance is still pending; a successful launch alone does not validate those interactions.
+
+## Discoverable toolbar organization — November 14, 2026
+
+Named Draw, Study and Capture tile panels now occupy the former unused toolbar area; Laser and Zoom have direct buttons. Insert retains text/images/handwriting style. Stroke settings have a fixed-width home after the tools. Quick Adjustments exposes all three eraser modes. A single-tree SwiftUI Layout gives portrait/narrow headers a full-width tools row without State-driven header resizing or duplicate popover anchors. Top/bottom/left/right placement remains supported.
+
+Validation: the two new organization tests cover complete, unique tool discoverability, contextual PDF availability, group presentations, and retained native canvas/content/Undo when changing tools. Fourteen targeted header/navigation/placement/native-button tests passed, then the complete simulator suite passed **174 tests with zero failures** (`/private/tmp/heynotes-toolbar-organized-full-tests.log`; result `Test-NotesApp-2026.11.14_22-32-00--0500.xcresult`). Tool grids and landscape/portrait editor screenshots were exported and inspected. Signed Release compilation succeeded (`/private/tmp/heynotes-toolbar-organized-release.log`). No metadata migration or file-storage change was made for this organization work.
+
+The signed build installed successfully on the physical iPad, sequence **3092**, preserving the installed app's data container. Launch was blocked because the device was locked; unlock the iPad and open HeyNotes to inspect the new toolbar. Actual finger/Pencil feel remains a hands-on check. No commit or push was made.
+
+## Icon-only toolbar refinement — November 14, 2026
+
+Removed visible group/tool captions and the toolbar's Quick Adjustments ellipsis/popover. Panel titles, tool names inside panels, VoiceOver names and hover help remain. The color/width/settings control is compact; spare width shows favorite colors and, when space allows, width presets directly. The glass capsule hugs the actual controls instead of reserving a blank adjustment lane. Page Options remains separate beside the navigation controls.
+
+Eleven targeted native tests passed (`/private/tmp/heynotes-icon-toolbar-final-tests.log`, result `Test-NotesApp-2026.11.14_22-56-16--0500.xcresult`). An actual raster regression checks that shrinking/growing favorite-control counts does not draw stale controls outside their reserved width. Dynamic ForEach ranges have explicit identity, preventing old colors from overlapping the palette after rotation. The obsolete ellipsis activation test was removed because that UI no longer exists; general native button/Page Options tests remain. Inspected final editor screenshots in both orientations. Signed Release compilation passed (`/private/tmp/heynotes-icon-toolbar-release-ready.log`). No persistence or metadata migration was needed, and no commit/push was made.
+
+The first device install attempt encountered a transient connection reset. After refreshing device discovery, the final signed build installed successfully on the iPad (sequence 3104) and `com.local.notesapp` launched successfully. Existing application data was retained.
+
+## Laser light appearance — November 14, 2026
+
+Replaced the solid temporary laser line with a colored beam, thin white core, concentric translucent glow and a radial luminous pointer head. Core Animation updates avoid unnecessary full overlay redraws. Existing release fade/clear behavior and all persistence/export boundaries remain unchanged. Native light-renderer attachments were visually inspected over white/dark backgrounds and in red/blue. The 15 expanded-tool tests passed (`/private/tmp/heynotes-laser-glow-tests.log`), followed by the focused style/render check after aligning the light layer to overlay bounds (`/private/tmp/heynotes-laser-glow-final-check.log`). Signed Release build passed (`/private/tmp/heynotes-laser-glow-release.log`).
+
+Installed successfully on the physical iPad, sequence 3120. Automatic launch timed out after 15 seconds; open HeyNotes manually to assess physical Pencil tracking and the light effect. No commit or push was made.
+
+## Commit preparation — November 14, 2026
+
+This delivery is organized into 29 scoped Conventional Commits on `feature/library-backups`. All 25 commits that contain app code or native source registration were compiled from their exact staged trees in an isolated snapshot directory before committing. The 50 host tests passed again. Splitting the history did not alter the implemented source files or discard pending work. Earlier entries saying no commit was made describe their original delivery sessions; this preparation supersedes that status. No push is included.
