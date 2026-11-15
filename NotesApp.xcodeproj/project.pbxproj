@@ -3136,6 +3136,7 @@
 				<string>EB1E77C828C479A4B0003C56</string>
 				<string>5D936E49F3FE4887FAEAAE1B</string>
 				<string>20A39E1375528857EC5EAB58</string>
+				<string>75EF217868BADA8A20901F1A</string>
 			</array>
 			<key>isa</key>
 			<string>PBXSourcesBuildPhase</string>
@@ -3956,6 +3957,7 @@
 				<string>B8CA52AFF7AFF003785FB06C</string>
 				<string>26C1EED6E713FADC5FF8BC44</string>
 				<string>42DBC78D6B76C681B7FA493B</string>
+				<string>DA430EB6BF29AE365FF6626C</string>
 			</array>
 			<key>isa</key>
 			<string>PBXGroup</string>
@@ -4439,6 +4441,24 @@
 			<string>CCCFA8569F9D1BE0BE946F21</string>
 			<key>isa</key>
 			<string>PBXBuildFile</string>
+		</dict>
+		<key>DA430EB6BF29AE365FF6626C</key>
+		<dict>
+			<key>isa</key>
+			<string>PBXFileReference</string>
+			<key>lastKnownFileType</key>
+			<string>sourcecode.swift</string>
+			<key>path</key>
+			<string>NotesApp/Features/Editor/Components/LaserPointerVisual.swift</string>
+			<key>sourceTree</key>
+			<string>SOURCE_ROOT</string>
+		</dict>
+		<key>75EF217868BADA8A20901F1A</key>
+		<dict>
+			<key>isa</key>
+			<string>PBXBuildFile</string>
+			<key>fileRef</key>
+			<string>DA430EB6BF29AE365FF6626C</string>
 		</dict>
 	</dict>
 	<key>rootObject</key>
