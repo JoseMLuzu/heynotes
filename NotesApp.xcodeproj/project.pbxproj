@@ -1130,6 +1130,7 @@
 				<string>D4D3DC74FC650A23CE7287EE</string>
 				<string>F3B24BE66BA94267A227F0BB</string>
 				<string>887AB287F13078D52BA5543F</string>
+				<string>936A810475DDE913EE6F4247</string>
 			</array>
 			<key>isa</key>
 			<string>PBXSourcesBuildPhase</string>
@@ -2305,6 +2306,13 @@
 			<key>sourceTree</key>
 			<string>SOURCE_ROOT</string>
 		</dict>
+		<key>936A810475DDE913EE6F4247</key>
+		<dict>
+			<key>fileRef</key>
+			<string>C1076425C85EEA7604533EC2</string>
+			<key>isa</key>
+			<string>PBXBuildFile</string>
+		</dict>
 		<key>9457C9E149A2A045DA122C72</key>
 		<dict>
 			<key>isa</key>
@@ -3052,6 +3060,17 @@
 			<key>isa</key>
 			<string>PBXBuildFile</string>
 		</dict>
+		<key>C1076425C85EEA7604533EC2</key>
+		<dict>
+			<key>isa</key>
+			<string>PBXFileReference</string>
+			<key>lastKnownFileType</key>
+			<string>sourcecode.swift</string>
+			<key>path</key>
+			<string>NotesAppDeviceTests/LibraryBackupIntegrationTests.swift</string>
+			<key>sourceTree</key>
+			<string>SOURCE_ROOT</string>
+		</dict>
 		<key>C157433EC730FC8A2803FD22</key>
 		<dict>
 			<key>fileRef</key>
@@ -3797,6 +3816,7 @@
 				<string>CE102B87B3C2B611738E5CA8</string>
 				<string>C7E8EA6EAC06EED5B3084685</string>
 				<string>B19A73FD5B1E2C193F286A78</string>
+				<string>C1076425C85EEA7604533EC2</string>
 				<string>DFD20CBA03F4F8736444CB3D</string>
 				<string>26C1EED6E713FADC5FF8BC44</string>
 			</array>
