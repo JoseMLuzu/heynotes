@@ -27,12 +27,22 @@ struct ToolOptionsPanel: View {
                     if preferences.selected.usesInkStyle { inkOptions }
                     else if preferences.selected == .eraser { eraserOptions }
                     else {
-                        Text(preferences.selected == .lasso ? "Draw a loop around handwriting with Apple Pencil, then drag the selection to move it. Touch and hold selected ink for editing actions." : "Drag on the page to create study tape. Choose Select Objects to move or resize inserted content. Tap tape with a finger to reveal or cover the answer.")
+                        Text(preferences.selected.guidance)
                             .font(.subheadline).foregroundStyle(.secondary)
                     }
                     if preferences.selected.usesInkStyle || preferences.selected == .eraser {
                         Button("Reset This Tool") { preferences.resetCurrentTool() }
                             .font(.subheadline).frame(minHeight: 44)
+                    }
+                    if preferences.selected == .stamp {
+                        Picker("Stamp", selection: $preferences.stampSymbol) {
+                            ForEach(StampSymbol.allCases, id: \.self) { Text("\($0.rawValue)  \($0.title)").tag($0) }
+                        }
+                    }
+                    if preferences.selected == .sticky {
+                        Picker("Note Color", selection: $preferences.stickyStyle) {
+                            ForEach(StickyNoteStyle.allCases, id: \.self) { Text($0.rawValue.capitalized).tag($0) }
+                        }
                     }
                 }.padding(20)
             }
@@ -85,9 +95,9 @@ struct ToolOptionsPanel: View {
             Picker("Eraser Mode", selection: $preferences.eraserMode) {
                 ForEach(EraserMode.allCases, id: \.self) { Text($0.title).tag($0) }
             }.pickerStyle(.segmented)
-            Text(preferences.eraserMode == .strokes ? "Remove an entire stroke when you touch it." : "Erase only the part you touch, with a fixed-size eraser.")
+            Text(preferences.eraserMode == .highlighter ? "Remove only whole highlighter strokes you touch. Pen and pencil handwriting stays intact." : preferences.eraserMode == .strokes ? "Remove an entire stroke when you touch it." : "Erase only the part you touch, with a fixed-size eraser.")
                 .font(.subheadline).foregroundStyle(.secondary)
-            if preferences.eraserMode == .precise {
+            if preferences.eraserMode != .strokes {
                 VStack(alignment: .leading, spacing: 12) {
                     widthHeader("Eraser Size", value: preferences.eraserWidth)
                     Slider(value: $preferences.eraserWidth, in: preferences.eraserRange)

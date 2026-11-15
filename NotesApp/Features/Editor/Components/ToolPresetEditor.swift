@@ -29,10 +29,20 @@ struct ToolPresetEditor: View {
                         Picker("Mode", selection: $draft.eraserMode) {
                             ForEach(EraserMode.allCases, id: \.self) { Text($0.title).tag($0) }
                         }
-                        if draft.eraserMode == .precise {
+                        if draft.eraserMode != .strokes {
                             LabeledContent("Size", value: "\(draft.eraserWidth.formatted(.number.precision(.fractionLength(0...1)))) pt")
                             Slider(value: $draft.eraserWidth, in: ToolPreset.eraserRange).accessibilityLabel("Favorite eraser size")
                         }
+                    }
+                }
+                if draft.tool == .stamp {
+                    Picker("Stamp", selection: Binding(get: { draft.stampSymbol ?? .check }, set: { draft.stampSymbol = $0 })) {
+                        ForEach(StampSymbol.allCases, id: \.self) { Text("\($0.rawValue)  \($0.title)").tag($0) }
+                    }
+                }
+                if draft.tool == .sticky {
+                    Picker("Note Color", selection: Binding(get: { draft.stickyStyle ?? .yellow }, set: { draft.stickyStyle = $0 })) {
+                        ForEach(StickyNoteStyle.allCases, id: \.self) { Text($0.rawValue.capitalized).tag($0) }
                     }
                 }
                 Section {

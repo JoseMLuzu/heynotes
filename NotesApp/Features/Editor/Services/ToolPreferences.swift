@@ -2,16 +2,23 @@ import SwiftUI
 import PencilKit
 import Observation
 
-enum EditorTool: String, Codable, CaseIterable {
+enum EditorTool: String, Codable, CaseIterable, Sendable {
     case pen, pencil, marker, eraser, lasso
     case line, rectangle, ellipse, arrow, tape, objects
+    case laser, stamp, sticky, protractor, compass, capture, cardCapture, pdfHighlight, writingZoom
     var title: String {
-        switch self { case .marker: "Highlighter"; case .tape: "Study Tape"; case .objects: "Select Objects"; default: rawValue.capitalized }
+        switch self {
+        case .marker: "Highlighter"; case .tape: "Study Tape"; case .objects: "Select Objects"
+        case .sticky: "Sticky Note"; case .cardCapture: "Region Flashcard"; case .pdfHighlight: "PDF Text Highlight"
+        case .writingZoom: "Zoom Writing"; case .capture: "Region Capture"; case .protractor: "Protractor"; case .compass: "Compass"
+        default: rawValue.capitalized
+        }
     }
     var elementKind: PageElementKind? {
         switch self { case .line: .line; case .rectangle: .rectangle; case .ellipse: .ellipse; case .arrow: .arrow; case .tape: .tape; default: nil }
     }
-    var usesInkStyle: Bool { inkType != nil || (elementKind != nil && self != .tape) }
+    var usesInkStyle: Bool { inkType != nil || (elementKind != nil && self != .tape) || self == .stamp || self == .compass || self == .laser }
+    var usesAuxiliaryInput: Bool { [.laser, .stamp, .sticky, .protractor, .compass, .capture, .cardCapture, .pdfHighlight, .writingZoom].contains(self) }
     var editsObjects: Bool { elementKind != nil || self == .objects }
     var symbol: String {
         switch self {
@@ -26,6 +33,10 @@ enum EditorTool: String, Codable, CaseIterable {
         case .arrow: "arrow.up.right"
         case .tape: "rectangle.fill"
         case .objects: "cursorarrow"
+        case .laser: "laser.burst"; case .stamp: "seal"; case .sticky: "note.text"
+        case .protractor: "angle"; case .compass: "circle.dashed"; case .capture: "viewfinder"
+        case .cardCapture: "rectangle.on.rectangle"; case .pdfHighlight: "textformat.abc"
+        case .writingZoom: "rectangle.and.pencil.and.ellipsis"
         }
     }
     var inkType: PKInkingTool.InkType? {
@@ -33,12 +44,12 @@ enum EditorTool: String, Codable, CaseIterable {
     }
 }
 
-enum EraserMode: String, Codable, CaseIterable {
-    case strokes, precise
-    var title: String { self == .strokes ? "Whole Strokes" : "Precise" }
+enum EraserMode: String, Codable, CaseIterable, Sendable {
+    case strokes, precise, highlighter
+    var title: String { switch self { case .strokes: "Whole Strokes"; case .precise: "Precise"; case .highlighter: "Highlighter Only" } }
 }
 
-struct InkStyle: Codable, Equatable {
+struct InkStyle: Codable, Equatable, Sendable {
     var red: Double = 0.08
     var green: Double = 0.09
     var blue: Double = 0.09
@@ -62,6 +73,10 @@ final class ToolPreferences {
         var quickPenColors: [QuickInkColor]? = nil
         var quickPencilColors: [QuickInkColor]? = nil
         var quickMarkerColors: [QuickInkColor]? = nil
+        var smartShapes: Bool? = nil
+        var stampSymbol: StampSymbol? = nil
+        var stickyStyle: StickyNoteStyle? = nil
+        var laser: InkStyle? = nil
     }
     @ObservationIgnored private var saved: Saved
     @ObservationIgnored private let defaults: UserDefaults
@@ -89,6 +104,18 @@ final class ToolPreferences {
             if newValue.usesInkStyle { lastInkTool = newValue }
             withMutation(keyPath: \.selected) { saved.selected = newValue; persist() }
         }
+    }
+    var smartShapes: Bool {
+        get { access(keyPath: \.smartShapes); return saved.smartShapes ?? false }
+        set { guard smartShapes != newValue else { return }; withMutation(keyPath: \.smartShapes) { saved.smartShapes = newValue; persist() } }
+    }
+    var stampSymbol: StampSymbol {
+        get { access(keyPath: \.stampSymbol); return saved.stampSymbol ?? .check }
+        set { guard stampSymbol != newValue else { return }; withMutation(keyPath: \.stampSymbol) { saved.stampSymbol = newValue; persist() } }
+    }
+    var stickyStyle: StickyNoteStyle {
+        get { access(keyPath: \.stickyStyle); return saved.stickyStyle ?? .yellow }
+        set { guard stickyStyle != newValue else { return }; withMutation(keyPath: \.stickyStyle) { saved.stickyStyle = newValue; persist() } }
     }
     func toggleEraser() { selected = selected == .eraser ? lastNonEraser : .eraser }
     func selectPreviousTool() { selected = previousTool }
@@ -156,12 +183,7 @@ final class ToolPreferences {
     var ink: InkStyle {
         get {
             access(keyPath: \.ink)
-            var value: InkStyle
-            switch selected { case .pencil: value = saved.pencil; case .marker: value = saved.marker; default: value = saved.pen }
-            value.width = clamp(value.width, to: widthRange)
-            value.opacity = clamp(value.opacity, to: 0.1...1)
-            value.red = clamp(value.red, to: 0...1); value.green = clamp(value.green, to: 0...1); value.blue = clamp(value.blue, to: 0...1)
-            return value
+            return inkStyle(for: selected)
         }
         set {
             guard selected.usesInkStyle else { return }
@@ -171,10 +193,24 @@ final class ToolPreferences {
             value.red = clamp(value.red, to: 0...1); value.green = clamp(value.green, to: 0...1); value.blue = clamp(value.blue, to: 0...1)
             guard ink != value else { return }
             withMutation(keyPath: \.ink) {
-                switch selected { case .pencil: saved.pencil = value; case .marker: saved.marker = value; default: saved.pen = value }
+                switch selected { case .pencil: saved.pencil = value; case .marker: saved.marker = value; case .laser: saved.laser = value; default: saved.pen = value }
                 persist()
             }
         }
+    }
+    /// Read an inactive tool's saved style without selecting it or writing preferences.
+    func inkStyle(for tool: EditorTool) -> InkStyle {
+        access(keyPath: \.ink)
+        var value: InkStyle
+        switch tool {
+        case .pencil: value = saved.pencil; case .marker: value = saved.marker
+        case .laser: value = saved.laser ?? InkStyle(red: 1, green: 0.15, blue: 0.2, width: 3)
+        default: value = saved.pen
+        }
+        value.width = clamp(value.width, to: ToolPreset.widthRange(for: tool))
+        value.opacity = clamp(value.opacity, to: 0.1...1)
+        value.red = clamp(value.red, to: 0...1); value.green = clamp(value.green, to: 0...1); value.blue = clamp(value.blue, to: 0...1)
+        return value
     }
     var tool: PKTool {
         if let type = selected.inkType { return PKInkingTool(type, color: ink.uiColor, width: ink.width) }
@@ -202,6 +238,7 @@ final class ToolPreferences {
         case .pencil: ink = initial.pencil
         case .marker: ink = initial.marker
         case .eraser: eraserMode = initial.eraserMode; eraserWidth = initial.eraserWidth
+        case .laser: ink = InkStyle(red: 1, green: 0.15, blue: 0.2, width: 3)
         default: break
         }
     }

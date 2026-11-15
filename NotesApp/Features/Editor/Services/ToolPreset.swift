@@ -1,13 +1,15 @@
 import PencilKit
 import SwiftUI
 
-struct ToolPreset: Identifiable, Codable, Equatable {
+struct ToolPreset: Identifiable, Codable, Equatable, Sendable {
     var id = UUID()
     var name: String
     var tool: EditorTool
     var ink = InkStyle()
     var eraserMode: EraserMode = .strokes
     var eraserWidth: Double = 20
+    var stampSymbol: StampSymbol? = nil
+    var stickyStyle: StickyNoteStyle? = nil
 
     static func widthRange(for tool: EditorTool) -> ClosedRange<Double> {
         let range = (tool.inkType ?? .pen).validWidthRange
@@ -36,6 +38,10 @@ struct ToolPreset: Identifiable, Codable, Equatable {
     var detail: String {
         if tool == .lasso || tool == .objects { return "Selection" }
         if tool == .tape { return "Study tape" }
+        if tool == .stamp { return stampSymbol?.title ?? StampSymbol.check.title }
+        if tool == .sticky { return "\((stickyStyle ?? .yellow).rawValue.capitalized) note" }
+        if tool.usesAuxiliaryInput, !tool.usesInkStyle { return tool.title }
+        if tool == .eraser && eraserMode == .highlighter { return "Highlighter · \(eraserWidth.formatted(.number.precision(.fractionLength(0...1)))) pt" }
         if tool == .eraser { return eraserMode == .strokes ? "Whole strokes" : "\(eraserWidth.formatted(.number.precision(.fractionLength(0...1)))) pt" }
         return "\(ink.width.formatted(.number.precision(.fractionLength(0...1)))) pt · \(Int(ink.opacity * 100))%"
     }
@@ -50,20 +56,25 @@ struct ToolPreset: Identifiable, Codable, Equatable {
 }
 
 extension ToolPreferences {
-    func capturePreset(name: String? = nil) -> ToolPreset {
-        ToolPreset(name: name ?? selected.title, tool: selected, ink: ink, eraserMode: eraserMode, eraserWidth: eraserWidth).sanitized
+    func capturePreset(for tool: EditorTool? = nil, name: String? = nil) -> ToolPreset {
+        let tool = tool ?? selected
+        return ToolPreset(name: name ?? tool.title, tool: tool, ink: inkStyle(for: tool), eraserMode: eraserMode, eraserWidth: eraserWidth,
+                          stampSymbol: tool == .stamp ? stampSymbol : nil, stickyStyle: tool == .sticky ? stickyStyle : nil).sanitized
     }
     func apply(_ preset: ToolPreset) {
         let preset = preset.sanitized
         selected = preset.tool
         if selected.usesInkStyle { ink = preset.ink }
         else if selected == .eraser { eraserMode = preset.eraserMode; eraserWidth = preset.eraserWidth }
+        if selected == .stamp { stampSymbol = preset.stampSymbol ?? .check }
+        if selected == .sticky { stickyStyle = preset.stickyStyle ?? .yellow }
     }
     func matches(_ preset: ToolPreset) -> Bool {
         let preset = preset.sanitized
         guard selected == preset.tool else { return false }
-        if selected.usesInkStyle { return ink == preset.ink }
+        if selected.usesInkStyle { return ink == preset.ink && (selected != .stamp || stampSymbol == (preset.stampSymbol ?? .check)) }
         if selected == .eraser { return eraserMode == preset.eraserMode && (eraserMode == .strokes || eraserWidth == preset.eraserWidth) }
+        if selected == .sticky { return stickyStyle == (preset.stickyStyle ?? .yellow) }
         return true
     }
 }
