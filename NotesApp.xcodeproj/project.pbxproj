@@ -231,6 +231,17 @@
 			<key>isa</key>
 			<string>PBXBuildFile</string>
 		</dict>
+		<key>0E3A8AA61A197566CFFF9240</key>
+		<dict>
+			<key>isa</key>
+			<string>PBXFileReference</string>
+			<key>lastKnownFileType</key>
+			<string>sourcecode.swift</string>
+			<key>path</key>
+			<string>NotesApp/Core/Storage/BackupValidation.swift</string>
+			<key>sourceTree</key>
+			<string>SOURCE_ROOT</string>
+		</dict>
 		<key>0E8A3AD980EC179856012B7E</key>
 		<dict>
 			<key>buildConfigurationList</key>
@@ -484,6 +495,13 @@
 			<string>NotesApp/Features/Editor/Components/PageCreationIndicator.swift</string>
 			<key>sourceTree</key>
 			<string>SOURCE_ROOT</string>
+		</dict>
+		<key>1F6130B6C6DD6E5A0185AF55</key>
+		<dict>
+			<key>fileRef</key>
+			<string>0E3A8AA61A197566CFFF9240</string>
+			<key>isa</key>
+			<string>PBXBuildFile</string>
 		</dict>
 		<key>21B52ECAB5A30A90E9CCD383</key>
 		<dict>
@@ -1274,6 +1292,17 @@
 			<string>sourcecode.swift</string>
 			<key>path</key>
 			<string>NotesApp/Features/Study/Views/StudyReviewAnchors.swift</string>
+			<key>sourceTree</key>
+			<string>SOURCE_ROOT</string>
+		</dict>
+		<key>5F9B45DFFC6439FB8E8C8DB2</key>
+		<dict>
+			<key>isa</key>
+			<string>PBXFileReference</string>
+			<key>lastKnownFileType</key>
+			<string>sourcecode.swift</string>
+			<key>path</key>
+			<string>NotesApp/Core/Storage/BackupManifest.swift</string>
 			<key>sourceTree</key>
 			<string>SOURCE_ROOT</string>
 		</dict>
@@ -2838,6 +2867,8 @@
 				<string>DCA2CBFC94A7FECB14AB95C3</string>
 				<string>B037D916690E274048F4B2FF</string>
 				<string>0850111ABE3A881AFD3DEEB9</string>
+				<string>EC75C5DD2D6E289B17296178</string>
+				<string>1F6130B6C6DD6E5A0185AF55</string>
 				<string>A6EAD68F63D6A824A5982C29</string>
 				<string>5D936E49F3FE4887FAEAAE1B</string>
 			</array>
@@ -3575,6 +3606,8 @@
 				<string>A6FF88F516373C638E94CEBB</string>
 				<string>5E6CCFB61748E970D5FD614D</string>
 				<string>ECE525D1AF06FBDBDF5510F5</string>
+				<string>5F9B45DFFC6439FB8E8C8DB2</string>
+				<string>0E3A8AA61A197566CFFF9240</string>
 				<string>DFD20CBA03F4F8736444CB3D</string>
 				<string>26C1EED6E713FADC5FF8BC44</string>
 			</array>
@@ -3709,6 +3742,13 @@
 		<dict>
 			<key>fileRef</key>
 			<string>11B4DB62A8871AE676CDB290</string>
+			<key>isa</key>
+			<string>PBXBuildFile</string>
+		</dict>
+		<key>EC75C5DD2D6E289B17296178</key>
+		<dict>
+			<key>fileRef</key>
+			<string>5F9B45DFFC6439FB8E8C8DB2</string>
 			<key>isa</key>
 			<string>PBXBuildFile</string>
 		</dict>
