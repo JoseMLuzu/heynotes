@@ -1362,6 +1362,13 @@
 			<key>isa</key>
 			<string>PBXBuildFile</string>
 		</dict>
+		<key>5131A0EE401DEE07F55D85B3</key>
+		<dict>
+			<key>fileRef</key>
+			<string>78F1F06489D5EA56087DC737</string>
+			<key>isa</key>
+			<string>PBXBuildFile</string>
+		</dict>
 		<key>51BEBCAD5030677D360D18A3</key>
 		<dict>
 			<key>fileRef</key>
@@ -2084,6 +2091,17 @@
 			<string>13178594AC3C9634784B4927</string>
 			<key>isa</key>
 			<string>PBXBuildFile</string>
+		</dict>
+		<key>78F1F06489D5EA56087DC737</key>
+		<dict>
+			<key>isa</key>
+			<string>PBXFileReference</string>
+			<key>lastKnownFileType</key>
+			<string>sourcecode.swift</string>
+			<key>path</key>
+			<string>NotesApp/Features/Editor/Components/ZoomWritingPanel.swift</string>
+			<key>sourceTree</key>
+			<string>SOURCE_ROOT</string>
 		</dict>
 		<key>7A0D578ABE2A24472D8F29A9</key>
 		<dict>
@@ -3278,6 +3296,7 @@
 				<string>D2202E05531BE534631865FC</string>
 				<string>8DC08F769C15695FE0FB1961</string>
 				<string>1FB20D21F82254391DDF0660</string>
+				<string>5131A0EE401DEE07F55D85B3</string>
 				<string>20A39E1375528857EC5EAB58</string>
 				<string>75EF217868BADA8A20901F1A</string>
 			</array>
@@ -4180,6 +4199,7 @@
 				<string>C77FA84ADDC79BD3A5BCCE0A</string>
 				<string>C36D4C0D22BD6446BB430AAA</string>
 				<string>EA940B2400058F1DFC966A2A</string>
+				<string>78F1F06489D5EA56087DC737</string>
 				<string>42DBC78D6B76C681B7FA493B</string>
 				<string>DA430EB6BF29AE365FF6626C</string>
 			</array>
