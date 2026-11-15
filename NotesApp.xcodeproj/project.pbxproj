@@ -113,6 +113,17 @@
 			<key>sourceTree</key>
 			<string>SOURCE_ROOT</string>
 		</dict>
+		<key>04CA5D83E9856E880D72AF2C</key>
+		<dict>
+			<key>isa</key>
+			<string>PBXFileReference</string>
+			<key>lastKnownFileType</key>
+			<string>sourcecode.swift</string>
+			<key>path</key>
+			<string>NotesApp/Features/Editor/Components/MeasurementToolRenderer.swift</string>
+			<key>sourceTree</key>
+			<string>SOURCE_ROOT</string>
+		</dict>
 		<key>0523EF3BB51B89C403EB9465</key>
 		<dict>
 			<key>isa</key>
@@ -2084,6 +2095,13 @@
 			<key>isa</key>
 			<string>PBXBuildFile</string>
 		</dict>
+		<key>7F86207A110270D859691723</key>
+		<dict>
+			<key>fileRef</key>
+			<string>CB548FF9746AF07C3C40C02D</string>
+			<key>isa</key>
+			<string>PBXBuildFile</string>
+		</dict>
 		<key>7FA0C7EA131C0250ADA47910</key>
 		<dict>
 			<key>fileRef</key>
@@ -3131,6 +3149,8 @@
 				<string>9055AE783ADD6E935D5B790A</string>
 				<string>0237B8E9CDD41D226E37C293</string>
 				<string>A6EAD68F63D6A824A5982C29</string>
+				<string>D380B4F37B9F04952F787B22</string>
+				<string>7F86207A110270D859691723</string>
 				<string>D7C8A6BFF9689EDA8A3BB805</string>
 				<string>3D4E87EB12CB7C88713EB734</string>
 				<string>EB1E77C828C479A4B0003C56</string>
@@ -3388,6 +3408,17 @@
 			<key>isa</key>
 			<string>PBXBuildFile</string>
 		</dict>
+		<key>CB548FF9746AF07C3C40C02D</key>
+		<dict>
+			<key>isa</key>
+			<string>PBXFileReference</string>
+			<key>lastKnownFileType</key>
+			<string>sourcecode.swift</string>
+			<key>path</key>
+			<string>NotesApp/Features/Editor/Components/StudentToolOverlay.swift</string>
+			<key>sourceTree</key>
+			<string>SOURCE_ROOT</string>
+		</dict>
 		<key>CBFCF1CD32033861A33F7169</key>
 		<dict>
 			<key>fileRef</key>
@@ -3515,6 +3546,13 @@
 		<dict>
 			<key>fileRef</key>
 			<string>F2C0064AAE4908E12E98DC38</string>
+			<key>isa</key>
+			<string>PBXBuildFile</string>
+		</dict>
+		<key>D380B4F37B9F04952F787B22</key>
+		<dict>
+			<key>fileRef</key>
+			<string>04CA5D83E9856E880D72AF2C</string>
 			<key>isa</key>
 			<string>PBXBuildFile</string>
 		</dict>
@@ -3952,6 +3990,8 @@
 				<string>F8A6C910378FF022B9C4AF8B</string>
 				<string>F63D67C6BC72D3CE90BEC2A5</string>
 				<string>DFD20CBA03F4F8736444CB3D</string>
+				<string>04CA5D83E9856E880D72AF2C</string>
+				<string>CB548FF9746AF07C3C40C02D</string>
 				<string>B1C86E1A99FC45C1E2C49C5E</string>
 				<string>7EA4B47265933D46949DC359</string>
 				<string>B8CA52AFF7AFF003785FB06C</string>
