@@ -56,6 +56,7 @@ struct StudyReviewView: View {
         VStack(spacing: 18) {
             header(card)
             StudyReviewCard(question: card.question, answer: card.answer,
+                            questionImagePath: card.questionImagePath, answerImagePath: card.answerImagePath,
                             isAnswerVisible: session.isAnswerVisible, flip: session.flip)
                 .frame(minHeight: minimumCardHeight, maxHeight: scrolls ? minimumCardHeight : .infinity)
                 .id(card.id)

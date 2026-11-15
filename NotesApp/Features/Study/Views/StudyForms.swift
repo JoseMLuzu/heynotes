@@ -47,6 +47,8 @@ struct FlashcardForm: View {
     let card: Flashcard?
     @State private var question: String
     @State private var answer: String
+    @State private var questionImage: String?
+    @State private var answerImage: String?
     @State private var notebookID: UUID?
     @State private var pageID: UUID?
     @State private var error: String?
@@ -55,6 +57,7 @@ struct FlashcardForm: View {
         self.model = model; self.deck = deck; self.card = card
         _question = State(initialValue: card?.question ?? "")
         _answer = State(initialValue: card?.answer ?? "")
+        _questionImage = State(initialValue: card?.questionImagePath); _answerImage = State(initialValue: card?.answerImagePath)
         _notebookID = State(initialValue: card?.sourceNotebookID ?? initialSource?.notebookID ?? deck.notebookID)
         _pageID = State(initialValue: card?.sourcePageID ?? initialSource?.pageID)
     }
@@ -63,10 +66,18 @@ struct FlashcardForm: View {
         NavigationStack {
             Form {
                 Section("Question") {
+                    if let questionImage {
+                        StudyAttachmentImage(path: questionImage).frame(maxHeight: 220)
+                        Button("Remove Question Image", role: .destructive) { self.questionImage = nil }
+                    }
                     TextEditor(text: $question).frame(minHeight: 100)
                         .accessibilityLabel("Question").accessibilityIdentifier("study.question")
                 }
                 Section("Answer") {
+                    if let answerImage {
+                        StudyAttachmentImage(path: answerImage).frame(maxHeight: 220)
+                        Button("Remove Answer Image", role: .destructive) { self.answerImage = nil }
+                    }
                     TextEditor(text: $answer).frame(minHeight: 160)
                         .accessibilityLabel("Answer").accessibilityIdentifier("study.answer")
                 }
@@ -100,7 +111,8 @@ struct FlashcardForm: View {
                     Button("Save") {
                         let source = notebookID.flatMap { book in pageID.map { StudySource(notebookID: book, pageID: $0) } }
                         do {
-                            try model.saveCard(id: card?.id, deckID: deck.id, question: question, answer: answer, source: source)
+                            try model.saveCard(id: card?.id, deckID: deck.id, question: question, answer: answer, source: source,
+                                               images: StudyCardImages(question: questionImage, answer: answerImage))
                             dismiss()
                         } catch { self.error = error.localizedDescription }
                     }.disabled(question.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || answer.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)

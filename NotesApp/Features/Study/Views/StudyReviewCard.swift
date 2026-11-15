@@ -4,6 +4,9 @@ import SwiftUI
 struct StudyReviewCard: View {
     let question: String
     let answer: String
+    var questionImagePath: String? = nil
+    var answerImagePath: String? = nil
+    var storage: DrawingStorage = .shared
     let isAnswerVisible: Bool
     let flip: () -> Void
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
@@ -45,13 +48,17 @@ struct StudyReviewCard: View {
             .accessibilityHidden(true)
             GeometryReader { geometry in
                 ScrollView {
-                    Text(text)
+                    VStack(spacing: 14) {
+                        if let path = answer ? answerImagePath : questionImagePath {
+                            StudyAttachmentImage(path: path, storage: storage).frame(maxHeight: 440)
+                        }
+                        Text(text)
                         .font(.system(answer ? .title3 : .title2, design: .rounded).weight(answer ? .regular : .medium))
                         .multilineTextAlignment(.center).lineSpacing(6).textSelection(.enabled)
                         .fixedSize(horizontal: false, vertical: true)
                         .frame(maxWidth: .infinity)
-                        .frame(minHeight: geometry.size.height)
                         .accessibilityIdentifier(answer ? "study.answerText" : "study.questionText")
+                    }.frame(minHeight: geometry.size.height)
                 }
             }
             Text(answer ? "Tap to return to the question" : "Tap the card to reveal the answer")

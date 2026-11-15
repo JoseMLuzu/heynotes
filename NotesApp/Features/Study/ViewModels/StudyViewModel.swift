@@ -4,6 +4,11 @@ import SwiftData
 
 struct StudyRoute: Hashable { let deckID: UUID }
 
+struct StudyCardImages: Sendable {
+    var question: String?
+    var answer: String?
+}
+
 struct StudySource: Equatable, Sendable, Identifiable {
     let notebookID: UUID
     let pageID: UUID
@@ -83,7 +88,7 @@ enum StudyError: LocalizedError {
     }
 
     @discardableResult func saveCard(id: UUID? = nil, deckID: UUID, question: String, answer: String,
-                                    source: StudySource?, now: Date = .now) throws -> Flashcard {
+                                    source: StudySource?, images: StudyCardImages? = nil, now: Date = .now) throws -> Flashcard {
         let question = question.trimmingCharacters(in: .whitespacesAndNewlines)
         let answer = answer.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !question.isEmpty, !answer.isEmpty else { throw StudyError.emptyCard }
@@ -94,10 +99,14 @@ enum StudyError: LocalizedError {
             _ = try resolve(source)
         }
         let card = existing ?? Flashcard(question: question, answer: answer, now: now)
+        if let images {
+            for path in [images.question, images.answer].compactMap({ $0 }) { try BackupValidation.path(path) }
+        }
         try commit {
             if existing == nil { context.insert(card) }
             card.deck = deck; card.question = question; card.answer = answer; card.updatedAt = now
             card.sourceNotebookID = source?.notebookID; card.sourcePageID = source?.pageID
+            if let images { card.questionImagePath = images.question; card.answerImagePath = images.answer }
         }
         return card
     }
@@ -151,4 +160,8 @@ enum StudyError: LocalizedError {
         catch { context.rollback(); throw StudyError.saveFailed(error.localizedDescription) }
         reload()
     }
+}
+
+extension Notification.Name {
+    static let studyContentChanged = Notification.Name("HeyNotes.studyContentChanged")
 }
