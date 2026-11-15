@@ -66,6 +66,7 @@ struct PaletteFavoriteDraft: Identifiable {
         var visible = true
     }
     @ObservationIgnored private let defaults: UserDefaults
+    @ObservationIgnored let dragScopeID = UUID()
     private var saved: Saved
     private static let key = "editor.quickPalette.v2"
     static let maximumFavorites = 6
@@ -171,6 +172,25 @@ struct PaletteFavoriteDraft: Identifiable {
     }
     func move(from source: IndexSet, to destination: Int) {
         saved.profiles[activeIndex].favorites.move(fromOffsets: source, toOffset: destination); persist()
+    }
+    /// Same-profile drags reorder; toolbar/cross-profile drags insert an independent snapshot.
+    @discardableResult func acceptDrop(_ drag: PaletteToolDrag, onto targetID: UUID?, in profileID: UUID) -> Bool {
+        guard drag.version == 1, (drag.paletteID == nil) == (drag.profileID == nil),
+              profileID == saved.activeProfileID else { return false }
+        let index = activeIndex
+        var favorites = saved.profiles[index].favorites
+        let target = targetID.flatMap { id in favorites.firstIndex { $0.id == id } }
+        guard targetID == nil || target != nil else { return false }
+        if drag.paletteID == dragScopeID, drag.profileID == profileID {
+            guard let source = favorites.firstIndex(where: { $0.id == drag.preset.id }) else { return false }
+            let favorite = favorites.remove(at: source)
+            favorites.insert(favorite, at: min(target ?? favorites.count, favorites.count))
+        } else {
+            guard favorites.count < Self.maximumFavorites else { return false }
+            var copy = drag.preset.sanitized; copy.id = UUID()
+            favorites.insert(copy, at: target ?? favorites.count)
+        }
+        saved.profiles[index].favorites = favorites; persist(); return true
     }
     private static func cleanName(_ value: String) -> String { String(value.trimmingCharacters(in: .whitespacesAndNewlines).prefix(40)) }
     private static func validFavorites(_ values: [ToolPreset]) -> [ToolPreset] {

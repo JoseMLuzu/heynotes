@@ -6,6 +6,14 @@
     <array>
         <dict>
             <key>UTTypeIdentifier</key>
+            <string>com.local.notesapp.palette-tool</string>
+            <key>UTTypeDescription</key>
+            <string>HeyNotes Palette Tool</string>
+            <key>UTTypeConformsTo</key>
+            <array><string>public.data</string></array>
+        </dict>
+        <dict>
+            <key>UTTypeIdentifier</key>
             <string>com.local.notesapp.library-backup</string>
             <key>UTTypeDescription</key>
             <string>HeyNotes Library Backup</string>

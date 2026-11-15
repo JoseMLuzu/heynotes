@@ -128,7 +128,11 @@ struct EditorToolbar<InsertMenu: View>: View {
         }
         .accessibilityLabel(item.title)
         .accessibilityAddTraits(preferences.selected == item ? .isSelected : [])
-        .accessibilityHint("Select this tool. Tap again for settings.")
+        .accessibilityHint("Select this tool. Tap again for settings, or hold and drag to Quick Palette.")
+        .modifier(PaletteToolDragSource(snapshot: { preferences.capturePreset(for: item) }, palette: quickPalette) {
+            let stroke = session.canvas?.drawingGestureRecognizer.state
+            return session.ready && !session.busy && !session.exporting && stroke != .began && stroke != .changed
+        })
     }
 
     private func openToolSettings() {

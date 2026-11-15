@@ -76,7 +76,8 @@ struct EditorView: View {
                 QuickPalette(palette: quickPalette, tools: preferences,
                              onExitFocus: focusMode.isActive ? { focusMode.exit() } : nil) {
                     let stroke = session.canvas?.drawingGestureRecognizer.state
-                    return session.ready && !session.busy && stroke != .began && stroke != .changed
+                    return isCurrentSession && session.ready && !session.busy && !session.exporting && workspace?.isSwitching != true
+                        && stroke != .began && stroke != .changed
                 }
                 .allowsHitTesting(focusMode.isActive || !session.busy)
             }

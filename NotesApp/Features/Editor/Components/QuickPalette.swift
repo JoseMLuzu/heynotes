@@ -20,6 +20,10 @@ struct QuickPalette: View {
     @State private var showingManager = false
     @State private var editing: PaletteFavoriteDraft?
     @State private var showingProfiles = false
+    @State private var gridFrame = CGRect.zero
+    @State private var dropTargeted = false
+    @State private var targetFavoriteID: UUID?
+    @State private var dropNotice: String?
 
     var body: some View {
         GeometryReader { geometry in
@@ -76,6 +80,10 @@ struct QuickPalette: View {
                             .help("Save current tool")
                         }
                     }
+                    .background(GeometryReader { grid in
+                        Color.clear.preference(key: PaletteGridFrame.self, value: grid.frame(in: .named("quickPaletteDrop")))
+                    })
+                    .animation(reduceMotion ? nil : .easeOut(duration: 0.14), value: palette.favorites.map(\.id))
                     Menu { profileMenu } label: {
                         HStack(spacing: 6) {
                             Text(palette.activeProfile.name).lineLimit(1)
@@ -91,16 +99,46 @@ struct QuickPalette: View {
             }
             .padding(8)
             .frame(width: size.width, height: size.height)
+            .coordinateSpace(name: "quickPaletteDrop")
             .buttonStyle(.plain)
             .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 18))
             .overlay(RoundedRectangle(cornerRadius: 18).strokeBorder(.primary.opacity(0.09)).allowsHitTesting(false))
+            .overlay {
+                RoundedRectangle(cornerRadius: 18).strokeBorder(AppTheme.accent, lineWidth: 2)
+                    .opacity(dropTargeted ? 1 : 0).allowsHitTesting(false)
+            }
+            .overlay(alignment: .bottom) {
+                if let dropNotice {
+                    Text(dropNotice).font(.caption).multilineTextAlignment(.center)
+                        .padding(8).frame(width: size.width)
+                        .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 10))
+                        .fixedSize(horizontal: false, vertical: true)
+                        .allowsHitTesting(false)
+                }
+            }
             .shadow(color: .black.opacity(0.12), radius: 10, y: 3)
+            .onPreferenceChange(PaletteGridFrame.self) { gridFrame = $0 }
+            .onDrop(of: [.paletteTool], delegate: PaletteToolDrop(palette: palette, profileID: palette.activeProfile.id,
+                grid: collapsed ? .zero : gridFrame, canInteract: canInteract,
+                hovering: { targeted, favoriteID in
+                    if targeted, dropNotice != nil { dropNotice = nil }
+                    if dropTargeted != targeted { dropTargeted = targeted }
+                    if targetFavoriteID != favoriteID { targetFavoriteID = favoriteID }
+                }, completed: { _, message in
+                    dropNotice = message
+                    if let message { UIAccessibility.post(notification: .announcement, argument: message) }
+                }))
             .offset(x: origin.x, y: origin.y)
             .opacity(fits ? 1 : 0)
             .allowsHitTesting(fits)
             .accessibilityHidden(!fits)
             .animation(reduceMotion ? nil : .easeOut(duration: 0.14), value: collapsed)
             .onChange(of: geometry.size) { _, _ in translation = .zero }
+            .task(id: dropNotice) {
+                guard dropNotice != nil else { return }
+                do { try await Task.sleep(for: .seconds(3)) } catch { return }
+                dropNotice = nil
+            }
         }
         .tint(AppTheme.accent)
         .sheet(isPresented: $showingManager) { PaletteManager(palette: palette, tools: tools) }
@@ -151,6 +189,11 @@ struct QuickPalette: View {
             }
             Button("Remove Favorite", systemImage: "minus.circle", role: .destructive) { palette.remove(favorite.id) }
                 .disabled(palette.favorites.count <= 1)
+        }
+        .modifier(PaletteToolDragSource(snapshot: { favorite }, palette: palette, fromFavorite: true, canInteract: canInteract))
+        .overlay {
+            RoundedRectangle(cornerRadius: 10).strokeBorder(AppTheme.accent, lineWidth: 2)
+                .opacity(dropTargeted && targetFavoriteID == favorite.id ? 1 : 0).allowsHitTesting(false)
         }
     }
 

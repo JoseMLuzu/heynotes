@@ -73,6 +73,13 @@
 			<key>isa</key>
 			<string>PBXBuildFile</string>
 		</dict>
+		<key>0237B8E9CDD41D226E37C293</key>
+		<dict>
+			<key>fileRef</key>
+			<string>F8A6C910378FF022B9C4AF8B</string>
+			<key>isa</key>
+			<string>PBXBuildFile</string>
+		</dict>
 		<key>0245A90AABFFBE9D9CA85927</key>
 		<dict>
 			<key>isa</key>
@@ -175,6 +182,17 @@
 			<string>sourcecode.swift</string>
 			<key>path</key>
 			<string>NotesApp/Features/Library/Views/LibraryView.swift</string>
+			<key>sourceTree</key>
+			<string>SOURCE_ROOT</string>
+		</dict>
+		<key>09E3CAEBB39E63532D4C22CD</key>
+		<dict>
+			<key>isa</key>
+			<string>PBXFileReference</string>
+			<key>lastKnownFileType</key>
+			<string>sourcecode.swift</string>
+			<key>path</key>
+			<string>NotesApp/Features/Editor/Components/PaletteToolDrop.swift</string>
 			<key>sourceTree</key>
 			<string>SOURCE_ROOT</string>
 		</dict>
@@ -570,6 +588,17 @@
 			<string>9C3C09493904226E9A03F82B</string>
 			<key>isa</key>
 			<string>PBXBuildFile</string>
+		</dict>
+		<key>2313C75588C72D23D2B9E2F2</key>
+		<dict>
+			<key>isa</key>
+			<string>PBXFileReference</string>
+			<key>lastKnownFileType</key>
+			<string>sourcecode.swift</string>
+			<key>path</key>
+			<string>NotesApp/Features/Editor/Components/PaletteToolDragSource.swift</string>
+			<key>sourceTree</key>
+			<string>SOURCE_ROOT</string>
 		</dict>
 		<key>238BD63EDF90B85DEE618805</key>
 		<dict>
@@ -2324,6 +2353,13 @@
 			<key>isa</key>
 			<string>PBXBuildFile</string>
 		</dict>
+		<key>9055AE783ADD6E935D5B790A</key>
+		<dict>
+			<key>fileRef</key>
+			<string>09E3CAEBB39E63532D4C22CD</string>
+			<key>isa</key>
+			<string>PBXBuildFile</string>
+		</dict>
 		<key>9070D961930A0B130984F54F</key>
 		<dict>
 			<key>isa</key>
@@ -3050,6 +3086,9 @@
 				<string>4FC753B7E05569E357D67D77</string>
 				<string>0DD429621728492BE2787D0D</string>
 				<string>F14BA426B25FFCE43E411D95</string>
+				<string>DF7E818AC756E53258B87612</string>
+				<string>9055AE783ADD6E935D5B790A</string>
+				<string>0237B8E9CDD41D226E37C293</string>
 				<string>A6EAD68F63D6A824A5982C29</string>
 				<string>3D4E87EB12CB7C88713EB734</string>
 				<string>5D936E49F3FE4887FAEAAE1B</string>
@@ -3589,6 +3628,13 @@
 			<key>isa</key>
 			<string>PBXBuildFile</string>
 		</dict>
+		<key>DF7E818AC756E53258B87612</key>
+		<dict>
+			<key>fileRef</key>
+			<string>2313C75588C72D23D2B9E2F2</string>
+			<key>isa</key>
+			<string>PBXBuildFile</string>
+		</dict>
 		<key>DFD20CBA03F4F8736444CB3D</key>
 		<dict>
 			<key>isa</key>
@@ -3849,6 +3895,9 @@
 				<string>B19A73FD5B1E2C193F286A78</string>
 				<string>C1076425C85EEA7604533EC2</string>
 				<string>3D4DEBB08D9D9D8671F65C4E</string>
+				<string>2313C75588C72D23D2B9E2F2</string>
+				<string>09E3CAEBB39E63532D4C22CD</string>
+				<string>F8A6C910378FF022B9C4AF8B</string>
 				<string>DFD20CBA03F4F8736444CB3D</string>
 				<string>7EA4B47265933D46949DC359</string>
 				<string>26C1EED6E713FADC5FF8BC44</string>
@@ -4170,6 +4219,17 @@
 			<string>EB152F7EC81C19B4B04C9374</string>
 			<key>isa</key>
 			<string>PBXBuildFile</string>
+		</dict>
+		<key>F8A6C910378FF022B9C4AF8B</key>
+		<dict>
+			<key>isa</key>
+			<string>PBXFileReference</string>
+			<key>lastKnownFileType</key>
+			<string>sourcecode.swift</string>
+			<key>path</key>
+			<string>NotesApp/Features/Editor/Services/PaletteToolDrag.swift</string>
+			<key>sourceTree</key>
+			<string>SOURCE_ROOT</string>
 		</dict>
 		<key>F8B10B4282E93127ACD08CC7</key>
 		<dict>
