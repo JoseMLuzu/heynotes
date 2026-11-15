@@ -31,6 +31,7 @@ struct EditorView: View {
     @State private var showingMargin = false
     @State private var studySource: StudySource?
     @State private var selectedPhoto: PhotosPickerItem?
+    @State private var toolCapture: ToolCapturePresentation?
     @State private var showingPhotos = false
     @State private var showingImageFile = false
 
@@ -75,7 +76,7 @@ struct EditorView: View {
             if (session.ready && quickPalette.isVisible) || focusMode.isActive {
                 QuickPalette(palette: quickPalette, tools: preferences,
                              onExitFocus: focusMode.isActive ? { focusMode.exit() } : nil) {
-                    let stroke = session.canvas?.drawingGestureRecognizer.state
+                    let stroke = (session.zoomCanvas ?? session.canvas)?.drawingGestureRecognizer.state
                     return isCurrentSession && session.ready && !session.busy && !session.exporting && workspace?.isSwitching != true
                         && stroke != .began && stroke != .changed
                 }
@@ -84,7 +85,7 @@ struct EditorView: View {
         }
         .background(AppTheme.background)
         .overlay {
-            if session.exporting { ProgressView("Preparing PDF…").padding(24).background(.regularMaterial, in: RoundedRectangle(cornerRadius: 16)) }
+            if session.exporting { ProgressView("Preparing…").padding(24).background(.regularMaterial, in: RoundedRectangle(cornerRadius: 16)) }
         }
         .navigationBarBackButtonHidden()
         .toolbar(.hidden, for: .navigationBar)
@@ -92,6 +93,7 @@ struct EditorView: View {
         .persistentSystemOverlays(focusMode.isActive ? .hidden : .automatic)
         .background(FocusSplitViewPolicy(focused: focusMode.isActive && (workspace == nil || showsWorkspaceTabs)))
         .safeAreaInset(edge: .bottom, spacing: 0) {
+            if session.writingRegion != nil { ZoomWritingPanel(session: session, tools: preferences, fingerDrawing: fingerDrawing) }
             if !focusMode.isActive && toolbarPlacement.position == .bottom {
                 toolBar.frame(height: 52).padding(.horizontal, 12).padding(.vertical, 8)
                     .background(Color(uiColor: AppTheme.canvasUIColor))
@@ -142,7 +144,35 @@ struct EditorView: View {
             resetDocumentControls()
             session.handwriting.setTool(preferences.selected, session: session)
         }
-        .onChange(of: preferences.selected) { _, value in session.handwriting.setTool(value, session: session) }
+        .onChange(of: preferences.selected) { _, value in
+            session.handwriting.setTool(value, session: session)
+            if session.writingRegion != nil, value.usesAuxiliaryInput || value.editsObjects || value == .eraser && preferences.eraserMode == .highlighter { Task { _ = await session.closeZoomWriting() } }
+        }
+        .onChange(of: preferences.eraserMode) { _, mode in
+            if session.writingRegion != nil, preferences.selected == .eraser, mode == .highlighter { Task { _ = await session.closeZoomWriting() } }
+        }
+        .onChange(of: session.requestedNote?.id) { _, _ in
+            if let item = session.requestedNote, let page = session.page {
+                editingContent = EditorElementDraft(pageID: page.id, element: item, isNew: true)
+                session.requestedNote = nil
+            }
+        }
+        .onChange(of: session.regionRequest?.id) { _, _ in
+            guard let request = session.regionRequest else { return }
+            session.regionRequest = nil
+            if request.tool == .pdfHighlight {
+                Task { await session.highlightPDF(request.rect, expectedPageID: request.pageID) }
+            } else if request.tool == .writingZoom {
+                session.beginZoomWriting(request.rect); preferences.selected = .pen
+            } else {
+                Task {
+                    if let snapshot = await session.capturePage(expectedPageID: request.pageID), canFinishImport {
+                        toolCapture = ToolCapturePresentation(snapshot: snapshot, region: request.rect, startsWithCard: request.tool == .cardCapture)
+                    }
+                }
+            }
+        }
+        .sheet(item: $toolCapture) { ToolCaptureFlow(presentation: $0, session: session) }
         .onChange(of: focusMode.isActive) { _, active in if active { showingPages = false } }
         .onDisappear { session.handwriting.cancel() }
         .sheet(isPresented: $showingMargin) { PDFMarginEditor(session: session) }
@@ -252,10 +282,10 @@ struct EditorView: View {
 
                 HStack(spacing: 0) {
                     Group {
-                        Button { session.canvas?.undoManager?.undo() } label: {
+                        Button { (session.zoomCanvas ?? session.canvas)?.undoManager?.undo() } label: {
                             Image(systemName: "arrow.uturn.backward").frame(width: 44, height: 44)
                         }.accessibilityLabel("Undo")
-                        Button { session.canvas?.undoManager?.redo() } label: {
+                        Button { (session.zoomCanvas ?? session.canvas)?.undoManager?.redo() } label: {
                             Image(systemName: "arrow.uturn.forward").frame(width: 44, height: 44)
                         }.accessibilityLabel("Redo")
                     }

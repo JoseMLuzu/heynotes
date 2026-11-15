@@ -30,6 +30,7 @@ private final class PagePanDelegate: NSObject, UIGestureRecognizerDelegate {
               host.ink.drawingPolicy == .pencilOnly,
               abs(host.zoomScale - host.minimumZoomScale) < 0.01,
               !host.isZooming, !host.isZoomBouncing,
+              !host.studentTools.isTracking,
               host.ink.drawingGestureRecognizer.state != .began,
               host.ink.drawingGestureRecognizer.state != .changed,
               pan.numberOfTouches == 1 else { return false }
@@ -48,6 +49,8 @@ final class CanvasHost: UIScrollView, UIScrollViewDelegate {
     let pageSize: CGSize
     let objectContent: PageObjectsContentView
     let objectControls: PageObjectsInteractionView
+    let studentTools: StudentToolOverlay
+    let writingGuide = CAShapeLayer()
     var objectsMode = false { didSet { updateInkInteraction() } }
     private let zoomContent: UIView
     private let pageSurface: UIView
@@ -84,6 +87,7 @@ final class CanvasHost: UIScrollView, UIScrollViewDelegate {
         paper = PaperView(frame: CGRect(origin: .zero, size: pageSize))
         objectContent = PageObjectsContentView(frame: CGRect(origin: .zero, size: pageSize))
         objectControls = PageObjectsInteractionView(frame: CGRect(origin: .zero, size: pageSize))
+        studentTools = StudentToolOverlay(frame: CGRect(origin: .zero, size: pageSize))
         ink = InkCanvas(frame: CGRect(origin: .zero, size: pageSize))
         super.init(frame: .zero)
         delegate = self
@@ -97,11 +101,16 @@ final class CanvasHost: UIScrollView, UIScrollViewDelegate {
         pagePan.allowedTouchTypes = [NSNumber(value: UITouch.TouchType.direct.rawValue)]
         addGestureRecognizer(pagePan)
         objectControls.yieldFingerGestures(to: pagePan)
+        studentTools.yieldFingerGestures(to: pagePan)
         panGestureRecognizer.require(toFail: pagePan)
         maximumZoomScale = 4
         contentSize = pageSize
         addSubview(zoomContent); zoomContent.addSubview(pageSurface)
         pageSurface.addSubview(paper); paper.addSubview(objectContent); paper.addSubview(ink); paper.addSubview(objectControls)
+        paper.addSubview(studentTools); studentTools.isHidden = true
+        writingGuide.fillColor = UIColor.systemBlue.withAlphaComponent(0.06).cgColor
+        writingGuide.strokeColor = UIColor.systemBlue.cgColor; writingGuide.lineWidth = 2; writingGuide.lineDashPattern = [6, 4]
+        paper.layer.addSublayer(writingGuide)
         objectContent.backgroundColor = .clear; objectContent.isOpaque = false; objectContent.isUserInteractionEnabled = false
         objectControls.onPreview = { [weak objectContent] in objectContent?.elements = $0 }
         paper.isUserInteractionEnabled = true
@@ -121,6 +130,7 @@ final class CanvasHost: UIScrollView, UIScrollViewDelegate {
     private func updateInkInteraction() {
         ink.isUserInteractionEnabled = editorAllowsInk && !transitionPausesInk && !objectsMode
         objectControls.isUserInteractionEnabled = editorAllowsInk && !transitionPausesInk
+        studentTools.isUserInteractionEnabled = editorAllowsInk && !transitionPausesInk
     }
     /// Animate inside the zoom root, leaving the scroll viewport/background stationary.
     func setPageOffset(_ points: CGFloat) {
@@ -138,6 +148,7 @@ final class CanvasHost: UIScrollView, UIScrollViewDelegate {
         if paper.contentScaleFactor != paperScale { paper.contentScaleFactor = paperScale }
         if objectContent.contentScaleFactor != paperScale { objectContent.contentScaleFactor = paperScale }
         if objectControls.contentScaleFactor != paperScale { objectControls.contentScaleFactor = paperScale }
+        if studentTools.contentScaleFactor != paperScale { studentTools.contentScaleFactor = paperScale }
         if wasAtFit, abs(zoomScale - minimumZoomScale) > 0.001 { zoomScale = minimumZoomScale }
         fitted = true
         objectControls.zoom = zoomScale
@@ -259,6 +270,11 @@ struct PaperCanvas: UIViewRepresentable {
     var editorTool: EditorTool = .pen
     var inkStyle = InkStyle()
     var rulerEnabled = false
+    var eraserMode: EraserMode = .strokes
+    var eraserWidth: Double = 20
+    var stampSymbol: StampSymbol = .check
+    var stickyStyle: StickyNoteStyle = .yellow
+    var smartShapes = false
     var onPencilDoubleTap: ((UIPencilPreferredAction) -> Void)? = nil
     var onInteraction: (() -> Void)? = nil
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
@@ -274,6 +290,7 @@ struct PaperCanvas: UIViewRepresentable {
     static func dismantleUIView(_ container: PageCanvasContainer, coordinator: Coordinator) {
         container.onInteraction = nil
         coordinator.pencil.detach()
+        coordinator.shapes.detach()
         container.discardPreparedCanvases()
         coordinator.session.onPreparedNeighbor = nil
         coordinator.session.onDiscardPreparedCanvases = nil
@@ -308,6 +325,7 @@ struct PaperCanvas: UIViewRepresentable {
             }
             host.objectControls.onSelect = { [weak session] in session?.selectedElementID = $0 }
             host.objectControls.onReveal = { [weak session] in session?.toggleTape($0) }
+            host.objectControls.onToggleSticky = { [weak session] in session?.toggleSticky($0) }
             host.onCreationProgress = { [weak container] in container?.showCreationProgress($0) }
             host.onPagePull = { [weak container] in container?.updateInteractivePull(from: pageID, translation: $0) }
             host.onPagePullCancelled = { [weak container] in container?.cancelInteractivePull() }
@@ -351,7 +369,8 @@ struct PaperCanvas: UIViewRepresentable {
         host.hasNextPage = page.pageIndex < session.notebook.pages.count - 1
         host.hasPreviousPage = page.pageIndex > 0
         host.pagePan.isEnabled = isEnabled && !fingerDrawing && session.ready && !session.busy
-        host.objectsMode = editorTool.editsObjects
+        let auxiliary = editorTool.usesAuxiliaryInput || editorTool == .eraser && eraserMode == .highlighter
+        host.objectsMode = editorTool.editsObjects || auxiliary || session.writingRegion != nil
         host.editorAllowsInk = isEnabled && session.ready && !session.busy
         host.ink.drawingPolicy = fingerDrawing ? .anyInput : .pencilOnly
         host.panGestureRecognizer.minimumNumberOfTouches = fingerDrawing || editorTool.editsObjects ? 2 : 1
@@ -361,13 +380,40 @@ struct PaperCanvas: UIViewRepresentable {
         host.objectContent.images = session.objectImages
         host.objectContent.elements = session.elements
         host.objectContent.isHidden = !session.elements.contains { $0.kind != .tape }
-        host.objectControls.isHidden = !editorTool.editsObjects && !session.elements.contains { $0.kind == .tape }
+        host.objectControls.isHidden = !editorTool.editsObjects && !session.elements.contains { $0.kind == .tape || $0.stickyStyle != nil }
         host.objectControls.elements = session.elements
         host.objectControls.revealed = session.revealedTapes
         host.objectControls.selectedID = session.selectedElementID
         host.objectControls.tool = editorTool
         host.objectControls.fingerDrawing = fingerDrawing
         host.objectControls.style = inkStyle
+        host.writingGuide.path = session.writingRegion.map { UIBezierPath(rect: $0).cgPath }
+        host.studentTools.isHidden = !auxiliary
+        host.studentTools.mode = auxiliary ? editorTool : nil
+        host.studentTools.fingerDrawing = fingerDrawing
+        host.studentTools.radius = eraserWidth / 2
+        if editorTool == .laser { host.studentTools.laserStyle = inkStyle }
+        let toolPageID = page.id
+        host.studentTools.onActivity = { [weak session] active in if session?.page?.id == toolPageID { session?.auxiliaryInputActive = active } }
+        host.studentTools.onErase = { [weak session] points, radius in Task {
+            guard session?.page?.id == toolPageID else { return }; await session?.eraseHighlighter(along: points, radius: radius)
+        } }
+        host.studentTools.onCircle = { [weak session] rect in
+            guard session?.page?.id == toolPageID else { return }
+            var item = PageElement(kind: .ellipse, rect: rect)
+            item.red = inkStyle.red; item.green = inkStyle.green; item.blue = inkStyle.blue; item.opacity = inkStyle.opacity; item.lineWidth = inkStyle.width
+            _ = session?.insertElement(item)
+        }
+        host.studentTools.onTap = { [weak session] tool, point in
+            guard session?.page?.id == toolPageID else { return }
+            if tool == .stamp { session?.insertStamp(at: point, symbol: stampSymbol, style: inkStyle) }
+            else { session?.requestSticky(at: point, style: stickyStyle) }
+        }
+        host.studentTools.onRegion = { [weak session] tool, rect in
+            guard session?.page?.id == toolPageID else { return }; session?.requestRegion(rect, tool: tool)
+        }
+        context.coordinator.shapes.attach(to: host.ink, session: session,
+            enabled: smartShapes && [.pen, .pencil].contains(editorTool) && host.ink.isUserInteractionEnabled, style: inkStyle)
     }
     private func sameTool(_ lhs: PKTool, _ rhs: PKTool) -> Bool {
         if let lhs = lhs as? PKInkingTool, let rhs = rhs as? PKInkingTool { return lhs == rhs }
@@ -378,12 +424,14 @@ struct PaperCanvas: UIViewRepresentable {
     @MainActor final class Coordinator: NSObject, PKCanvasViewDelegate {
         let session: EditorSession
         let pencil = PencilDoubleTapCoordinator()
+        let shapes = SmartShapeCoordinator()
         init(session: EditorSession) { self.session = session }
         func canvasViewDrawingDidChange(_ canvasView: PKCanvasView) {
             // Late callbacks from an outgoing page must never overwrite the incoming page.
-            guard session.canvas === canvasView, (canvasView as? InkCanvas)?.pageID == session.page?.id,
-                  canvasView.drawing != session.drawing else { return }
-            session.changed(canvasView.drawing)
+            guard session.zoomCanvas == nil, session.canvas === canvasView, (canvasView as? InkCanvas)?.pageID == session.page?.id,
+                  canvasView.drawing != session.drawing else { shapes.didChange(canvasView); return }
+            session.changed(canvasView.drawing); shapes.didChange(canvasView)
         }
+        func canvasViewDidEndUsingTool(_ canvasView: PKCanvasView) { shapes.didEnd(canvasView) }
     }
 }

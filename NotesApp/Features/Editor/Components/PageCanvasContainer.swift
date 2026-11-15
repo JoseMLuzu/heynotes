@@ -362,6 +362,7 @@ final class PageCanvasContainer: UIView {
 
     /// Keep a clean return page's real canvas. Fresh source checks still gate every activation.
     private func retire(_ host: CanvasHost, identity: UUID?) {
+        host.studentTools.reset()
         guard let id = host.ink.pageID, let identity, allowedNeighbors.values.contains(id), neighbors[id] == nil else {
             host.removeFromSuperview(); return
         }
