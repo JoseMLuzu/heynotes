@@ -955,6 +955,13 @@
 			<key>sourceTree</key>
 			<string>SOURCE_ROOT</string>
 		</dict>
+		<key>37C87D915B1456E935098777</key>
+		<dict>
+			<key>fileRef</key>
+			<string>A2BFA95A4E764994EF46B70B</string>
+			<key>isa</key>
+			<string>PBXBuildFile</string>
+		</dict>
 		<key>37D4F310A61DDB5C18FCD2E0</key>
 		<dict>
 			<key>fileRef</key>
@@ -1401,6 +1408,17 @@
 			<string>ABE921123353C8A2D9253100</string>
 			<key>isa</key>
 			<string>PBXBuildFile</string>
+		</dict>
+		<key>526F01E87852E092E7E62955</key>
+		<dict>
+			<key>isa</key>
+			<string>PBXFileReference</string>
+			<key>lastKnownFileType</key>
+			<string>sourcecode.swift</string>
+			<key>path</key>
+			<string>NotesApp/Features/Editor/Components/ToolbarToolGroup.swift</string>
+			<key>sourceTree</key>
+			<string>SOURCE_ROOT</string>
 		</dict>
 		<key>538F6F0C4C4E72A87632BAF1</key>
 		<dict>
@@ -2735,6 +2753,17 @@
 			<key>isa</key>
 			<string>PBXBuildFile</string>
 		</dict>
+		<key>A2BFA95A4E764994EF46B70B</key>
+		<dict>
+			<key>isa</key>
+			<string>PBXFileReference</string>
+			<key>lastKnownFileType</key>
+			<string>sourcecode.swift</string>
+			<key>path</key>
+			<string>NotesApp/Features/Editor/Components/EditorHeaderLayout.swift</string>
+			<key>sourceTree</key>
+			<string>SOURCE_ROOT</string>
+		</dict>
 		<key>A2DFA86A5BB1546DB8A4D1C5</key>
 		<dict>
 			<key>isa</key>
@@ -3317,6 +3346,8 @@
 				<string>1FB20D21F82254391DDF0660</string>
 				<string>5131A0EE401DEE07F55D85B3</string>
 				<string>20A39E1375528857EC5EAB58</string>
+				<string>C9FA8528ABB68B87BD4145B5</string>
+				<string>37C87D915B1456E935098777</string>
 				<string>75EF217868BADA8A20901F1A</string>
 			</array>
 			<key>isa</key>
@@ -3588,6 +3619,13 @@
 		<dict>
 			<key>fileRef</key>
 			<string>A66591DBC603AB033A5B144F</string>
+			<key>isa</key>
+			<string>PBXBuildFile</string>
+		</dict>
+		<key>C9FA8528ABB68B87BD4145B5</key>
+		<dict>
+			<key>fileRef</key>
+			<string>526F01E87852E092E7E62955</string>
 			<key>isa</key>
 			<string>PBXBuildFile</string>
 		</dict>
@@ -4221,6 +4259,8 @@
 				<string>78F1F06489D5EA56087DC737</string>
 				<string>42DBC78D6B76C681B7FA493B</string>
 				<string>59082E8B1D47465262F54133</string>
+				<string>526F01E87852E092E7E62955</string>
+				<string>A2BFA95A4E764994EF46B70B</string>
 				<string>DA430EB6BF29AE365FF6626C</string>
 			</array>
 			<key>isa</key>
