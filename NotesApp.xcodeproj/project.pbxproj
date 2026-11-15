@@ -564,6 +564,13 @@
 			<key>isa</key>
 			<string>PBXBuildFile</string>
 		</dict>
+		<key>20A39E1375528857EC5EAB58</key>
+		<dict>
+			<key>fileRef</key>
+			<string>42DBC78D6B76C681B7FA493B</string>
+			<key>isa</key>
+			<string>PBXBuildFile</string>
+		</dict>
 		<key>21B52ECAB5A30A90E9CCD383</key>
 		<dict>
 			<key>fileRef</key>
@@ -1083,6 +1090,17 @@
 			<string>322FEA7DCD015FEFD06969D5</string>
 			<key>isa</key>
 			<string>PBXBuildFile</string>
+		</dict>
+		<key>42DBC78D6B76C681B7FA493B</key>
+		<dict>
+			<key>isa</key>
+			<string>PBXFileReference</string>
+			<key>lastKnownFileType</key>
+			<string>sourcecode.swift</string>
+			<key>path</key>
+			<string>NotesApp/Features/Editor/Services/EditorZoomWriting.swift</string>
+			<key>sourceTree</key>
+			<string>SOURCE_ROOT</string>
 		</dict>
 		<key>43C2CF90D649A5109ABA4898</key>
 		<dict>
@@ -2791,6 +2809,17 @@
 			<key>sourceTree</key>
 			<string>SOURCE_ROOT</string>
 		</dict>
+		<key>B1C86E1A99FC45C1E2C49C5E</key>
+		<dict>
+			<key>isa</key>
+			<string>PBXFileReference</string>
+			<key>lastKnownFileType</key>
+			<string>sourcecode.swift</string>
+			<key>path</key>
+			<string>NotesApp/Features/Editor/Services/EditorStudentTools.swift</string>
+			<key>sourceTree</key>
+			<string>SOURCE_ROOT</string>
+		</dict>
 		<key>B24D0E29A4F722A513B6B543</key>
 		<dict>
 			<key>isa</key>
@@ -2899,6 +2928,17 @@
 			<string>24F047F427C07743DA1A4E77</string>
 			<key>isa</key>
 			<string>PBXBuildFile</string>
+		</dict>
+		<key>B8CA52AFF7AFF003785FB06C</key>
+		<dict>
+			<key>isa</key>
+			<string>PBXFileReference</string>
+			<key>lastKnownFileType</key>
+			<string>sourcecode.swift</string>
+			<key>path</key>
+			<string>NotesApp/Features/Editor/Services/SelectiveInkEraser.swift</string>
+			<key>sourceTree</key>
+			<string>SOURCE_ROOT</string>
 		</dict>
 		<key>BA0C727F114408F83B780E3F</key>
 		<dict>
@@ -3091,8 +3131,11 @@
 				<string>9055AE783ADD6E935D5B790A</string>
 				<string>0237B8E9CDD41D226E37C293</string>
 				<string>A6EAD68F63D6A824A5982C29</string>
+				<string>D7C8A6BFF9689EDA8A3BB805</string>
 				<string>3D4E87EB12CB7C88713EB734</string>
+				<string>EB1E77C828C479A4B0003C56</string>
 				<string>5D936E49F3FE4887FAEAAE1B</string>
+				<string>20A39E1375528857EC5EAB58</string>
 			</array>
 			<key>isa</key>
 			<string>PBXSourcesBuildPhase</string>
@@ -3542,6 +3585,13 @@
 			<key>isa</key>
 			<string>PBXBuildFile</string>
 		</dict>
+		<key>D7C8A6BFF9689EDA8A3BB805</key>
+		<dict>
+			<key>fileRef</key>
+			<string>B1C86E1A99FC45C1E2C49C5E</string>
+			<key>isa</key>
+			<string>PBXBuildFile</string>
+		</dict>
 		<key>D8775192EE5E147A5ECA57D0</key>
 		<dict>
 			<key>isa</key>
@@ -3901,8 +3951,11 @@
 				<string>F8A6C910378FF022B9C4AF8B</string>
 				<string>F63D67C6BC72D3CE90BEC2A5</string>
 				<string>DFD20CBA03F4F8736444CB3D</string>
+				<string>B1C86E1A99FC45C1E2C49C5E</string>
 				<string>7EA4B47265933D46949DC359</string>
+				<string>B8CA52AFF7AFF003785FB06C</string>
 				<string>26C1EED6E713FADC5FF8BC44</string>
+				<string>42DBC78D6B76C681B7FA493B</string>
 			</array>
 			<key>isa</key>
 			<string>PBXGroup</string>
@@ -4019,6 +4072,13 @@
 			<string>NotesApp/Features/Settings/Views/AppSettingsView.swift</string>
 			<key>sourceTree</key>
 			<string>SOURCE_ROOT</string>
+		</dict>
+		<key>EB1E77C828C479A4B0003C56</key>
+		<dict>
+			<key>fileRef</key>
+			<string>B8CA52AFF7AFF003785FB06C</string>
+			<key>isa</key>
+			<string>PBXBuildFile</string>
 		</dict>
 		<key>EB207AF9C83EAD183A681941</key>
 		<dict>

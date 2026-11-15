@@ -13,6 +13,12 @@ final class EditorSession {
     @ObservationIgnored var pdfBackground: UIImage?
     var elements: [PageElement] = []
     var selectedElementID: UUID?
+    var requestedNote: PageElement?
+    var regionRequest: ToolRegionRequest?
+    var writingRegion: CGRect?
+    var auxiliaryInputActive = false
+    @ObservationIgnored weak var zoomCanvas: PKCanvasView?
+    @ObservationIgnored var zoomStartDrawing: PKDrawing?
     var revealedTapes: Set<UUID> = []
     @ObservationIgnored var objectImages: [String: UIImage] = [:]
     var pageTurnDirection = 1
@@ -73,7 +79,9 @@ final class EditorSession {
             else { loaded = try await pagePreparation.content(preparedRequest, storage: storage) }
             // Keep the old canvas visible until the destination has loaded completely.
             pageTurnDirection = target.pageIndex >= (previousIndex ?? 0) ? 1 : -1
+            finishZoomHistory()
             page = target; drawing = loaded.drawing; pdfBackground = loaded.background
+            requestedNote = nil; regionRequest = nil; writingRegion = nil; auxiliaryInputActive = false; zoomCanvas = nil
             preparedIdentity = loaded.identity
             elements = loaded.elements; objectImages = loaded.images; revealedTapes = []; selectedElementID = nil
             handwriting.reset(to: loaded.drawing)
@@ -81,7 +89,7 @@ final class EditorSession {
             if previousID != target.id { canvas = nil }
             ready = true; status = "Saved on iPad"
             prepareNeighboringPages()
-        } catch { loading?.cancel(); page = target; ready = false; canvas = nil; status = "Page unavailable"; errorMessage = "The page could not be opened. Its files have been preserved. \(error.localizedDescription)" }
+        } catch { loading?.cancel(); finishZoomHistory(); writingRegion = nil; zoomCanvas = nil; auxiliaryInputActive = false; page = target; ready = false; canvas = nil; status = "Page unavailable"; errorMessage = "The page could not be opened. Its files have been preserved. \(error.localizedDescription)" }
     }
 
     private func preparationRequest(_ page: NotePage) -> PagePreparationRequest {
@@ -143,7 +151,8 @@ final class EditorSession {
     func changed(_ value: PKDrawing) {
         guard ready else { return }
         drawing = value; revision += 1
-        handwriting.changed(value, session: self)
+        if writingRegion == nil { handwriting.changed(value, session: self) }
+        else { handwriting.reset(to: value) }
         if !hasPendingSave { hasPendingSave = true }
         if status != "Unsaved changes" { status = "Unsaved changes" }
         debounce?.cancel()
@@ -156,8 +165,8 @@ final class EditorSession {
     /// Explicit navigation/background/export flushes drain all revisions. Debounce saves only one.
     func flush() async -> Bool {
         // Capture the native canvas before navigation even if its final delegate callback is queued.
-        if let canvas, (canvas as? InkCanvas)?.pageID == page?.id, canvas.drawing != drawing {
-            changed(canvas.drawing)
+        if let live = zoomCanvas ?? canvas, (live as? InkCanvas)?.pageID == page?.id, live.drawing != drawing {
+            changed(live.drawing)
         }
         repeat {
             guard await saveCheckpoint() else { return false }
@@ -194,7 +203,7 @@ final class EditorSession {
     }
 
     func clearHandwriting() {
-        guard ready, !busy, let canvas, (canvas as? InkCanvas)?.pageID == page?.id else { return }
+        guard ready, !busy, let canvas = zoomCanvas ?? canvas, (canvas as? InkCanvas)?.pageID == page?.id else { return }
         replaceHandwriting(with: PKDrawing(), on: canvas)
     }
 
@@ -206,6 +215,8 @@ final class EditorSession {
         }
         canvas.undoManager?.setActionName("Clear Handwriting")
         canvas.drawing = replacement
+        if let overview = self.canvas, overview !== canvas { overview.drawing = replacement }
+        if let zoomCanvas, zoomCanvas !== canvas { zoomCanvas.drawing = replacement }
         changed(replacement)
     }
 
@@ -214,7 +225,7 @@ final class EditorSession {
         let token = UIApplication.shared.beginBackgroundTask(withName: "Save handwriting")
         Task {
             _ = await flush()
-            handwriting.reset(to: canvas?.drawing ?? drawing)
+            handwriting.reset(to: drawing)
             if token != .invalid { UIApplication.shared.endBackgroundTask(token) }
         }
     }

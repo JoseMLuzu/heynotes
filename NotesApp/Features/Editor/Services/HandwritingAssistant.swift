@@ -71,6 +71,7 @@ final class HandwritingAssistant {
     }
 
     func convertPage(session: EditorSession) async {
+        guard session.writingRegion == nil else { message = "Close Zoom Writing before converting handwriting."; return }
         cancel()
         let snapshot = session.canvas?.drawing ?? session.drawing
         guard !snapshot.strokes.isEmpty else { message = "Write something on this page first."; return }

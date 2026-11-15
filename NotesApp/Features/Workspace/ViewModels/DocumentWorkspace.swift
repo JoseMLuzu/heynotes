@@ -42,6 +42,7 @@ final class DocumentWorkspace {
     var blocksTabControls: Bool { isSwitching || visibleSessions.contains { $0.busy || $0.exporting } }
     var blocksNavigation: Bool {
         blocksTabControls || visibleSessions.contains {
+            if $0.auxiliaryInputActive { return true }
             let stroke = $0.canvas?.drawingGestureRecognizer.state
             return stroke == .began || stroke == .changed
         }
