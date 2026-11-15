@@ -5,41 +5,36 @@ struct ToolStripWidth: PreferenceKey {
     static func reduce(value: inout CGFloat, nextValue: () -> CGFloat) { value = max(value, nextValue()) }
 }
 
+/// Physical 44-point controls fill spare space; the glass surface hugs its actual contents.
+enum ToolbarAdjustmentLayout {
+    static func maximumSlots(for tool: EditorTool) -> Int {
+        tool.usesInkStyle || tool == .eraser ? 6 : tool == .objects ? 3 : 0
+    }
+    static func width(slots: Int) -> CGFloat {
+        let count = max(0, min(6, slots))
+        return CGFloat(count * 44 + (count > 3 ? 9 : 0))
+    }
+    static func slots(fitting available: CGFloat, tool: EditorTool) -> Int {
+        (0...maximumSlots(for: tool)).reversed().first { $0 == 0 || width(slots: $0) + 9 <= available } ?? 0
+    }
+}
+
 struct ToolbarQuickControls: View {
     let preferences: ToolPreferences
     let session: EditorSession
-    let inline: Bool
-    var arrowEdge: Edge = .top
+    var slots = 6
     let edit: (PageElement) -> Void
-    @State private var showing = false
 
     var body: some View {
-        Group {
-            if inline {
-                row
-            } else {
-                EditorMoreButton(title: "Quick Adjustments", identifier: "editor.quickAdjustments") { showing = true }
-                .frame(width: 44, height: 44)
-                .help("Quick colors, widths and object actions")
-                .popover(isPresented: $showing, arrowEdge: arrowEdge) {
-                    VStack(alignment: .leading, spacing: 8) {
-                        Text(preferences.selected.title).font(.headline)
-                        row
-                    }.padding(16).presentationCompactAdaptation(.popover)
-                }
-            }
-        }
-    }
-    private var row: some View {
-        QuickControlsRow(preferences: preferences, session: session) { item in
-            showing = false; edit(item)
-        }
+        QuickControlsRow(preferences: preferences, session: session,
+                         slots: min(max(0, slots), ToolbarAdjustmentLayout.maximumSlots(for: preferences.selected)), edit: edit)
     }
 }
 
 private struct QuickControlsRow: View {
     let preferences: ToolPreferences
     let session: EditorSession
+    let slots: Int
     let edit: (PageElement) -> Void
     @State private var colorDraft: QuickColorDraft?
     @State private var deletion: ObjectTarget?
@@ -52,12 +47,8 @@ private struct QuickControlsRow: View {
             if preferences.selected.usesInkStyle { inkControls }
             else if preferences.selected == .eraser { eraserControls }
             else if preferences.selected == .objects { objectControls }
-            else {
-                Text(preferences.selected == .tape ? "Draw with Pencil · Tap tape to reveal" : "Circle handwriting with the lasso")
-                    .font(.caption).foregroundStyle(.secondary).lineLimit(1)
-            }
         }
-        .frame(width: 276, height: 44)
+        .frame(width: ToolbarAdjustmentLayout.width(slots: slots), height: 44)
         .buttonStyle(EditorToolbarButtonStyle())
         .popover(item: $colorDraft) { draft in
             QuickColorEditor(color: draft.color) { color in
@@ -75,7 +66,7 @@ private struct QuickControlsRow: View {
 
     private var inkControls: some View {
         HStack(spacing: 0) {
-            ForEach(0..<3) { index in
+            ForEach(0..<min(3, slots), id: \.self) { index in
                 let color = preferences.quickColors[index]
                 let selected = preferences.matchesColor(color.color)
                 Button { preferences.setColor(color.color) } label: {
@@ -94,8 +85,8 @@ private struct QuickControlsRow: View {
                     }
                 }
             }
-            Divider().frame(height: 20).padding(.horizontal, 4)
-            ForEach(0..<3) { index in
+            if slots > 3 { Divider().frame(height: 20).padding(.horizontal, 4) }
+            ForEach(0..<max(0, slots - 3), id: \.self) { index in
                 let width = preferences.quickWidths[index]
                 let selected = abs(preferences.ink.width - width) < 0.01
                 Button { preferences.ink.width = width } label: {
@@ -112,9 +103,9 @@ private struct QuickControlsRow: View {
 
     private var eraserControls: some View {
         HStack(spacing: 0) {
-            ForEach([EraserMode.strokes, .precise], id: \.self) { mode in
+            ForEach(Array(EraserMode.allCases.prefix(min(3, slots))), id: \.self) { mode in
                 Button { preferences.eraserMode = mode } label: {
-                    Image(systemName: mode == .strokes ? "scribble" : "eraser")
+                    Image(systemName: mode == .strokes ? "scribble" : mode == .highlighter ? "highlighter" : "eraser")
                         .frame(width: 44, height: 44)
                         .foregroundStyle(preferences.eraserMode == mode ? AppTheme.accent : .secondary)
                         .background(preferences.eraserMode == mode ? AppTheme.accent.opacity(0.12) : .clear, in: Circle())
@@ -123,8 +114,8 @@ private struct QuickControlsRow: View {
                 .accessibilityAddTraits(preferences.eraserMode == mode ? .isSelected : [])
                 .help(mode.title)
             }
-            Divider().frame(height: 20).padding(.horizontal, 4)
-            ForEach(0..<3) { index in
+            if slots > 3 { Divider().frame(height: 20).padding(.horizontal, 4) }
+            ForEach(0..<max(0, slots - 3), id: \.self) { index in
                 let size = preferences.quickEraserSizes[index]
                 let selected = abs(preferences.eraserWidth - size) < 0.01
                 Button { preferences.eraserWidth = size } label: {
@@ -132,33 +123,30 @@ private struct QuickControlsRow: View {
                         .frame(width: 44, height: 44)
                         .background(selected ? AppTheme.accent.opacity(0.12) : .clear, in: Circle())
                 }
-                .disabled(preferences.eraserMode != .precise)
+                .disabled(preferences.eraserMode == .strokes)
                 .accessibilityLabel("Eraser size \(size.formatted()) points")
                 .accessibilityAddTraits(selected ? .isSelected : [])
-                .help("\(size.formatted()) pt · Precise eraser")
+                .help("\(size.formatted()) pt · Eraser size")
             }
         }
     }
 
     private var objectControls: some View {
-        HStack(spacing: 4) {
-            Button {
+        HStack(spacing: 0) {
+            if slots > 0 { Button {
                 if let item = session.selectedElement { edit(item) }
             } label: { Image(systemName: "pencil").frame(width: 44, height: 44) }
-                .accessibilityLabel("Edit Selected Object").help("Edit selected object")
-            Button {
+                .accessibilityLabel("Edit Selected Object").help("Edit selected object") }
+            if slots > 1 { Button {
                 if let item = session.selectedElement { _ = session.duplicateElement(item.id) }
             } label: { Image(systemName: "plus.square.on.square").frame(width: 44, height: 44) }
-                .accessibilityLabel("Duplicate Selected Object").help("Duplicate selected object")
-            Button(role: .destructive) {
+                .accessibilityLabel("Duplicate Selected Object").help("Duplicate selected object") }
+            if slots > 2 { Button(role: .destructive) {
                 if let item = session.selectedElement, let page = session.page {
                     deletion = ObjectTarget(id: item.id, pageID: page.id)
                 }
             } label: { Image(systemName: "trash").frame(width: 44, height: 44) }
-                .accessibilityLabel("Delete Selected Object").help("Delete selected object")
-            Text("Select an object").font(.caption).foregroundStyle(.secondary).lineLimit(1)
-                .opacity(session.selectedElement == nil ? 1 : 0)
-                .accessibilityHidden(session.selectedElement != nil)
+                .accessibilityLabel("Delete Selected Object").help("Delete selected object") }
         }.disabled(session.selectedElement == nil)
     }
 }

@@ -11,6 +11,7 @@ struct EditorToolbar<InsertMenu: View>: View {
     let openContent: () -> Void
     @ViewBuilder let insertMenu: InsertMenu
     @State private var toolStripWidth: CGFloat = 0
+    @State private var presentedGroup: ToolbarToolGroup?
 
     var body: some View {
         Group {
@@ -28,8 +29,6 @@ struct EditorToolbar<InsertMenu: View>: View {
                 primaryTools.background(ImmediateScrollTouchPolicy())
             }
             Divider().frame(width: 24).padding(.vertical, 4)
-            ToolbarQuickControls(preferences: preferences, session: session, inline: false,
-                                 arrowEdge: position.popoverEdge, edit: edit)
             quickPaletteButton
         }
         .padding(.vertical, 4)
@@ -39,12 +38,14 @@ struct EditorToolbar<InsertMenu: View>: View {
 
     private var horizontalBar: some View {
         GeometryReader { geometry in
-            let inline = toolStripWidth > 0 && geometry.size.width >= toolStripWidth + 354
-            // 78 pt of padding/dividers/palette, plus 276 pt inline or 44 pt overflow.
-            let available = geometry.size.width - (inline ? 354 : 122)
+            // Keep tools first, then fill available room with direct adjustments. No overflow button.
+            let slots = toolStripWidth > 0 ? ToolbarAdjustmentLayout.slots(
+                fitting: geometry.size.width - toolStripWidth - 77, tool: preferences.selected) : 0
+            let adjustmentWidth = slots > 0 ? ToolbarAdjustmentLayout.width(slots: slots) + 9 : 0
+            let available = max(44, geometry.size.width - 77 - adjustmentWidth)
+            let stripWidth = toolStripWidth > 0 ? min(toolStripWidth, available) : available
             HStack(spacing: 0) {
                 Group {
-                    // Keep only one live control tree and one anchor per popover.
                     if toolStripWidth > 0 && toolStripWidth <= available {
                         primaryTools.fixedSize(horizontal: true, vertical: false)
                     } else {
@@ -53,14 +54,12 @@ struct EditorToolbar<InsertMenu: View>: View {
                         }
                     }
                 }
-                .frame(maxWidth: .infinity, alignment: .leading)
-                Divider().frame(height: 24).padding(.horizontal, 4)
-                // Keep every primary tool visible before using the spare width for adjustments.
-                ToolbarQuickControls(preferences: preferences, session: session,
-                                     inline: inline) { item in
-                    edit(item)
+                .frame(width: stripWidth, alignment: .leading)
+                if slots > 0 {
+                    Divider().frame(height: 24).padding(.horizontal, 4)
+                    ToolbarQuickControls(preferences: preferences, session: session, slots: slots, edit: edit)
                 }
-                Divider().frame(height: 24)
+                Divider().frame(height: 24).padding(.horizontal, 4)
                 quickPaletteButton.padding(.horizontal, 4)
             }
             .padding(.horizontal, 8)
@@ -83,7 +82,7 @@ struct EditorToolbar<InsertMenu: View>: View {
                 HStack(spacing: 2) { primaryButtons }
             }
         }
-        .padding(4)
+        .padding(3)
         .background {
             if !position.isVertical {
                 GeometryReader { content in
@@ -95,14 +94,21 @@ struct EditorToolbar<InsertMenu: View>: View {
 
     @ViewBuilder private var primaryButtons: some View {
         ForEach([EditorTool.pen, .pencil, .marker, .eraser], id: \.self) { toolButton($0) }
-        strokeSettingsButton
-        separator
         toolButton(.lasso)
         toolButton(.objects)
         separator
-        shapesMenu
-        toolButton(.tape)
+        ForEach(ToolbarToolGroup.allCases) { group in
+            ToolbarToolGroupButton(group: group, preferences: preferences, page: session.page,
+                                   arrowEdge: position.popoverEdge, presentedGroup: $presentedGroup) { tool in
+                preferences.selected = tool
+            }
+        }
+        separator
+        toolButton(.laser)
+        toolButton(.writingZoom)
         insertMenu
+        separator
+        strokeSettingsButton
     }
 
     private var separator: some View {
@@ -114,23 +120,19 @@ struct EditorToolbar<InsertMenu: View>: View {
 
     private func toolButton(_ item: EditorTool) -> some View {
         Button {
-            if preferences.selected == item { openToolSettings() }
+            if item == .writingZoom, session.writingRegion != nil { Task { _ = await session.closeZoomWriting() } }
+            else if preferences.selected == item { openToolSettings() }
             else { preferences.selected = item }
         } label: {
-            Image(systemName: item.symbol).frame(width: 44, height: 44)
-                .foregroundStyle(preferences.selected == item ? AppTheme.accent : .secondary)
-                .background {
-                    if preferences.selected == item {
-                        Circle()
-                            .fill(AppTheme.accent.opacity(0.12))
-                    }
-                }
+            ToolbarToolIcon(symbol: item.symbol,
+                            active: preferences.selected == item || item == .writingZoom && session.writingRegion != nil)
         }
         .accessibilityLabel(item.title)
-        .accessibilityAddTraits(preferences.selected == item ? .isSelected : [])
+        .accessibilityIdentifier("editor.tool.\(item.rawValue)")
+        .accessibilityAddTraits(preferences.selected == item || item == .writingZoom && session.writingRegion != nil ? .isSelected : [])
         .accessibilityHint("Select this tool. Tap again for settings, or hold and drag to Quick Palette.")
         .modifier(PaletteToolDragSource(snapshot: { preferences.capturePreset(for: item) }, palette: quickPalette) {
-            let stroke = session.canvas?.drawingGestureRecognizer.state
+            let stroke = (session.zoomCanvas ?? session.canvas)?.drawingGestureRecognizer.state
             return session.ready && !session.busy && !session.exporting && stroke != .began && stroke != .changed
         })
     }
@@ -145,50 +147,31 @@ struct EditorToolbar<InsertMenu: View>: View {
             if position.isVertical {
                 Image(systemName: "slider.horizontal.3").frame(width: 44, height: 44)
             } else {
-                HStack(spacing: 6) {
-                    ZStack {
-                        // The readout keeps its width when switching tools as well as numbers.
-                        HStack(spacing: 6) {
-                            Circle().frame(width: 16, height: 16)
-                            Text("\(88.8.formatted(.number.precision(.fractionLength(1)))) pt")
-                        }
-                        .hidden().accessibilityHidden(true)
-                        if preferences.selected.usesInkStyle {
-                            HStack(spacing: 6) {
-                                Circle().fill(preferences.ink.color).frame(width: 16, height: 16)
-                                    .overlay(Circle().strokeBorder(.primary.opacity(0.15)))
-                                Text("\(preferences.ink.width.formatted(.number.precision(.fractionLength(0...1)))) pt")
-                                    .frame(maxWidth: .infinity, alignment: .trailing)
-                            }
-                        } else {
-                            Text(preferences.selected == .eraser ? "Eraser" : preferences.selected == .tape ? "Tape" : "Selection")
-                                .lineLimit(1).minimumScaleFactor(0.8)
-                        }
+                HStack(spacing: 4) {
+                    if preferences.selected.usesInkStyle {
+                        Circle().fill(preferences.ink.color).frame(width: 14, height: 14)
+                            .overlay(Circle().strokeBorder(.primary.opacity(0.15)))
+                        Text(preferences.ink.width, format: .number.precision(.fractionLength(0...1)))
+                            .frame(width: 32, alignment: .trailing)
+                    } else if preferences.selected == .eraser {
+                        Image(systemName: preferences.eraserMode == .highlighter ? "highlighter" : "eraser").frame(width: 14)
+                        Text(preferences.eraserMode == .strokes ? "—" : preferences.eraserWidth.formatted(.number.precision(.fractionLength(0...1))))
+                            .frame(width: 32, alignment: .trailing)
+                    } else {
+                        Image(systemName: preferences.selected.symbol).frame(width: 50)
                     }
-                    .font(.caption.monospacedDigit()).fixedSize(horizontal: true, vertical: false)
                     Image(systemName: "slider.horizontal.3")
                 }
-                .padding(.horizontal, 10).frame(minWidth: 44, minHeight: 44)
+                .font(.caption.monospacedDigit()).lineLimit(1).minimumScaleFactor(0.8)
+                .frame(width: 88, height: 44)
             }
         }
         .accessibilityLabel("\(preferences.selected.title) settings")
+        .accessibilityValue(preferences.selected.usesInkStyle ? "\(preferences.ink.width.formatted()) points" : preferences.selected == .eraser ? preferences.eraserMode.title : "")
+        .help("\(preferences.selected.title) settings")
         .popover(isPresented: $showingToolOptions, arrowEdge: position.popoverEdge) {
             ToolOptionsPanel(preferences: preferences) { session.clearHandwriting() }.tint(AppTheme.accent)
         }
-    }
-
-    private var shapesMenu: some View {
-        Menu {
-            ForEach([EditorTool.line, .rectangle, .ellipse, .arrow], id: \.self) { tool in
-                Button(tool.title, systemImage: tool.symbol) { preferences.selected = tool }
-            }
-            Divider()
-            Toggle("Ruler", systemImage: "ruler", isOn: $preferences.rulerEnabled)
-        } label: {
-            Image(systemName: preferences.selected.elementKind != nil && preferences.selected != .tape ? preferences.selected.symbol : "square.on.circle")
-                .frame(width: 44, height: 44)
-                .foregroundStyle(preferences.selected.usesInkStyle && preferences.selected.inkType == nil ? AppTheme.accent : .secondary)
-        }.accessibilityLabel("Shapes, arrows and ruler")
     }
 
     private var quickPaletteButton: some View {

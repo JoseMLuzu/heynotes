@@ -264,52 +264,49 @@ struct EditorView: View {
     }
 
     private var editorHeader: some View {
-        VStack(spacing: 4) {
-            HStack(spacing: 8) {
-                if !isSplitPane { Button(action: onLibrary) {
+        EditorHeaderLayout(toolbarVisible: toolbarPlacement.position == .top,
+                           prefersFullToolbarRow: isSplitPane || sizeClass == .compact) {
+            if !isSplitPane {
+                Button(action: onLibrary) {
                     Image(systemName: "chevron.left").frame(width: 44, height: 44)
                 }
                 .accessibilityLabel("Back to Library")
                 .modifier(EditorGlassSurface(shape: Circle()))
                 .allowsHitTesting(!session.busy)
-                }
+            } else { Color.clear.frame(width: 0, height: 44) }
 
-                if isSplitPane || sizeClass == .compact || toolbarPlacement.position != .top {
-                    Spacer(minLength: 0)
-                } else {
-                    toolBar.frame(minWidth: 44, maxWidth: .infinity).frame(height: 52)
-                }
+            if toolbarPlacement.position == .top { toolBar }
+            else { Color.clear.frame(width: 0, height: 0) }
 
-                HStack(spacing: 0) {
-                    Group {
-                        Button { (session.zoomCanvas ?? session.canvas)?.undoManager?.undo() } label: {
-                            Image(systemName: "arrow.uturn.backward").frame(width: 44, height: 44)
-                        }.accessibilityLabel("Undo")
-                        Button { (session.zoomCanvas ?? session.canvas)?.undoManager?.redo() } label: {
-                            Image(systemName: "arrow.uturn.forward").frame(width: 44, height: 44)
-                        }.accessibilityLabel("Redo")
-                    }
-                    .disabled(!session.ready)
-                    Divider().frame(height: 20).padding(.horizontal, 4)
-                    bookmarkButton
-                    pageControls
-                    if workspace == nil || !showsWorkspaceTabs {
-                        pageOptions.labelStyle(.iconOnly).frame(width: 44, height: 44)
-                    }
-                }
-                .fixedSize(horizontal: true, vertical: false)
-                .modifier(EditorGlassCapsule())
-                .allowsHitTesting(!session.busy)
-
-            }
-            // Narrow iPad windows keep all actions at the top without squeezing the tools.
-            if (isSplitPane || sizeClass == .compact) && toolbarPlacement.position == .top { toolBar.frame(height: 52) }
+            pageActions
         }
         .buttonStyle(EditorToolbarButtonStyle())
         .padding(.horizontal, 12)
         .padding(.vertical, 6)
         .background(AppTheme.headerBackground)
         .simultaneousGesture(TapGesture().onEnded { workspace?.focus(session.notebook.id) })
+    }
+
+    private var pageActions: some View {
+        HStack(spacing: 0) {
+            Group {
+                Button { (session.zoomCanvas ?? session.canvas)?.undoManager?.undo() } label: {
+                    Image(systemName: "arrow.uturn.backward").frame(width: 44, height: 44)
+                }.accessibilityLabel("Undo")
+                Button { (session.zoomCanvas ?? session.canvas)?.undoManager?.redo() } label: {
+                    Image(systemName: "arrow.uturn.forward").frame(width: 44, height: 44)
+                }.accessibilityLabel("Redo")
+            }.disabled(!session.ready)
+            Divider().frame(height: 20).padding(.horizontal, 4)
+            bookmarkButton
+            pageControls
+            if workspace == nil || !showsWorkspaceTabs {
+                pageOptions.labelStyle(.iconOnly).frame(width: 44, height: 44)
+            }
+        }
+        .fixedSize(horizontal: true, vertical: false)
+        .modifier(EditorGlassCapsule())
+        .allowsHitTesting(!session.busy)
     }
 
     private var bookmarkButton: some View {
@@ -422,11 +419,10 @@ struct EditorView: View {
             Button("Image from Files", systemImage: "folder") { showingImageFile = true }
             Button("Edit Inserted Content", systemImage: "square.and.pencil") { showingContent = true }
         } label: {
-            Image(systemName: session.handwriting.enabled ? "textformat" : "plus.square")
-                .foregroundStyle(session.handwriting.enabled ? AppTheme.accent : .primary)
-                .frame(width: 44, height: 44)
+            ToolbarToolIcon(symbol: session.handwriting.enabled ? "textformat" : "plus.square", active: session.handwriting.enabled)
         }
-        .accessibilityLabel(session.handwriting.enabled ? "Insert content. Handwriting Style is on" : "Insert content and handwriting style")
+        .accessibilityLabel(session.handwriting.enabled ? "Insert content. Handwriting Style is on" : "Insert text, images and handwriting style")
+        .accessibilityIdentifier("editor.tools.insert")
     }
 
 }

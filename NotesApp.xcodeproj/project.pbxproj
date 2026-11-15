@@ -1259,6 +1259,7 @@
 				<string>936A810475DDE913EE6F4247</string>
 				<string>E5ECCD1141DBFCD55488F7B4</string>
 				<string>42BB35A6F9A7527E5B4F83D3</string>
+				<string>A9B05A51C9E4C043352E035F</string>
 			</array>
 			<key>isa</key>
 			<string>PBXSourcesBuildPhase</string>
@@ -2884,6 +2885,13 @@
 			<key>sourceTree</key>
 			<string>SOURCE_ROOT</string>
 		</dict>
+		<key>A9B05A51C9E4C043352E035F</key>
+		<dict>
+			<key>fileRef</key>
+			<string>FB3C8DD2BCF0CC2123EE7E97</string>
+			<key>isa</key>
+			<string>PBXBuildFile</string>
+		</dict>
 		<key>AA60388B1ECF1FF62C941AE3</key>
 		<dict>
 			<key>fileRef</key>
@@ -4260,6 +4268,7 @@
 				<string>42DBC78D6B76C681B7FA493B</string>
 				<string>59082E8B1D47465262F54133</string>
 				<string>526F01E87852E092E7E62955</string>
+				<string>FB3C8DD2BCF0CC2123EE7E97</string>
 				<string>A2BFA95A4E764994EF46B70B</string>
 				<string>DA430EB6BF29AE365FF6626C</string>
 			</array>
@@ -4697,6 +4706,17 @@
 			<string>sourcecode.swift</string>
 			<key>path</key>
 			<string>NotesApp/Features/Templates/Services/TemplateRenderer.swift</string>
+			<key>sourceTree</key>
+			<string>SOURCE_ROOT</string>
+		</dict>
+		<key>FB3C8DD2BCF0CC2123EE7E97</key>
+		<dict>
+			<key>isa</key>
+			<string>PBXFileReference</string>
+			<key>lastKnownFileType</key>
+			<string>sourcecode.swift</string>
+			<key>path</key>
+			<string>NotesAppDeviceTests/ToolbarOrganizationTests.swift</string>
 			<key>sourceTree</key>
 			<string>SOURCE_ROOT</string>
 		</dict>

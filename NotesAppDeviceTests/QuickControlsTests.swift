@@ -4,6 +4,40 @@ import PencilKit
 @testable import NotesApp
 
 @MainActor final class QuickControlsTests: XCTestCase {
+    func testAdaptiveFavoriteControlsNeverDrawOutsideTheirReservedSpaceAfterResizing() async throws {
+        let container = try PersistenceController.makeContainer(inMemory: true)
+        let book = Notebook(title: "Adaptive controls")
+        container.mainContext.insert(book)
+        let session = EditorSession(notebook: book, context: container.mainContext)
+        let suite = "AdaptiveControls.\(UUID())", defaults = try XCTUnwrap(UserDefaults(suiteName: suite))
+        defer { defaults.removePersistentDomain(forName: suite) }
+        let tools = ToolPreferences(defaults: defaults), slots = AdaptiveControlSlots()
+        let scene = try XCTUnwrap(UIApplication.shared.connectedScenes.compactMap { $0 as? UIWindowScene }.first)
+        let window = UIWindow(windowScene: scene); window.frame = CGRect(x: 0, y: 0, width: 500, height: 140)
+        let host = UIHostingController(rootView: AdaptiveControlsPreview(tools: tools, session: session, slots: slots))
+        window.rootViewController = host; window.isHidden = false
+        defer { window.isHidden = true; window.rootViewController = nil }
+        host.view.frame = window.bounds
+        for count in [6, 1, 2, 0, 3, 6] {
+            slots.count = count; host.view.layoutIfNeeded(); try await Task.sleep(for: .milliseconds(80)); host.view.layoutIfNeeded()
+            let format = UIGraphicsImageRendererFormat(); format.scale = 1
+            let image = UIGraphicsImageRenderer(size: window.bounds.size, format: format).image { _ in window.drawHierarchy(in: window.bounds, afterScreenUpdates: true) }
+            let cg = try XCTUnwrap(image.cgImage)
+            var pixels = [UInt8](repeating: 255, count: cg.width * cg.height * 4)
+            let raster = try XCTUnwrap(CGContext(data: &pixels, width: cg.width, height: cg.height, bitsPerComponent: 8,
+                bytesPerRow: cg.width * 4, space: CGColorSpaceCreateDeviceRGB(), bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue))
+            raster.draw(cg, in: CGRect(x: 0, y: 0, width: cg.width, height: cg.height))
+            let edge = Int(12 + ToolbarAdjustmentLayout.width(slots: count)) + 2
+            var spill = 0
+            for y in 0..<cg.height { for x in edge..<cg.width {
+                let i = (y * cg.width + x) * 4
+                if min(pixels[i], pixels[i + 1], pixels[i + 2]) < 230 { spill += 1 }
+            } }
+            XCTAssertEqual(spill, 0, "Resizing to \(count) slots must remove old controls rather than overlap the palette.")
+        }
+        withExtendedLifetime(container) {}
+    }
+
     func testFavoriteColorsReopenIndependentlyAndLegacyPreferencesStillDecode() throws {
         let suite = "QuickControls.\(UUID().uuidString)"
         let defaults = try XCTUnwrap(UserDefaults(suiteName: suite))
@@ -93,12 +127,29 @@ import PencilKit
             ForEach(tools.indices, id: \.self) { index in
                 HStack {
                     Text(tools[index].selected.title).font(.caption).frame(width: 110, alignment: .leading)
-                    ToolbarQuickControls(preferences: tools[index], session: session, inline: true, edit: { _ in })
+                    ToolbarQuickControls(preferences: tools[index], session: session, slots: 6, edit: { _ in })
                 }
             }
         }.padding(20).background(Color(white: 0.08)).environment(\.colorScheme, .dark)
         let renderer = ImageRenderer(content: sheet); renderer.scale = 2
         let attachment = XCTAttachment(image: try XCTUnwrap(renderer.uiImage))
         attachment.name = "Quick-Adjustments-All-Contexts"; attachment.lifetime = .keepAlways; add(attachment)
+    }
+}
+
+@MainActor @Observable private final class AdaptiveControlSlots { var count = 6 }
+@MainActor private struct AdaptiveControlsPreview: View {
+    let tools: ToolPreferences
+    let session: EditorSession
+    let slots: AdaptiveControlSlots
+    var body: some View {
+        VStack {
+            HStack {
+                ToolbarQuickControls(preferences: tools, session: session, slots: slots.count, edit: { _ in }).fixedSize()
+                Spacer(minLength: 0)
+            }
+            Spacer(minLength: 0)
+        }.padding(12).frame(maxWidth: .infinity, maxHeight: .infinity).background(.white)
+            .environment(\.colorScheme, .light).ignoresSafeArea()
     }
 }

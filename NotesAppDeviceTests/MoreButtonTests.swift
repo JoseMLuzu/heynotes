@@ -13,52 +13,6 @@ import PencilKit
 }
 
 @MainActor final class MoreButtonTests: XCTestCase {
-    func testSingleActivationOpensRealQuickAdjustmentsPopoverAndWholeSquareIsTappable() async throws {
-        let container = try PersistenceController.makeContainer(inMemory: true)
-        let notebook = Notebook(title: "More button"), page = NotePage(pageIndex: 0)
-        container.mainContext.insert(notebook); container.mainContext.insert(page); notebook.pages = [page]
-        let session = EditorSession(notebook: notebook, context: container.mainContext)
-        await session.open(page)
-        let name = "MoreButton.\(UUID())"
-        let defaults = try XCTUnwrap(UserDefaults(suiteName: name))
-        defer { defaults.removePersistentDomain(forName: name) }
-        let preferences = ToolPreferences(defaults: defaults)
-        let scene = try XCTUnwrap(UIApplication.shared.connectedScenes.compactMap { $0 as? UIWindowScene }.first)
-        let window = UIWindow(windowScene: scene)
-        window.frame = CGRect(x: 0, y: 0, width: 820, height: 900)
-        let host = UIHostingController(rootView: VStack {
-            HStack {
-                ToolbarQuickControls(preferences: preferences, session: session, inline: false, edit: { _ in })
-            }.padding(4).modifier(EditorGlassCapsule())
-            Spacer()
-        }.padding(24))
-        window.rootViewController = host; window.isHidden = false
-        defer { window.isHidden = true; window.rootViewController = nil }
-        host.view.frame = window.bounds; host.view.layoutIfNeeded()
-        try await Task.sleep(for: .milliseconds(100))
-        let button = try XCTUnwrap(descendants(host.view).compactMap { $0 as? UIButton }
-            .first { $0.accessibilityIdentifier == "editor.quickAdjustments" })
-        XCTAssertEqual(button.bounds.width, 44, accuracy: 0.1)
-        XCTAssertEqual(button.bounds.height, 44, accuracy: 0.1)
-        for point in [CGPoint(x: 2, y: 22), CGPoint(x: 42, y: 22), CGPoint(x: 22, y: 2), CGPoint(x: 22, y: 42)] {
-            let hit = host.view.hitTest(button.convert(point, to: host.view), with: nil)
-            XCTAssertTrue(hit === button || hit?.isDescendant(of: button) == true,
-                          "Whitespace around the ellipsis must activate the button.")
-        }
-        button.sendActions(for: .primaryActionTriggered) // One activation, no retry loop.
-        for _ in 0..<100 {
-            if host.presentedViewController != nil { break }
-            try await Task.sleep(for: .milliseconds(10))
-        }
-        let presented = try XCTUnwrap(host.presentedViewController)
-        XCTAssertEqual(presented.modalPresentationStyle, .popover)
-        XCTAssertFalse(button.isHidden)
-        XCTAssertTrue(button.window === window)
-        host.dismiss(animated: false)
-        // Retain the SwiftData container throughout the asynchronous presentation test.
-        withExtendedLifetime(container) {}
-    }
-
     func testNativeActivationUsesLatestActionAndHonorsDisabledState() {
         var first = 0, second = 0
         let coordinator = EditorMoreButton.Coordinator { first += 1 }
