@@ -260,6 +260,13 @@
 			<key>isa</key>
 			<string>PBXBuildFile</string>
 		</dict>
+		<key>0DD429621728492BE2787D0D</key>
+		<dict>
+			<key>fileRef</key>
+			<string>B19A73FD5B1E2C193F286A78</string>
+			<key>isa</key>
+			<string>PBXBuildFile</string>
+		</dict>
 		<key>0E3A8AA61A197566CFFF9240</key>
 		<dict>
 			<key>isa</key>
@@ -780,6 +787,24 @@
 			<key>isa</key>
 			<string>PBXBuildFile</string>
 		</dict>
+		<key>322FEA7DCD015FEFD06969D5</key>
+		<dict>
+			<key>isa</key>
+			<string>PBXFileReference</string>
+			<key>lastKnownFileType</key>
+			<string>sourcecode.swift</string>
+			<key>path</key>
+			<string>NotesApp/Features/Settings/Services/BackupSettingsModel.swift</string>
+			<key>sourceTree</key>
+			<string>SOURCE_ROOT</string>
+		</dict>
+		<key>3270D5CD1048EDFE0109CB1A</key>
+		<dict>
+			<key>fileRef</key>
+			<string>CE102B87B3C2B611738E5CA8</string>
+			<key>isa</key>
+			<string>PBXBuildFile</string>
+		</dict>
 		<key>330F6791CB508626FDE9F15E</key>
 		<dict>
 			<key>isa</key>
@@ -1005,6 +1030,13 @@
 			<key>sourceTree</key>
 			<string>SOURCE_ROOT</string>
 		</dict>
+		<key>427165FD31363DE2A5C3BB4C</key>
+		<dict>
+			<key>fileRef</key>
+			<string>322FEA7DCD015FEFD06969D5</string>
+			<key>isa</key>
+			<string>PBXBuildFile</string>
+		</dict>
 		<key>43C2CF90D649A5109ABA4898</key>
 		<dict>
 			<key>fileRef</key>
@@ -1177,6 +1209,13 @@
 		<dict>
 			<key>fileRef</key>
 			<string>836B23A40932222B661C7199</string>
+			<key>isa</key>
+			<string>PBXBuildFile</string>
+		</dict>
+		<key>4FC753B7E05569E357D67D77</key>
+		<dict>
+			<key>fileRef</key>
+			<string>C7E8EA6EAC06EED5B3084685</string>
 			<key>isa</key>
 			<string>PBXBuildFile</string>
 		</dict>
@@ -2667,6 +2706,17 @@
 			<key>isa</key>
 			<string>PBXBuildFile</string>
 		</dict>
+		<key>B19A73FD5B1E2C193F286A78</key>
+		<dict>
+			<key>isa</key>
+			<string>PBXFileReference</string>
+			<key>lastKnownFileType</key>
+			<string>sourcecode.swift</string>
+			<key>path</key>
+			<string>NotesApp/Features/Settings/Views/BackupSettingsView.swift</string>
+			<key>sourceTree</key>
+			<string>SOURCE_ROOT</string>
+		</dict>
 		<key>B24D0E29A4F722A513B6B543</key>
 		<dict>
 			<key>isa</key>
@@ -2958,6 +3008,10 @@
 				<string>D61A6462177D0F43808F3F4A</string>
 				<string>1F6130B6C6DD6E5A0185AF55</string>
 				<string>C18AA5196FC33E86B809636D</string>
+				<string>427165FD31363DE2A5C3BB4C</string>
+				<string>3270D5CD1048EDFE0109CB1A</string>
+				<string>4FC753B7E05569E357D67D77</string>
+				<string>0DD429621728492BE2787D0D</string>
 				<string>A6EAD68F63D6A824A5982C29</string>
 				<string>5D936E49F3FE4887FAEAAE1B</string>
 			</array>
@@ -3153,6 +3207,17 @@
 			<key>isa</key>
 			<string>PBXBuildFile</string>
 		</dict>
+		<key>C7E8EA6EAC06EED5B3084685</key>
+		<dict>
+			<key>isa</key>
+			<string>PBXFileReference</string>
+			<key>lastKnownFileType</key>
+			<string>sourcecode.swift</string>
+			<key>path</key>
+			<string>NotesApp/Features/Settings/Views/BackupRestorePreview.swift</string>
+			<key>sourceTree</key>
+			<string>SOURCE_ROOT</string>
+		</dict>
 		<key>C82E0CE731AED1617262A872</key>
 		<dict>
 			<key>isa</key>
@@ -3240,6 +3305,17 @@
 			<string>sourcecode.swift</string>
 			<key>path</key>
 			<string>NotesApp/Features/Library/ViewModels/LibrarySortOrder.swift</string>
+			<key>sourceTree</key>
+			<string>SOURCE_ROOT</string>
+		</dict>
+		<key>CE102B87B3C2B611738E5CA8</key>
+		<dict>
+			<key>isa</key>
+			<string>PBXFileReference</string>
+			<key>lastKnownFileType</key>
+			<string>sourcecode.swift</string>
+			<key>path</key>
+			<string>NotesApp/Features/Settings/Views/BackupExportPicker.swift</string>
 			<key>sourceTree</key>
 			<string>SOURCE_ROOT</string>
 		</dict>
@@ -3717,6 +3793,10 @@
 				<string>FD37F65D7E3A0911647C6043</string>
 				<string>0E3A8AA61A197566CFFF9240</string>
 				<string>00575E714D10113278E5FE8C</string>
+				<string>322FEA7DCD015FEFD06969D5</string>
+				<string>CE102B87B3C2B611738E5CA8</string>
+				<string>C7E8EA6EAC06EED5B3084685</string>
+				<string>B19A73FD5B1E2C193F286A78</string>
 				<string>DFD20CBA03F4F8736444CB3D</string>
 				<string>26C1EED6E713FADC5FF8BC44</string>
 			</array>

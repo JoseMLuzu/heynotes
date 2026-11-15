@@ -6,6 +6,19 @@
     <array>
         <dict>
             <key>UTTypeIdentifier</key>
+            <string>com.local.notesapp.library-backup</string>
+            <key>UTTypeDescription</key>
+            <string>HeyNotes Library Backup</string>
+            <key>UTTypeConformsTo</key>
+            <array><string>public.data</string></array>
+            <key>UTTypeTagSpecification</key>
+            <dict>
+                <key>public.filename-extension</key>
+                <array><string>heynotesbackup</string></array>
+            </dict>
+        </dict>
+        <dict>
+            <key>UTTypeIdentifier</key>
             <string>com.local.notesapp.page-reference</string>
             <key>UTTypeDescription</key>
             <string>HeyNotes Page Reference</string>

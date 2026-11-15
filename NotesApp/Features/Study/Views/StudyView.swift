@@ -99,6 +99,7 @@ struct StudyView: View {
             StudyReviewView(model: model, session: session) { source in pendingSource = source; review = nil }
         }
         .onChange(of: scenePhase) { _, phase in if phase == .active { model.reload() } }
+        .onReceive(NotificationCenter.default.publisher(for: .libraryBackupRestored)) { _ in model.reload() }
     }
 }
 

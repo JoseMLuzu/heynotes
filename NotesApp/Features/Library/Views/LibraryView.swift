@@ -305,7 +305,7 @@ struct LibraryView: View {
         }) {
             TemplateGallery { template in pendingTemplate = template }
         }
-        .sheet(isPresented: $showingSettings) { AppSettingsView() }
+        .sheet(isPresented: $showingSettings, onDismiss: { model.reload() }) { AppSettingsView(workspace: workspace) }
         .sheet(item: $coloringFolder) { folder in
             FolderColorPicker(folder: folder) { model.changeColor(folder, to: $0) }
         }

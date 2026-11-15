@@ -1,10 +1,14 @@
 import SwiftUI
+import SwiftData
 
 struct AppSettingsView: View {
+    var workspace: DocumentWorkspace? = nil
     @Bindable var preferences: AppPreferences = .shared
     @Bindable var toolbar: EditorToolbarPreferences = .shared
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.modelContext) private var context
     @State private var custom = Color.gray
+    @State private var backupWorking = false
 
     var body: some View {
         NavigationStack {
@@ -49,6 +53,11 @@ struct AppSettingsView: View {
                     Text("Paper changes apply to new notebooks. Existing pages retain their templates.")
                         .font(.footnote).foregroundStyle(.secondary)
                 }
+                Section("Your Library") {
+                    NavigationLink {
+                        BackupSettingsView(container: context.container, workspace: workspace, working: $backupWorking)
+                    } label: { Label("Backups", systemImage: "externaldrive") }
+                }
                 Section("About") {
                     LabeledContent("Storage", value: "On this iPad")
                     Text("Your notes work offline, without an account.").font(.footnote).foregroundStyle(.secondary)
@@ -57,9 +66,10 @@ struct AppSettingsView: View {
                 }
             }
             .navigationTitle("Settings").navigationBarTitleDisplayMode(.inline)
-            .toolbar { ToolbarItem(placement: .confirmationAction) { Button("Done") { dismiss() } } }
+            .toolbar { ToolbarItem(placement: .confirmationAction) { Button("Done") { dismiss() }.disabled(backupWorking) } }
         }
         .appSheetPresentation()
+        .interactiveDismissDisabled(backupWorking)
         .modifier(AppAppearance(preferences: preferences))
         .onAppear { custom = Color(uiColor: UIColor(preferences.accent)) }
         .onChange(of: preferences.accent) { custom = Color(uiColor: UIColor($1)) }
