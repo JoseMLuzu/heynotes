@@ -37,6 +37,7 @@ final class PageObjectsInteractionView: UIView {
     var onPreview: (([PageElement]) -> Void)?
     var onSelect: ((UUID?) -> Void)?
     var onReveal: ((UUID) -> Void)?
+    var onToggleSticky: ((UUID) -> Void)?
     private var original: PageElement?
     private var draft: PageElement?
     private var start = CGPoint.zero
@@ -73,14 +74,14 @@ final class PageObjectsInteractionView: UIView {
     }
     func fingerDragEditsObject(at point: CGPoint) -> Bool {
         tool == .objects && elements.contains {
-            $0.rect.insetBy(dx: -12 / max(zoom, 0.01), dy: -12 / max(zoom, 0.01)).contains(point)
+            $0.visibleRect.insetBy(dx: -12 / max(zoom, 0.01), dy: -12 / max(zoom, 0.01)).contains(point)
         }
     }
     override func point(inside point: CGPoint, with event: UIEvent?) -> Bool {
         guard bounds.contains(point) else { return false }
         if tool.editsObjects { return true }
         if event?.allTouches?.contains(where: { $0.type == .pencil }) == true { return false }
-        return elements.contains { $0.kind == .tape && $0.rect.contains(point) }
+        return elements.contains { $0.kind == .tape && $0.rect.contains(point) || $0.stickyStyle != nil && stickyHeader($0).contains(point) }
     }
     private var display: [PageElement] {
         guard let draft else { return elements }
@@ -92,21 +93,22 @@ final class PageObjectsInteractionView: UIView {
         PageElementRenderer.draw(display.filter { $0.kind == .tape }, images: [:], revealed: revealed, in: context)
         if tool == .objects, let selected = display.first(where: { $0.id == selectedID }) {
             context.setStrokeColor(UIColor.systemBlue.cgColor); context.setLineWidth(1.5 / max(zoom, 0.01))
-            context.stroke(selected.rect)
+            context.stroke(selected.visibleRect)
             let side = 10 / max(zoom, 0.01)
             context.setFillColor(UIColor.systemBlue.cgColor)
-            context.fillEllipse(in: CGRect(x: selected.rect.maxX - side / 2, y: selected.rect.maxY - side / 2, width: side, height: side))
+            if selected.folded != true { context.fillEllipse(in: CGRect(x: selected.rect.maxX - side / 2, y: selected.rect.maxY - side / 2, width: side, height: side)) }
         }
     }
     @objc private func tapped(_ gesture: UITapGestureRecognizer) {
         let point = gesture.location(in: self)
-        let item = elements.reversed().first { $0.rect.contains(point) && (tool.editsObjects || $0.kind == .tape) }
+        let item = elements.reversed().first { $0.visibleRect.contains(point) && (tool.editsObjects || $0.kind == .tape || $0.stickyStyle != nil) }
         if tool == .objects { onSelect?(item?.id) }
         else if let kind = tool.elementKind {
             let rect = CGRect(x: min(max(0, point.x - 80), max(0, bounds.width - 160)), y: min(max(0, point.y - 20), max(0, bounds.height - 40)), width: min(160, bounds.width), height: 40)
             let item = newElement(kind, rect: rect)
             if onCommit?(item, true) == true { elements.append(item) }
         } else if item?.kind == .tape, let id = item?.id { onReveal?(id) }
+        else if let item, item.stickyStyle != nil, stickyHeader(item).contains(point) { onToggleSticky?(item.id) }
     }
     @objc private func drag(_ gesture: UIPanGestureRecognizer) {
         guard tool.editsObjects else { return }
@@ -117,10 +119,10 @@ final class PageObjectsInteractionView: UIView {
             creating = tool.elementKind != nil
             if let kind = tool.elementKind { draft = newElement(kind, rect: CGRect(x: start.x, y: start.y, width: 1, height: 1)) }
             else {
-                original = elements.reversed().first { $0.rect.insetBy(dx: -12 / max(zoom, 0.01), dy: -12 / max(zoom, 0.01)).contains(start) }
+                original = elements.reversed().first { $0.visibleRect.insetBy(dx: -12 / max(zoom, 0.01), dy: -12 / max(zoom, 0.01)).contains(start) }
                 draft = original
                 selectedID = original?.id; onSelect?(original?.id)
-                if let original { resizing = hypot(start.x - original.rect.maxX, start.y - original.rect.maxY) < 24 / max(zoom, 0.01) }
+                if let original { resizing = original.folded != true && hypot(start.x - original.rect.maxX, start.y - original.rect.maxY) < 24 / max(zoom, 0.01) }
             }
             updateDraft(point: point, delta: delta)
         case .changed: updateDraft(point: point, delta: delta)
@@ -162,13 +164,16 @@ final class PageObjectsInteractionView: UIView {
         accessibilityElements = elements.map { item in
             let element = UIAccessibilityElement(accessibilityContainer: self)
             element.accessibilityLabel = item.kind == .text ? item.text : item.kind.title
-            element.accessibilityFrameInContainerSpace = item.rect
+            element.accessibilityFrameInContainerSpace = item.visibleRect
             element.accessibilityTraits = .button
-            element.accessibilityCustomActions = [UIAccessibilityCustomAction(name: item.kind == .tape ? "Reveal or cover" : "Select for editing", actionHandler: { [weak self] _ in
-                if item.kind == .tape { self?.onReveal?(item.id) } else { self?.onSelect?(item.id) }
+            element.accessibilityCustomActions = [UIAccessibilityCustomAction(name: item.kind == .tape ? "Reveal or cover" : item.stickyStyle != nil ? "Fold or expand note" : "Select for editing", actionHandler: { [weak self] _ in
+                if item.kind == .tape { self?.onReveal?(item.id) }
+                else if item.stickyStyle != nil { self?.onToggleSticky?(item.id) }
+                else { self?.onSelect?(item.id) }
                 return true
             })]
             return element
         }
     }
+    private func stickyHeader(_ item: PageElement) -> CGRect { CGRect(x: item.x, y: item.y, width: item.width, height: min(32, item.height)) }
 }

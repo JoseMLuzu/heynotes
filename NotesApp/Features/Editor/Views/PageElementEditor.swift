@@ -33,12 +33,21 @@ struct PageElementEditor: View {
                         Slider(value: $draft.fontSize, in: 12...96, step: 1).accessibilityLabel("Text size")
                     }
                 }
+                if draft.stickyStyle != nil {
+                    Section("Sticky Note") {
+                        Picker("Paper Color", selection: Binding(get: { draft.stickyStyle ?? .yellow }, set: { draft.stickyStyle = $0 })) {
+                            ForEach(StickyNoteStyle.allCases, id: \.self) { Text($0.rawValue.capitalized).tag($0) }
+                        }
+                        Toggle("Folded", isOn: Binding(get: { draft.folded ?? false }, set: { draft.folded = $0 }))
+                        Text("Tap the note header with a finger to fold or expand it.").font(.caption).foregroundStyle(.secondary)
+                    }
+                }
                 if let restoreInk, draft.originalInk != nil {
                     Section {
                         Button("Restore Original Handwriting", systemImage: "pencil.tip") {
                             if restoreInk() { dismiss() } else { failed = true }
                         }
-                    } footer: { Text("Replaces this text with its editable source strokes. You can undo this action.") }
+                    } footer: { Text("Replaces this object with its editable source strokes. You can undo this action.") }
                 }
                 if draft.kind != .tape && draft.kind != .image {
                     Section("Appearance") {
