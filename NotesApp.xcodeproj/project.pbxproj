@@ -350,6 +350,13 @@
 			<key>sourceTree</key>
 			<string>SOURCE_ROOT</string>
 		</dict>
+		<key>10A8C0AD7F02ABEADF9463DF</key>
+		<dict>
+			<key>fileRef</key>
+			<string>A4A623A217EA0208FE59D883</string>
+			<key>isa</key>
+			<string>PBXBuildFile</string>
+		</dict>
 		<key>1138A08E7577303FFB2F4AA1</key>
 		<dict>
 			<key>fileRef</key>
@@ -1016,6 +1023,17 @@
 			<key>sourceTree</key>
 			<string>SOURCE_ROOT</string>
 		</dict>
+		<key>3EC0E624A4108A7FA924378C</key>
+		<dict>
+			<key>isa</key>
+			<string>PBXFileReference</string>
+			<key>lastKnownFileType</key>
+			<string>sourcecode.swift</string>
+			<key>path</key>
+			<string>NotesApp/Features/Editor/Components/ShapeHoldObserver.swift</string>
+			<key>sourceTree</key>
+			<string>SOURCE_ROOT</string>
+		</dict>
 		<key>3EC5BCEA327FE12F94DC32EF</key>
 		<dict>
 			<key>children</key>
@@ -1258,6 +1276,17 @@
 			<string>sourcecode.swift</string>
 			<key>path</key>
 			<string>NotesApp/Core/Models/PageElement.swift</string>
+			<key>sourceTree</key>
+			<string>SOURCE_ROOT</string>
+		</dict>
+		<key>4BD11320DC7E2F510F8D285E</key>
+		<dict>
+			<key>isa</key>
+			<string>PBXFileReference</string>
+			<key>lastKnownFileType</key>
+			<string>sourcecode.swift</string>
+			<key>path</key>
+			<string>NotesApp/Features/Editor/Components/SmartShapeCoordinator.swift</string>
 			<key>sourceTree</key>
 			<string>SOURCE_ROOT</string>
 		</dict>
@@ -2626,6 +2655,17 @@
 			<key>isa</key>
 			<string>PBXBuildFile</string>
 		</dict>
+		<key>A4A623A217EA0208FE59D883</key>
+		<dict>
+			<key>isa</key>
+			<string>PBXFileReference</string>
+			<key>lastKnownFileType</key>
+			<string>sourcecode.swift</string>
+			<key>path</key>
+			<string>NotesApp/Features/Editor/Services/EditorSmartShapes.swift</string>
+			<key>sourceTree</key>
+			<string>SOURCE_ROOT</string>
+		</dict>
 		<key>A66591DBC603AB033A5B144F</key>
 		<dict>
 			<key>isa</key>
@@ -3155,6 +3195,9 @@
 				<string>3D4E87EB12CB7C88713EB734</string>
 				<string>EB1E77C828C479A4B0003C56</string>
 				<string>5D936E49F3FE4887FAEAAE1B</string>
+				<string>C6F68164807FB3FA3339440B</string>
+				<string>F055B691B84E545B5B0D88DB</string>
+				<string>10A8C0AD7F02ABEADF9463DF</string>
 				<string>20A39E1375528857EC5EAB58</string>
 				<string>75EF217868BADA8A20901F1A</string>
 			</array>
@@ -3333,6 +3376,13 @@
 		<dict>
 			<key>fileRef</key>
 			<string>BA75B95B112B101CA7338DD3</string>
+			<key>isa</key>
+			<string>PBXBuildFile</string>
+		</dict>
+		<key>C6F68164807FB3FA3339440B</key>
+		<dict>
+			<key>fileRef</key>
+			<string>3EC0E624A4108A7FA924378C</string>
 			<key>isa</key>
 			<string>PBXBuildFile</string>
 		</dict>
@@ -3996,6 +4046,9 @@
 				<string>7EA4B47265933D46949DC359</string>
 				<string>B8CA52AFF7AFF003785FB06C</string>
 				<string>26C1EED6E713FADC5FF8BC44</string>
+				<string>3EC0E624A4108A7FA924378C</string>
+				<string>4BD11320DC7E2F510F8D285E</string>
+				<string>A4A623A217EA0208FE59D883</string>
 				<string>42DBC78D6B76C681B7FA493B</string>
 				<string>DA430EB6BF29AE365FF6626C</string>
 			</array>
@@ -4197,6 +4250,13 @@
 			<string>NotesApp/Features/Covers/Views/CoverGallery.swift</string>
 			<key>sourceTree</key>
 			<string>SOURCE_ROOT</string>
+		</dict>
+		<key>F055B691B84E545B5B0D88DB</key>
+		<dict>
+			<key>fileRef</key>
+			<string>4BD11320DC7E2F510F8D285E</string>
+			<key>isa</key>
+			<string>PBXBuildFile</string>
 		</dict>
 		<key>F14BA426B25FFCE43E411D95</key>
 		<dict>

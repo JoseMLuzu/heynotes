@@ -68,13 +68,15 @@ extension EditorSession {
     /// Ink and text use one Undo action. Metadata is saved first; a crash during the ink write
     /// may show duplicate content, but the source archive and embedded strokes prevent loss.
     @discardableResult
-    private func replaceHandwritingContent(_ replacement: PKDrawing, items: [PageElement], action: String) -> Bool {
+    func replaceHandwritingContent(_ replacement: PKDrawing, items: [PageElement], action: String) -> Bool {
         guard ready, !busy, let pageID = page?.id, let canvas,
               (canvas as? InkCanvas)?.pageID == pageID else { return false }
         let oldDrawing = canvas.drawing, oldItems = elements
         guard replaceElements(items, action: action, undo: false) else { return false }
         handwriting.reset(to: replacement)
-        canvas.drawing = replacement; changed(replacement)
+        canvas.drawing = replacement
+        if let zoomCanvas, zoomCanvas.drawing != replacement { zoomCanvas.drawing = replacement }
+        changed(replacement)
         canvas.undoManager?.registerUndo(withTarget: self) { target in
             guard target.page?.id == pageID else { return }
             _ = target.replaceHandwritingContent(oldDrawing, items: oldItems, action: action)
