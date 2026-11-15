@@ -1,5 +1,10 @@
 # Architecture and delivery plan
 
+Current delivery: Study and the expanded student tools are implemented. The phase descriptions below also retain the original planning context; see [ExpandedStudentTools.md](ExpandedStudentTools.md) for the current V7 schema, controls and verification.
+
+Current status — November 14, 2026: schema V6, Phases 1–4, notebook sections, PDF margins, two-document workspace and local library backups are implemented. v1.0 is offline; iCloud is post-launch. Early proposals below are historical. See [ReleaseReadiness.md](ReleaseReadiness.md), [Study.md](Study.md) and [LibraryBackups.md](LibraryBackups.md) for current scope and acceptance gaps.
+
+
 ## Product boundary
 
 An iPad-only study notebook: Write. Study. Remember. Purchase-once pricing is a future product decision; the MVP has no store integration. Everything remains local. UIKit is used only through native platform integration where SwiftUI needs PencilKit, PDFKit or sharing.
@@ -115,3 +120,7 @@ The earlier Study proposal and phase gates above are historical. See [Study.md](
 ## Two-document workspace
 
 DocumentWorkspace now retains up to two live EditorSessions in stable primary/secondary presentation slots, with activeSession representing the focused editor. WorkspaceSnapshot extends the existing tab preference with optional pane IDs, display order and fraction; it does not change SwiftData entities. WorkspaceEditorView keeps slot identity through focus, resizing, swaps and keeping the secondary document alone, while existing single-pane tab switches preserve their toolbar control identity. Closing or replacing an editor requires its pending native ink to flush; Library/background and subtree cleanup cover both sessions. Same-document dual views and aliased editable drawing paths are rejected. See [SplitWorkspace.md](SplitWorkspace.md) for exact UI, lifecycle, restoration, touch behavior and tests.
+
+## Expanded student tools (November 14, 2026)
+
+Current live metadata is `NotesSchemaV7`. `SchemaV6.swift` freezes the previously installed seven-entity schema; V7 adds only optional question/answer image paths on Flashcard with a lightweight migration. Existing IDs, drawing/PDF paths, due dates and review records remain unchanged. See [ExpandedStudentTools.md](ExpandedStudentTools.md) for native input overlays, conservative shape recognition, canonical-drawing zoom writing, image-region study cards and shared PDF geometry. These features retain the existing light MVVM and local SwiftData/FileManager boundaries. Cloud synchronization remains deferred.

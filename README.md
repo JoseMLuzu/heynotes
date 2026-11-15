@@ -1,6 +1,13 @@
 # HeyNotes — Write. Study. Remember.
 
+Current release planning: see [ReleaseReadiness.md](Documentation/ReleaseReadiness.md) for the November 14, 2026 audit, consolidated feature inventory and launch gates. **v1.0 ships offline; iCloud follows after launch.** Full audit regression: 45 host + 151 native simulator tests passed. Older phase sections below retain delivery history.
+
+
 A native, offline-first iPad notes app. **Phases 1–4 are implemented.** There are no accounts, analytics, networking services, dependencies, payments, or cloud entitlements.
+
+## Library backups
+
+**Settings → Backups** creates a complete `.heynotesbackup` file through the native Files picker and restores verified archives without replacing existing notes. Includes editable handwriting, folders, PDFs, images, Study history and Trash. Both open editors save before snapshotting. This is the first CloudKit preparation milestone; cloud synchronization is not enabled. See [LibraryBackups.md](Documentation/LibraryBackups.md) for recovery behavior, limits and tests, and [CloudKitPreparation.md](Documentation/CloudKitPreparation.md) for the proposed sync architecture and gates.
 
 ## Student tools
 
@@ -142,3 +149,5 @@ V6 adds StudyDeck, Flashcard and ReviewRecord through the versioned migration pl
 ## Two documents at once
 
 Use the split icon beside the editor tabs to open another notebook or PDF beside the focused document. An existing tab also offers **Open Beside** in its context menu. Each pane has independent handwriting, page navigation, tools, Undo, zoom and saves. Drag the divider, swap panes or keep only the focused document from Split View Options. Narrow windows stack the two editors. The existing tab preference gains backward-compatible optional fields; the SwiftData schema and file layout are unchanged. See [SplitWorkspace.md](Documentation/SplitWorkspace.md) for save boundaries, restoration, source safety, limits and acceptance checks.
+
+Expanded student tools are implemented in the existing editor: selective marker erasing, held shapes, laser, stamps, geometry guides, folded notes, capture, image flashcards, PDF text highlighting and zoom writing. See [the tool guide](Documentation/ExpandedStudentTools.md) for entry points and current limits.

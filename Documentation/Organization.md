@@ -1,5 +1,8 @@
 # Organization system — inspection, migration and phased delivery
 
+Current status — November 14, 2026: nested folders, sections, bookmarks, real Study, name/recent/type sorting and PDF previews are implemented. Home/All Notes, dated Recents/lastOpenedAt, global Quick Note and grid/list remain open. The milestone descriptions below record earlier deliveries. See [ReleaseReadiness.md](ReleaseReadiness.md) for the current consolidated roadmap.
+
+
 ## Existing implementation inspected
 
 The app already has feature-based lightweight MVVM, native SwiftUI split navigation, a document-tab workspace with a single active editor, PencilKit drawing, page UUIDs and stable pageIndex ordering, atomic per-page files, PDF import/annotation/export and bounded preview caches. SwiftData stores Folder, Notebook and NotePage metadata. File paths remain relative to the app's private Documents root.
