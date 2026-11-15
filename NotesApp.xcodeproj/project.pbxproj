@@ -1138,6 +1138,13 @@
 			<key>isa</key>
 			<string>PBXBuildFile</string>
 		</dict>
+		<key>42BB35A6F9A7527E5B4F83D3</key>
+		<dict>
+			<key>fileRef</key>
+			<string>59082E8B1D47465262F54133</string>
+			<key>isa</key>
+			<string>PBXBuildFile</string>
+		</dict>
 		<key>42DBC78D6B76C681B7FA493B</key>
 		<dict>
 			<key>isa</key>
@@ -1244,6 +1251,7 @@
 				<string>887AB287F13078D52BA5543F</string>
 				<string>936A810475DDE913EE6F4247</string>
 				<string>E5ECCD1141DBFCD55488F7B4</string>
+				<string>42BB35A6F9A7527E5B4F83D3</string>
 			</array>
 			<key>isa</key>
 			<string>PBXSourcesBuildPhase</string>
@@ -1441,6 +1449,17 @@
 			<string>sourcecode.swift</string>
 			<key>path</key>
 			<string>NotesApp/Features/PDF/Services/PDFTextSelection.swift</string>
+			<key>sourceTree</key>
+			<string>SOURCE_ROOT</string>
+		</dict>
+		<key>59082E8B1D47465262F54133</key>
+		<dict>
+			<key>isa</key>
+			<string>PBXFileReference</string>
+			<key>lastKnownFileType</key>
+			<string>sourcecode.swift</string>
+			<key>path</key>
+			<string>NotesAppDeviceTests/ExpandedStudentToolTests.swift</string>
 			<key>sourceTree</key>
 			<string>SOURCE_ROOT</string>
 		</dict>
@@ -4201,6 +4220,7 @@
 				<string>EA940B2400058F1DFC966A2A</string>
 				<string>78F1F06489D5EA56087DC737</string>
 				<string>42DBC78D6B76C681B7FA493B</string>
+				<string>59082E8B1D47465262F54133</string>
 				<string>DA430EB6BF29AE365FF6626C</string>
 			</array>
 			<key>isa</key>
