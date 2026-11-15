@@ -1369,6 +1369,17 @@
 			<key>isa</key>
 			<string>PBXBuildFile</string>
 		</dict>
+		<key>51CE17D342DA8AC739F91223</key>
+		<dict>
+			<key>isa</key>
+			<string>PBXFileReference</string>
+			<key>lastKnownFileType</key>
+			<string>sourcecode.swift</string>
+			<key>path</key>
+			<string>NotesApp/Features/Editor/Views/ToolCaptureFlow.swift</string>
+			<key>sourceTree</key>
+			<string>SOURCE_ROOT</string>
+		</dict>
 		<key>52139962D2B778571E66FF2D</key>
 		<dict>
 			<key>fileRef</key>
@@ -3262,6 +3273,7 @@
 				<string>A250232B2DE768DB86844A11</string>
 				<string>E9338CBE3EAB17401E605A16</string>
 				<string>DD2684006A1E7C0090D88885</string>
+				<string>E177F5116711E44B486D4B15</string>
 				<string>538F6F0C4C4E72A87632BAF1</string>
 				<string>D2202E05531BE534631865FC</string>
 				<string>8DC08F769C15695FE0FB1961</string>
@@ -3890,6 +3902,13 @@
 			<key>sourceTree</key>
 			<string>SOURCE_ROOT</string>
 		</dict>
+		<key>E177F5116711E44B486D4B15</key>
+		<dict>
+			<key>fileRef</key>
+			<string>51CE17D342DA8AC739F91223</string>
+			<key>isa</key>
+			<string>PBXBuildFile</string>
+		</dict>
 		<key>E1DD09AB62D1C4008B0BCFB6</key>
 		<dict>
 			<key>fileRef</key>
@@ -4156,6 +4175,7 @@
 				<string>F63DA290F6FEEDE4C0A9C03F</string>
 				<string>A381FC8502C85E8FEC1C4328</string>
 				<string>222F8A09FDF90A1633721246</string>
+				<string>51CE17D342DA8AC739F91223</string>
 				<string>5806F8D3ADF4A46F514D38EE</string>
 				<string>C77FA84ADDC79BD3A5BCCE0A</string>
 				<string>C36D4C0D22BD6446BB430AAA</string>
