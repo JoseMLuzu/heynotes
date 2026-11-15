@@ -1,6 +1,15 @@
 import Foundation
 import CoreGraphics
 
+public enum StickyNoteStyle: String, Codable, CaseIterable, Sendable {
+    case yellow, blue, rose, mint
+}
+
+public enum StampSymbol: String, Codable, CaseIterable, Sendable {
+    case check = "✓", cross = "✕", star = "★", question = "?", important = "!"
+    public var title: String { switch self { case .check: "Check"; case .cross: "Cross"; case .star: "Star"; case .question: "Question"; case .important: "Important" } }
+}
+
 public enum PageElementKind: String, Codable, CaseIterable, Sendable {
     case tape, line, rectangle, ellipse, arrow, text, image
     public var title: String { switch self { case .tape: "Study Tape"; default: rawValue.capitalized } }
@@ -25,7 +34,11 @@ public struct PageElement: Identifiable, Codable, Equatable, Sendable {
     /// Editable source strokes for handwriting conversions. Missing on older text objects.
     public var originalInk: Data? = nil
     public var reversed = false
+    public var stickyStyle: StickyNoteStyle? = nil
+    public var folded: Bool? = nil
+    public var filled: Bool? = nil
     public var rect: CGRect { CGRect(x: x, y: y, width: width, height: height) }
+    public var visibleRect: CGRect { stickyStyle != nil && folded == true ? CGRect(x: x, y: y, width: width, height: min(32, height)) : rect }
     public init(kind: PageElementKind, rect: CGRect) {
         self.kind = kind; x = rect.minX; y = rect.minY; width = rect.width; height = rect.height
     }

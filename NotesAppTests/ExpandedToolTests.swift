@@ -3,6 +3,35 @@ import SwiftData
 import Testing
 @testable import NotesAppCore
 
+struct StudentToolGeometryTests {
+    @Test func anglesAndClippedCompassPreservePageCoordinates() throws {
+        #expect(abs(try #require(StudentToolGeometry.angle(vertex: .zero, first: CGPoint(x: 20, y: 0), second: CGPoint(x: 0, y: 20))) - 90) < 0.001)
+        #expect(StudentToolGeometry.angle(vertex: .zero, first: .zero, second: CGPoint(x: 0, y: 20)) == nil)
+        let circle = try #require(StudentToolGeometry.circle(center: CGPoint(x: 10, y: 20), end: CGPoint(x: 80, y: 20), bounds: CGRect(x: 0, y: 0, width: 100, height: 100)))
+        #expect(circle == CGRect(x: 0, y: 10, width: 20, height: 20))
+        #expect(StudentToolGeometry.circle(center: .zero, end: CGPoint(x: 30, y: 20), bounds: CGRect(x: 0, y: 0, width: 100, height: 100)) == nil)
+    }
+    @Test func conservativeShapeRecognitionRejectsHandwritingAndFindsSimpleGeometry() throws {
+        let line = (0...20).map { CGPoint(x: Double($0) * 4, y: Double($0) * 2 + ($0 % 2 == 0 ? 0.2 : -0.2)) }
+        #expect(SmartShapeGeometry.match(line)?.kind == .line)
+        let circle = (0...80).map { index in let a = Double(index) * 2 * Double.pi / 80; return CGPoint(x: 100 + cos(a) * 60, y: 100 + sin(a) * 40) }
+        #expect(SmartShapeGeometry.match(circle)?.kind == .ellipse)
+        let rectangle = [CGPoint(x: 0, y: 0), CGPoint(x: 50, y: 0), CGPoint(x: 100, y: 0), CGPoint(x: 100, y: 50), CGPoint(x: 100, y: 100), CGPoint(x: 50, y: 100), CGPoint(x: 0, y: 100), CGPoint(x: 0, y: 50), .zero]
+        #expect(SmartShapeGeometry.match(rectangle)?.kind == .rectangle)
+        #expect(SmartShapeGeometry.match([.zero, CGPoint(x: 1, y: 2)]) == nil)
+        #expect(SmartShapeGeometry.match([.zero, CGPoint(x: 10, y: 40), CGPoint(x: 20, y: 0), CGPoint(x: 30, y: 40), CGPoint(x: 40, y: 0), CGPoint(x: 50, y: 40)]) == nil)
+    }
+    @Test func oldObjectPayloadAndFoldedNotesRemainEditable() throws {
+        var note = PageElement(kind: .text, rect: CGRect(x: 20, y: 30, width: 240, height: 180)); note.text = "Remember the mitochondria"
+        let legacy = try PageElementsCodec.encode([note])
+        #expect(try PageElementsCodec.decode(legacy).first?.stickyStyle == nil)
+        note.stickyStyle = .mint; note.folded = true
+        let saved = try #require(PageElementsCodec.decode(PageElementsCodec.encode([note])).first)
+        #expect(saved.id == note.id && saved.text == note.text && saved.rect == note.rect)
+        #expect(saved.visibleRect.height == 32 && saved.folded == true && saved.stickyStyle == .mint)
+    }
+}
+
 @MainActor struct StudyImageMigrationTests {
     @Test func realV6DiskStoreMigratesWithoutChangingInkIDsOrReviewProgress() async throws {
         let root = URL.temporaryDirectory.appendingPathComponent(UUID().uuidString)

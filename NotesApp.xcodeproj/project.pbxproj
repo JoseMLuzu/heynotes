@@ -2408,6 +2408,13 @@
 			<key>sourceTree</key>
 			<string>SOURCE_ROOT</string>
 		</dict>
+		<key>A6EAD68F63D6A824A5982C29</key>
+		<dict>
+			<key>fileRef</key>
+			<string>DFD20CBA03F4F8736444CB3D</string>
+			<key>isa</key>
+			<string>PBXBuildFile</string>
+		</dict>
 		<key>A6ED62E97157A6E11C417DF6</key>
 		<dict>
 			<key>isa</key>
@@ -2831,6 +2838,7 @@
 				<string>DCA2CBFC94A7FECB14AB95C3</string>
 				<string>B037D916690E274048F4B2FF</string>
 				<string>0850111ABE3A881AFD3DEEB9</string>
+				<string>A6EAD68F63D6A824A5982C29</string>
 				<string>5D936E49F3FE4887FAEAAE1B</string>
 			</array>
 			<key>isa</key>
@@ -3321,6 +3329,17 @@
 			<key>isa</key>
 			<string>PBXBuildFile</string>
 		</dict>
+		<key>DFD20CBA03F4F8736444CB3D</key>
+		<dict>
+			<key>isa</key>
+			<string>PBXFileReference</string>
+			<key>lastKnownFileType</key>
+			<string>sourcecode.swift</string>
+			<key>path</key>
+			<string>NotesApp/Core/Models/StudentToolGeometry.swift</string>
+			<key>sourceTree</key>
+			<string>SOURCE_ROOT</string>
+		</dict>
 		<key>E1DD09AB62D1C4008B0BCFB6</key>
 		<dict>
 			<key>fileRef</key>
@@ -3556,6 +3575,7 @@
 				<string>A6FF88F516373C638E94CEBB</string>
 				<string>5E6CCFB61748E970D5FD614D</string>
 				<string>ECE525D1AF06FBDBDF5510F5</string>
+				<string>DFD20CBA03F4F8736444CB3D</string>
 				<string>26C1EED6E713FADC5FF8BC44</string>
 			</array>
 			<key>isa</key>
