@@ -1,8 +1,10 @@
 # Student tools
 
-Implemented inside the existing SwiftUI/PencilKit editor. Flashcards (item 7) and content/handwriting search (item 8) remain deferred. Everything works locally; there are no external services or new dependencies. Minimum deployment remains iPadOS 17 with Swift 6.
+Implemented inside the existing SwiftUI/PencilKit editor. Flashcards (item 7) shipped subsequently in Phase 4; see [Study.md](Study.md). Global content/handwriting search (item 8) remains deferred. Everything works locally; there are no external services or new dependencies. Minimum deployment remains iPadOS 17 with Swift 6.
 
-## Using the six tools
+The next ten tools are now implemented; see [ExpandedStudentTools.md](ExpandedStudentTools.md) for controls, migration, limits and acceptance checks.
+
+## Original six tools
 
 1. **Study tape:** select the filled rectangle tool, then drag across an answer with Apple Pencil. Return to a writing tool and tap the tape with a finger to reveal/cover it. Reveal state resets when reopening the page. Select Objects moves/resizes tape; Inserted Content edits or deletes it. Pencil input continues to reach PencilKit in writing mode.
 2. **Ruler and shapes:** the ruler button toggles PencilKit's public native ruler. Shapes and Arrows opens line, rectangle, ellipse and arrow tools. Drag with Apple Pencil to create a vector object; color, opacity and width use the ink settings and can be saved in Quick Palette presets. These are explicit shape tools, not automatic handwriting recognition. Shapes/text/images sit below handwriting; tape sits above it.
@@ -11,7 +13,7 @@ Implemented inside the existing SwiftUI/PencilKit editor. Flashcards (item 7) an
 5. **PDF note margins:** open a PDF page and choose Page Options → PDF Note Margin. None/Small/Medium/Wide adds 0/25/50/100 percent of the original width on the right. The source PDF keeps its dimensions and coordinates. Export includes the entire expanded page. Reducing a margin is rejected if it would clip handwriting or inserted content; move that content inward first.
 6. **Typed text and images:** Insert (+ in a square) adds typed text or an image from Photos/Files. Text supports system font size and color. Select Objects moves inserted objects; its bottom-right handle resizes them. Inserted Content offers precise editing and confirmed deletion. Object operations participate in the current canvas undo/redo session.
 
-All controls stay at the top. The toolbar scrolls horizontally in constrained windows; narrow iPad windows use a second top row. The bottom remains clear. Quick Palette profiles can also contain shape/tape/object tools.
+All controls stay at the top. The toolbar scrolls horizontally in constrained windows; narrow iPad windows use a second top row. The bottom remains clear in normal editing; the optional Zoom Writing window appears only while in use. Quick Palette profiles can also contain shape/tape/object tools.
 
 ## Export behavior
 
