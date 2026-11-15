@@ -86,4 +86,17 @@ public actor DrawingStorage {
         try backup.write(to: live, options: .atomic)
         return backup
     }
+
+    // These synchronous actor operations exclude drawing writes for the entire file snapshot/install.
+    func createLibraryBackup(_ manifest: BackupManifest) throws -> URL { try BackupArchive.write(manifest, root: root) }
+    func installLibraryBackup(_ prepared: PreparedLibraryBackup, prefix: String) throws {
+        try BackupFileInstallation.install(prepared, at: url(prefix))
+    }
+    func removeFailedLibraryBackup(prefix: String) throws {
+        let parts = prefix.split(separator: "/")
+        guard parts.count == 2, parts[0] == "Restored", UUID(uuidString: String(parts[1])) != nil else {
+            throw LibraryBackupError.unsafePath
+        }
+        try FileManager.default.removeItem(at: url(prefix))
+    }
 }

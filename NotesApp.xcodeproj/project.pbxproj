@@ -10,6 +10,13 @@
 	<string>56</string>
 	<key>objects</key>
 	<dict>
+		<key>0082FC745CA2A0B786F00EDF</key>
+		<dict>
+			<key>fileRef</key>
+			<string>70426C586F721D4C1F816EA8</string>
+			<key>isa</key>
+			<string>PBXBuildFile</string>
+		</dict>
 		<key>00C07AE719436B6B4EC852F6</key>
 		<dict>
 			<key>fileRef</key>
@@ -63,6 +70,17 @@
 			<string>sourcecode.swift</string>
 			<key>path</key>
 			<string>NotesAppDeviceTests/PageGestureTests.swift</string>
+			<key>sourceTree</key>
+			<string>SOURCE_ROOT</string>
+		</dict>
+		<key>032D0B045581BF32489D8745</key>
+		<dict>
+			<key>isa</key>
+			<string>PBXFileReference</string>
+			<key>lastKnownFileType</key>
+			<string>sourcecode.swift</string>
+			<key>path</key>
+			<string>NotesApp/Core/Storage/BackupFileInstallation.swift</string>
 			<key>sourceTree</key>
 			<string>SOURCE_ROOT</string>
 		</dict>
@@ -284,6 +302,13 @@
 			<string>NotesApp/Features/Editor/Components/PageCanvasContainer.swift</string>
 			<key>sourceTree</key>
 			<string>SOURCE_ROOT</string>
+		</dict>
+		<key>1138A08E7577303FFB2F4AA1</key>
+		<dict>
+			<key>fileRef</key>
+			<string>2A6C495DF0A253A81CE7594E</string>
+			<key>isa</key>
+			<string>PBXBuildFile</string>
 		</dict>
 		<key>11B4DB62A8871AE676CDB290</key>
 		<dict>
@@ -590,6 +615,17 @@
 			<string>sourcecode.swift</string>
 			<key>path</key>
 			<string>NotesApp/Features/Workspace/Views/WorkspaceEditorView.swift</string>
+			<key>sourceTree</key>
+			<string>SOURCE_ROOT</string>
+		</dict>
+		<key>2A6C495DF0A253A81CE7594E</key>
+		<dict>
+			<key>isa</key>
+			<string>PBXFileReference</string>
+			<key>lastKnownFileType</key>
+			<string>sourcecode.swift</string>
+			<key>path</key>
+			<string>NotesApp/Core/Storage/BackupArchive.swift</string>
 			<key>sourceTree</key>
 			<string>SOURCE_ROOT</string>
 		</dict>
@@ -1569,6 +1605,17 @@
 			<string>sourcecode.swift</string>
 			<key>path</key>
 			<string>NotesApp/Features/Editor/Services/PageTextLayoutCache.swift</string>
+			<key>sourceTree</key>
+			<string>SOURCE_ROOT</string>
+		</dict>
+		<key>70426C586F721D4C1F816EA8</key>
+		<dict>
+			<key>isa</key>
+			<string>PBXFileReference</string>
+			<key>lastKnownFileType</key>
+			<string>sourcecode.swift</string>
+			<key>path</key>
+			<string>NotesApp/Core/Storage/BackupArchiveIO.swift</string>
 			<key>sourceTree</key>
 			<string>SOURCE_ROOT</string>
 		</dict>
@@ -2591,6 +2638,13 @@
 			<key>isa</key>
 			<string>PBXBuildFile</string>
 		</dict>
+		<key>B0CEF5CE8AFE33B49D4D90E5</key>
+		<dict>
+			<key>fileRef</key>
+			<string>032D0B045581BF32489D8745</string>
+			<key>isa</key>
+			<string>PBXBuildFile</string>
+		</dict>
 		<key>B24D0E29A4F722A513B6B543</key>
 		<dict>
 			<key>isa</key>
@@ -2867,6 +2921,9 @@
 				<string>DCA2CBFC94A7FECB14AB95C3</string>
 				<string>B037D916690E274048F4B2FF</string>
 				<string>0850111ABE3A881AFD3DEEB9</string>
+				<string>1138A08E7577303FFB2F4AA1</string>
+				<string>0082FC745CA2A0B786F00EDF</string>
+				<string>B0CEF5CE8AFE33B49D4D90E5</string>
 				<string>EC75C5DD2D6E289B17296178</string>
 				<string>1F6130B6C6DD6E5A0185AF55</string>
 				<string>A6EAD68F63D6A824A5982C29</string>
@@ -3606,6 +3663,9 @@
 				<string>A6FF88F516373C638E94CEBB</string>
 				<string>5E6CCFB61748E970D5FD614D</string>
 				<string>ECE525D1AF06FBDBDF5510F5</string>
+				<string>2A6C495DF0A253A81CE7594E</string>
+				<string>70426C586F721D4C1F816EA8</string>
+				<string>032D0B045581BF32489D8745</string>
 				<string>5F9B45DFFC6439FB8E8C8DB2</string>
 				<string>0E3A8AA61A197566CFFF9240</string>
 				<string>DFD20CBA03F4F8736444CB3D</string>
