@@ -72,3 +72,9 @@ The revised palette and one-time legacy-Sage preference upgrade passed all 83 na
 ## Leading folder dots — 2026-11-11
 
 Sidebar color dots now precede the folder icon and title. The marker uses a solid 10-point vector circle. Removing the former translucent 0.7-point white border and increasing the diameter gives it a cleaner edge. Each row combines its accessible label and color value and retains a full-width hit area. All six native personalization tests pass; real library sidebar captures were inspected in Light and Dark appearance. The signed Release update was installed on the connected iPad with installation sequence 2652.
+
+## Folder and save-status halos — 2026-11-14
+
+Sidebar folder markers and visible-document save dots share `AuraDot`: a solid vector center with two quiet concentric color halos. Folder markers retain their existing 10-point layout slot; tab save dots retain their 7-point slot. Background layers extend visually without moving labels or changing hit targets. No blur, pulse animation, shadow or drawing/canvas state is introduced. Increased Contrast strengthens both halo layers. Folder colors remain user-selected; document status remains blue for locally saved and orange for pending/unavailable state, with existing accessible row/tab values and status help.
+
+Validation: seven existing native personalization/tab-close tests pass. Light/dark sidebar and real tab captures were visually inspected; the signed iPad Release build passes. Logs: `/private/tmp/heynotes-aura-native-tests.log` and `/private/tmp/heynotes-aura-release.log`.

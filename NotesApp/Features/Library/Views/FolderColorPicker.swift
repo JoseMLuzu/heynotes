@@ -39,8 +39,7 @@ struct FolderSidebarLabel: View {
     let selected: Bool
     var body: some View {
         HStack(spacing: 8) {
-            Circle().fill(folder.color.color).frame(width: 10, height: 10)
-                .accessibilityHidden(true)
+            AuraDot(color: folder.color.color).frame(width: 10, height: 10)
             Label(folder.title, systemImage: selected ? "folder.fill" : "folder")
         }
         .frame(maxWidth: .infinity, alignment: .leading)

@@ -933,6 +933,17 @@
 			<key>isa</key>
 			<string>PBXBuildFile</string>
 		</dict>
+		<key>3D4DEBB08D9D9D8671F65C4E</key>
+		<dict>
+			<key>isa</key>
+			<string>PBXFileReference</string>
+			<key>lastKnownFileType</key>
+			<string>sourcecode.swift</string>
+			<key>path</key>
+			<string>NotesApp/Core/Components/AuraDot.swift</string>
+			<key>sourceTree</key>
+			<string>SOURCE_ROOT</string>
+		</dict>
 		<key>3D6D95C28891027439EDE361</key>
 		<dict>
 			<key>fileRef</key>
@@ -3020,6 +3031,7 @@
 				<string>3270D5CD1048EDFE0109CB1A</string>
 				<string>4FC753B7E05569E357D67D77</string>
 				<string>0DD429621728492BE2787D0D</string>
+				<string>F14BA426B25FFCE43E411D95</string>
 				<string>A6EAD68F63D6A824A5982C29</string>
 				<string>5D936E49F3FE4887FAEAAE1B</string>
 			</array>
@@ -3817,6 +3829,7 @@
 				<string>C7E8EA6EAC06EED5B3084685</string>
 				<string>B19A73FD5B1E2C193F286A78</string>
 				<string>C1076425C85EEA7604533EC2</string>
+				<string>3D4DEBB08D9D9D8671F65C4E</string>
 				<string>DFD20CBA03F4F8736444CB3D</string>
 				<string>26C1EED6E713FADC5FF8BC44</string>
 			</array>
@@ -4004,6 +4017,13 @@
 			<string>NotesApp/Features/Covers/Views/CoverGallery.swift</string>
 			<key>sourceTree</key>
 			<string>SOURCE_ROOT</string>
+		</dict>
+		<key>F14BA426B25FFCE43E411D95</key>
+		<dict>
+			<key>fileRef</key>
+			<string>3D4DEBB08D9D9D8671F65C4E</string>
+			<key>isa</key>
+			<string>PBXBuildFile</string>
 		</dict>
 		<key>F1D45D921D7828F3A9C86EEA</key>
 		<dict>

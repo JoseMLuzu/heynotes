@@ -124,10 +124,7 @@ struct DocumentTabBar<TrailingActions: View>: View {
                         .foregroundStyle(selected ? .primary : .secondary)
                         .lineLimit(1).truncationMode(.tail)
                     if let session = visibleSession {
-                        Circle()
-                            .fill(session.hasPendingSave || !session.ready ? Color.orange : Color.blue)
-                            .frame(width: 7, height: 7)
-                            .accessibilityHidden(true)
+                        AuraDot(color: session.hasPendingSave || !session.ready ? .orange : .blue, diameter: 7)
                             .help(session.status)
                     }
                 }
