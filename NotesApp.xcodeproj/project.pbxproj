@@ -142,6 +142,19 @@
 			<key>isa</key>
 			<string>PBXBuildFile</string>
 		</dict>
+		<key>05C867D3E6D91666838703E5</key>
+		<dict>
+			<key>containerPortal</key>
+			<string>98F54143AB4E86B28C3AFEE0</string>
+			<key>isa</key>
+			<string>PBXContainerItemProxy</string>
+			<key>proxyType</key>
+			<string>1</string>
+			<key>remoteGlobalIDString</key>
+			<string>0E8A3AD980EC179856012B7E</string>
+			<key>remoteInfo</key>
+			<string>NotesApp</string>
+		</dict>
 		<key>073434390DC2825F1C26D815</key>
 		<dict>
 			<key>fileRef</key>
@@ -730,6 +743,40 @@
 			<key>sourceTree</key>
 			<string>SOURCE_ROOT</string>
 		</dict>
+		<key>2ABFF78A65194E791043F797</key>
+		<dict>
+			<key>buildSettings</key>
+			<dict>
+				<key>CODE_SIGN_STYLE</key>
+				<string>Automatic</string>
+				<key>DEVELOPMENT_TEAM</key>
+				<string>62TPVT35FP</string>
+				<key>GENERATE_INFOPLIST_FILE</key>
+				<string>YES</string>
+				<key>IPHONEOS_DEPLOYMENT_TARGET</key>
+				<string>17.0</string>
+				<key>PRODUCT_BUNDLE_IDENTIFIER</key>
+				<string>com.local.notesapp.uitests</string>
+				<key>PRODUCT_NAME</key>
+				<string>$(TARGET_NAME)</string>
+				<key>SDKROOT</key>
+				<string>iphoneos</string>
+				<key>SWIFT_ACTIVE_COMPILATION_CONDITIONS</key>
+				<string>DEBUG</string>
+				<key>SWIFT_OPTIMIZATION_LEVEL</key>
+				<string>-Onone</string>
+				<key>SWIFT_VERSION</key>
+				<string>6.0</string>
+				<key>TARGETED_DEVICE_FAMILY</key>
+				<string>2</string>
+				<key>TEST_TARGET_NAME</key>
+				<string>NotesApp</string>
+			</dict>
+			<key>isa</key>
+			<string>XCBuildConfiguration</string>
+			<key>name</key>
+			<string>Debug</string>
+		</dict>
 		<key>2AF75DA208E8481EB9A632BA</key>
 		<dict>
 			<key>isa</key>
@@ -997,6 +1044,30 @@
 			<string>40B1239ECD27488B403A76A9</string>
 			<key>isa</key>
 			<string>PBXBuildFile</string>
+		</dict>
+		<key>38FDD5DE812978A7AD9BC6E8</key>
+		<dict>
+			<key>buildActionMask</key>
+			<string>2147483647</string>
+			<key>files</key>
+			<array>
+				<string>BCF528E43B401CBC81156409</string>
+			</array>
+			<key>isa</key>
+			<string>PBXSourcesBuildPhase</string>
+			<key>runOnlyForDeploymentPostprocessing</key>
+			<string>0</string>
+		</dict>
+		<key>39D38B120CADE473DF558370</key>
+		<dict>
+			<key>isa</key>
+			<string>PBXFileReference</string>
+			<key>lastKnownFileType</key>
+			<string>sourcecode.swift</string>
+			<key>path</key>
+			<string>NotesAppUITests/PaletteReplacementUITests.swift</string>
+			<key>sourceTree</key>
+			<string>SOURCE_ROOT</string>
 		</dict>
 		<key>3A2401DC297C973454315F5E</key>
 		<dict>
@@ -1492,6 +1563,32 @@
 			<string>NotesAppDeviceTests/MoreButtonTests.swift</string>
 			<key>sourceTree</key>
 			<string>SOURCE_ROOT</string>
+		</dict>
+		<key>5A34D903501985CC35985C53</key>
+		<dict>
+			<key>buildConfigurationList</key>
+			<string>C0797F1E76169F06452CE36A</string>
+			<key>buildPhases</key>
+			<array>
+				<string>38FDD5DE812978A7AD9BC6E8</string>
+				<string>88E14B7A6319871CA50DE3A7</string>
+			</array>
+			<key>buildRules</key>
+			<array/>
+			<key>dependencies</key>
+			<array>
+				<string>A3A90E9557A8688311E1515A</string>
+			</array>
+			<key>isa</key>
+			<string>PBXNativeTarget</string>
+			<key>name</key>
+			<string>NotesAppUITests</string>
+			<key>productName</key>
+			<string>NotesAppUITests</string>
+			<key>productReference</key>
+			<string>CE5A089C62282F3FB0BF70A1</string>
+			<key>productType</key>
+			<string>com.apple.product-type.bundle.ui-testing</string>
 		</dict>
 		<key>5ACAD3562AABA79663662ACF</key>
 		<dict>
@@ -2350,6 +2447,13 @@
 			<key>sourceTree</key>
 			<string>SOURCE_ROOT</string>
 		</dict>
+		<key>833F1BF52B0E2B007E9E9CE2</key>
+		<dict>
+			<key>fileRef</key>
+			<string>EE932EB6C34E428CBCE8C1C2</string>
+			<key>isa</key>
+			<string>PBXBuildFile</string>
+		</dict>
 		<key>836B23A40932222B661C7199</key>
 		<dict>
 			<key>isa</key>
@@ -2435,6 +2539,17 @@
 			<string>3F13BE3E460C5C106CDB07B2</string>
 			<key>isa</key>
 			<string>PBXBuildFile</string>
+		</dict>
+		<key>88E14B7A6319871CA50DE3A7</key>
+		<dict>
+			<key>buildActionMask</key>
+			<string>2147483647</string>
+			<key>files</key>
+			<array/>
+			<key>isa</key>
+			<string>PBXFrameworksBuildPhase</string>
+			<key>runOnlyForDeploymentPostprocessing</key>
+			<string>0</string>
 		</dict>
 		<key>89336BA51750B4DB4D501C22</key>
 		<dict>
@@ -2627,6 +2742,14 @@
 				<string>YES</string>
 				<key>LastUpgradeCheck</key>
 				<string>2720</string>
+				<key>TargetAttributes</key>
+				<dict>
+					<key>5A34D903501985CC35985C53</key>
+					<dict>
+						<key>TestTargetID</key>
+						<string>0E8A3AD980EC179856012B7E</string>
+					</dict>
+				</dict>
 			</dict>
 			<key>buildConfigurationList</key>
 			<string>F8C70E4123C9AE82C42562CC</string>
@@ -2655,6 +2778,7 @@
 			<array>
 				<string>0E8A3AD980EC179856012B7E</string>
 				<string>75BD2E4726E4F97190107AF7</string>
+				<string>5A34D903501985CC35985C53</string>
 			</array>
 		</dict>
 		<key>9BBFE9BA7023ADA22336F3C7</key>
@@ -2800,6 +2924,15 @@
 			<string>NotesApp/Features/Editor/Services/PageCaptureService.swift</string>
 			<key>sourceTree</key>
 			<string>SOURCE_ROOT</string>
+		</dict>
+		<key>A3A90E9557A8688311E1515A</key>
+		<dict>
+			<key>isa</key>
+			<string>PBXTargetDependency</string>
+			<key>target</key>
+			<string>0E8A3AD980EC179856012B7E</string>
+			<key>targetProxy</key>
+			<string>05C867D3E6D91666838703E5</string>
 		</dict>
 		<key>A4A623A217EA0208FE59D883</key>
 		<dict>
@@ -3371,6 +3504,13 @@
 			<key>runOnlyForDeploymentPostprocessing</key>
 			<string>0</string>
 		</dict>
+		<key>BCF528E43B401CBC81156409</key>
+		<dict>
+			<key>fileRef</key>
+			<string>39D38B120CADE473DF558370</string>
+			<key>isa</key>
+			<string>PBXBuildFile</string>
+		</dict>
 		<key>BDB7AC1EB5A1E3CD33C56E2C</key>
 		<dict>
 			<key>fileRef</key>
@@ -3384,6 +3524,20 @@
 			<string>EB48512B2F3A07BE66EE1AE6</string>
 			<key>isa</key>
 			<string>PBXBuildFile</string>
+		</dict>
+		<key>C0797F1E76169F06452CE36A</key>
+		<dict>
+			<key>buildConfigurations</key>
+			<array>
+				<string>2ABFF78A65194E791043F797</string>
+				<string>C522851B9229E1D2DF9EC01E</string>
+			</array>
+			<key>defaultConfigurationIsVisible</key>
+			<string>0</string>
+			<key>defaultConfigurationName</key>
+			<string>Release</string>
+			<key>isa</key>
+			<string>XCConfigurationList</string>
 		</dict>
 		<key>C082BAA4E025E6B696DE2BE8</key>
 		<dict>
@@ -3518,6 +3672,40 @@
 			<string>DADDAAA7D709082C4039E54E</string>
 			<key>isa</key>
 			<string>PBXBuildFile</string>
+		</dict>
+		<key>C522851B9229E1D2DF9EC01E</key>
+		<dict>
+			<key>buildSettings</key>
+			<dict>
+				<key>CODE_SIGN_STYLE</key>
+				<string>Automatic</string>
+				<key>DEVELOPMENT_TEAM</key>
+				<string>62TPVT35FP</string>
+				<key>GENERATE_INFOPLIST_FILE</key>
+				<string>YES</string>
+				<key>IPHONEOS_DEPLOYMENT_TARGET</key>
+				<string>17.0</string>
+				<key>PRODUCT_BUNDLE_IDENTIFIER</key>
+				<string>com.local.notesapp.uitests</string>
+				<key>PRODUCT_NAME</key>
+				<string>$(TARGET_NAME)</string>
+				<key>SDKROOT</key>
+				<string>iphoneos</string>
+				<key>SWIFT_ACTIVE_COMPILATION_CONDITIONS</key>
+				<string>DEBUG</string>
+				<key>SWIFT_OPTIMIZATION_LEVEL</key>
+				<string>-Onone</string>
+				<key>SWIFT_VERSION</key>
+				<string>6.0</string>
+				<key>TARGETED_DEVICE_FAMILY</key>
+				<string>2</string>
+				<key>TEST_TARGET_NAME</key>
+				<string>NotesApp</string>
+			</dict>
+			<key>isa</key>
+			<string>XCBuildConfiguration</string>
+			<key>name</key>
+			<string>Release</string>
 		</dict>
 		<key>C550029187EDB9B819CBE0D5</key>
 		<dict>
@@ -3727,6 +3915,19 @@
 			<string>NotesApp/Features/Settings/Views/BackupExportPicker.swift</string>
 			<key>sourceTree</key>
 			<string>SOURCE_ROOT</string>
+		</dict>
+		<key>CE5A089C62282F3FB0BF70A1</key>
+		<dict>
+			<key>explicitFileType</key>
+			<string>wrapper.cfbundle</string>
+			<key>includeInIndex</key>
+			<string>0</string>
+			<key>isa</key>
+			<string>PBXFileReference</string>
+			<key>path</key>
+			<string>NotesAppUITests.xctest</string>
+			<key>sourceTree</key>
+			<string>BUILT_PRODUCTS_DIR</string>
 		</dict>
 		<key>CEA6CAF758D37E10D79681D0</key>
 		<dict>
@@ -4291,6 +4492,7 @@
 				<string>A2BFA95A4E764994EF46B70B</string>
 				<string>DA430EB6BF29AE365FF6626C</string>
 				<string>EE932EB6C34E428CBCE8C1C2</string>
+				<string>39D38B120CADE473DF558370</string>
 			</array>
 			<key>isa</key>
 			<string>PBXGroup</string>
@@ -4495,6 +4697,17 @@
 			<string>sourcecode.swift</string>
 			<key>path</key>
 			<string>NotesApp/Features/Editor/Components/PaletteProfileManager.swift</string>
+			<key>sourceTree</key>
+			<string>SOURCE_ROOT</string>
+		</dict>
+		<key>EE932EB6C34E428CBCE8C1C2</key>
+		<dict>
+			<key>isa</key>
+			<string>PBXFileReference</string>
+			<key>lastKnownFileType</key>
+			<string>sourcecode.swift</string>
+			<key>path</key>
+			<string>NotesApp/Features/Editor/Components/PaletteFavoriteIcon.swift</string>
 			<key>sourceTree</key>
 			<string>SOURCE_ROOT</string>
 		</dict>
@@ -4757,6 +4970,7 @@
 			<array>
 				<string>38A007151ABE87CC01A5B6E9</string>
 				<string>7FAAF003DE36512BA6558272</string>
+				<string>CE5A089C62282F3FB0BF70A1</string>
 			</array>
 			<key>isa</key>
 			<string>PBXGroup</string>
@@ -4819,24 +5033,6 @@
 		<dict>
 			<key>fileRef</key>
 			<string>CCCFA8569F9D1BE0BE946F21</string>
-			<key>isa</key>
-			<string>PBXBuildFile</string>
-		</dict>
-		<key>EE932EB6C34E428CBCE8C1C2</key>
-		<dict>
-			<key>isa</key>
-			<string>PBXFileReference</string>
-			<key>lastKnownFileType</key>
-			<string>sourcecode.swift</string>
-			<key>path</key>
-			<string>NotesApp/Features/Editor/Components/PaletteFavoriteIcon.swift</string>
-			<key>sourceTree</key>
-			<string>SOURCE_ROOT</string>
-		</dict>
-		<key>833F1BF52B0E2B007E9E9CE2</key>
-		<dict>
-			<key>fileRef</key>
-			<string>EE932EB6C34E428CBCE8C1C2</string>
 			<key>isa</key>
 			<string>PBXBuildFile</string>
 		</dict>

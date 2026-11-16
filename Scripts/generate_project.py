@@ -11,7 +11,7 @@ data = plistlib.loads(subprocess.check_output(['plutil', '-convert', 'xml1', '-o
 objects = data['objects']
 main = next(v for v in objects.values() if v['isa'] == 'PBXProject')['mainGroup']
 uid = lambda value: hashlib.sha1(value.encode()).hexdigest()[:24].upper()
-for directory, target_name in [('NotesApp', 'NotesApp'), ('NotesAppDeviceTests', 'NotesAppDeviceTests')]:
+for directory, target_name in [('NotesApp', 'NotesApp'), ('NotesAppDeviceTests', 'NotesAppDeviceTests'), ('NotesAppUITests', 'NotesAppUITests')]:
     target = next(v for v in objects.values() if v['isa'] == 'PBXNativeTarget' and v['name'] == target_name)
     phase = next(objects[key] for key in target['buildPhases'] if objects[key]['isa'] == 'PBXSourcesBuildPhase')
     for file in sorted(Path(directory).rglob('*.swift')):
