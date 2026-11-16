@@ -1,6 +1,6 @@
 import SwiftUI
 
-/// Only this grip can move the palette, with a finger.
+/// Only this grip can move the palette, with either a finger or Apple Pencil.
 struct PaletteDragHandle: UIViewRepresentable {
     let canMove: () -> Bool
     let changed: (CGSize) -> Void
@@ -26,13 +26,14 @@ struct PaletteDragHandle: UIViewRepresentable {
         NSLayoutConstraint.activate([icon.centerXAnchor.constraint(equalTo: view.centerXAnchor),
                                      icon.centerYAnchor.constraint(equalTo: view.centerYAnchor)])
         let pan = UIPanGestureRecognizer(target: context.coordinator, action: #selector(Coordinator.pan(_:)))
-        pan.allowedTouchTypes = [NSNumber(value: UITouch.TouchType.direct.rawValue)]
+        pan.allowedTouchTypes = [NSNumber(value: UITouch.TouchType.direct.rawValue),
+                                 NSNumber(value: UITouch.TouchType.pencil.rawValue)]
         pan.minimumNumberOfTouches = 1; pan.maximumNumberOfTouches = 1
         pan.delegate = context.coordinator
         view.addGestureRecognizer(pan)
         view.isAccessibilityElement = true
         view.accessibilityLabel = "Move Quick Palette"
-        view.accessibilityHint = "Drag with one finger. The profile menu also offers corner positions."
+        view.accessibilityHint = "Drag with a finger or Apple Pencil. The profile menu also offers corner positions."
         return view
     }
     func updateUIView(_ uiView: UIView, context: Context) { context.coordinator.parent = self }
