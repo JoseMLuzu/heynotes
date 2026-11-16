@@ -6,6 +6,12 @@ The sidebar removes NavigationSplitView's default toggle using the public iPadOS
 
 Activating a notebook or PDF automatically selects the detail-only split layout and the detail column in compact windows. This also covers switching document tabs, opening recents and restoring an active document. Folder browsing in wide landscape windows does not hide the sidebar; constrained layouts dismiss it after a selection as described below. Its button can reopen it while editing; it stays open until another document is activated or a constrained-layout destination is selected. Navigation blocked before activation leaves the current layout alone. Changing the split layout does not reload the active canvas or change saved document data.
 
+## Fixed document save indicator
+
+The active document's save indicator occupies a fixed 44-point control at the trailing end of the tab strip, after the tab actions. Individual tab titles no longer contain status dots. Its aura remains blue when saved and orange while changes are pending or the page is loading. Tapping opens a compact native popover with the current status and document title; VoiceOver exposes the same information. Changing the focused document dismisses the previous status popover and binds the indicator to the new session. Save-state updates are read inside the indicator component rather than every tab label.
+
+Focus Mode continues to hide the entire tab row. Existing save-failure alerts remain available there. Library browsing without an active editor has no save indicator. No persistence, canvas or save-pipeline changes are involved.
+
 ## Library navigation button alignment
 
 The native library toolbar changes its leading margin when the sidebar opens. The back button below it now follows the measured horizontal center of the native sidebar control instead of using a fixed 12-point leading inset. Only the library tab row receives that inset; editor rows keep their existing layout. Both controls retain their 44-point hit areas and existing actions. The row's trailing inset remains unchanged.

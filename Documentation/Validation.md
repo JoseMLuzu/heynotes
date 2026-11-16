@@ -312,3 +312,45 @@ Installed successfully on the physical iPad, sequence 3120. Automatic launch tim
 ## Commit preparation — November 14, 2026
 
 This delivery is organized into 29 scoped Conventional Commits on `feature/library-backups`. All 25 commits that contain app code or native source registration were compiled from their exact staged trees in an isolated snapshot directory before committing. The 50 host tests passed again. Splitting the history did not alter the implemented source files or discard pending work. Earlier entries saying no commit was made describe their original delivery sessions; this preparation supersedes that status. No push is included.
+
+## Floating palette redesign — November 15, 2026
+
+The favorites palette is now a 176 × 172-point floating tray for five/six favorites, with a shared profile/options header, six-dot grip, individual tool surfaces, inset color/width indicators and a 108 × 60-point collapsed pill. It uses the existing glass/Reduce Transparency policy. Profile/favorite data and normalized saved placement are unchanged. The rendered grid and native drop mapping share 44-point cells and 8-point gaps.
+
+All 17 targeted palette/profile/drop/Focus Mode tests passed (`/private/tmp/heynotes-palette-redesign-final-tests.log`; result `Test-NotesApp-2026.11.15_00-04-32--0500.xcresult`). Inspected actual native Light, Dark/six-favorite and collapsed screenshots, plus the retained Focus Mode/edge-placement coverage. Signed Release compilation succeeded (`/private/tmp/heynotes-palette-redesign-release-final.log`) and the build installed on the iPad (sequence 3128). This design iteration is uncommitted; no push was made. Physical movement/drop feel remains a device acceptance check.
+
+## Palette replacement drops — November 15, 2026
+
+Toolbar/cross-profile tools dropped onto an occupied favorite now replace that slot, including at six-favorite capacity, preserving its ID and index. Empty-space drops still append only when there is room; same-profile drags still reorder. Target hover uses a stronger accent fill/border, glow and a small scale change that respects Reduce Motion. Only a completed drop persists the replacement. Late deleted targets reject safely, other profiles remain independent and active tool preferences are unchanged.
+
+All 19 targeted native palette/profile/drag/Focus Mode tests passed (`/private/tmp/heynotes-palette-replacement-tests.log`; result `Test-NotesApp-2026.11.15_00-11-35--0500.xcresult`). Inspected the actual hover-style attachment. Signed Release build passed (`/private/tmp/heynotes-palette-replacement-release.log`) and installed on the physical iPad (sequence 3136). Physical drop/hover feel remains a hands-on acceptance check. No commit or push was made for this iteration.
+
+## Individual palette destinations — November 15, 2026
+
+A subsequent device report showed that the previous provider/model tests missed native destination routing: the palette still owned one container-level drop interaction with coordinate-based favorite lookup. Each favorite now owns its own native drop delegate with a permanent destination ID. The container is no longer a destination or highlighted. Only the hovered tool receives the accent border/fill/glow; releasing replaces that slot at six-favorite capacity. The + button remains an explicit append destination while space is available. No stored IDs, profile keys, document files or schemas changed.
+
+The new `NotesAppUITests` scheme runs real system drags through normal app UI. It creates a QA notebook/profile in the simulator, fills all six favorites, then replaces each individual slot while checking stable IDs/order, unchanged siblings and a count of six. This passed (`/private/tmp/heynotes-palette-ui-test.log`; result `Test-NotesAppUITests-2026.11.15_00-29-04--0500.xcresult`). The test does not reset an existing store or require production launch hooks. Initial harness runs exposed inherited accessibility identifiers and duplicate toolbar/favorite labels; the final selectors distinguish the toolbar from favorite cells.
+
+All 20 targeted native palette/profile/drop/Focus Mode tests passed (`/private/tmp/heynotes-palette-slot-tests.log`; result `Test-NotesApp-2026.11.15_00-30-46--0500.xcresult`). Inspected the final six-slot screenshot and frames from the actual drag recording: only the tool under the drag highlights, including when the drag crosses a different tool en route. Visual evidence: `/private/tmp/heynotes-palette-native-drag.mp4` and `/private/tmp/heynotes-palette-native-hover.png`.
+
+Signed Release compilation passed (`/private/tmp/heynotes-palette-slot-release.log`). Installed on the physical iPad (sequence 3144) and launch succeeded. Physical finger/Pencil feel still requires hands-on acceptance; automated gestures were exercised on the simulator. No commit or push was made.
+
+## Fixed tab-row save indicator — November 15, 2026
+
+Moved the active document's aura dot from the tab title into a fixed 44-point control at the trailing end of the tab row. Its compact status popover reads the real session status and document title. The indicator follows split-pane focus, and the existing Focus Mode/error-alert behavior is unchanged. No save logic, schemas or document files changed.
+
+All 10 existing tab-close, split-workspace and Focus Mode tests passed (`/private/tmp/heynotes-fixed-status-tests.log`; result `Test-NotesApp-2026.11.15_00-44-23--0500.xcresult`). Inspected the actual split-workspace screenshot with the dot at the trailing edge and no dots in tab titles. Signed Release build passed (`/private/tmp/heynotes-fixed-status-release.log`) and installed on the iPad (sequence 3152). No commit or push was made.
+
+## Apple Pencil palette movement — November 15, 2026
+
+The palette grip's pan recognizer explicitly excluded Pencil touches. Its allowed touch types now include direct touch and Apple Pencil; only the existing 44-point six-dot grip moves the palette. Existing active-stroke/busy guards, viewport clamping, cancellation and end-of-drag preference persistence remain unchanged. Updated the accessibility hint and interaction documentation.
+
+All 14 existing palette, Focus Mode and page-gesture tests passed (`/private/tmp/heynotes-pencil-palette-tests.log`; result `Test-NotesApp-2026.11.15_00-47-03--0500.xcresult`). These are regression checks, not synthesized Apple Pencil contact. Signed Release build passed (`/private/tmp/heynotes-pencil-palette-release.log`) and installed on the iPad (sequence 3160). Manual device acceptance: drag the six-dot grip with Pencil and finger, cancel a drag, reopen/rotate and confirm the saved position, then write outside the palette in normal and Focus Mode. No commit or push was made.
+
+## Integration into main — November 15, 2026
+
+At the owner's request, local `main` incorporated the 29 existing `feature/library-backups` commits by fast-forward. The subsequent palette refinements/replacement fix, Apple Pencil grip support, native drag UI regression, fixed tab-row save indicator and their documentation are split into five additional scoped commits. Earlier “no commit” entries record the original delivery sessions; this integration supersedes their commit status. No push is included.
+
+Each code-bearing staged tree was exported to an isolated snapshot and compiled before committing: palette, Pencil grip and save indicator app builds, plus build-for-testing of the dedicated native UI test scheme. Logs: `/private/tmp/heynotes-main-palette-staged.log`, `/private/tmp/heynotes-main-pencil-staged.log`, `/private/tmp/heynotes-main-ui-staged.log` and `/private/tmp/heynotes-main-status-staged.log`. These compilation checks supplement the runtime evidence above; they do not constitute another physical Pencil acceptance pass. Content hashes verified that splitting the commits did not change the implemented source files.
+
+The experimental logo-inspired app/cover colors remain preserved separately in the paused `experimental` stash. App theme/accent files, cover models/renderers and bundled artwork are unchanged from pre-integration `main` (`d2ab170`). No user library, drawing, PDF or study data was modified by the Git integration.
