@@ -1,6 +1,6 @@
 import SwiftUI
 
-/// Only this grip can move the palette. Pencil input never starts the pan recognizer.
+/// Only this grip can move the palette, with a finger.
 struct PaletteDragHandle: UIViewRepresentable {
     let canMove: () -> Bool
     let changed: (CGSize) -> Void
@@ -9,8 +9,18 @@ struct PaletteDragHandle: UIViewRepresentable {
     func makeCoordinator() -> Coordinator { Coordinator(self) }
     func makeUIView(context: Context) -> UIView {
         let view = UIView()
-        let icon = UIImageView(image: UIImage(systemName: "line.3.horizontal"))
-        icon.tintColor = .secondaryLabel; icon.contentMode = .center
+        // Six native dots stay crisp and adapt their color without relying on a symbol variant.
+        let icon = UIStackView(); icon.axis = .vertical; icon.spacing = 3
+        icon.isUserInteractionEnabled = false; icon.accessibilityElementsHidden = true
+        for _ in 0..<3 {
+            let row = UIStackView(); row.spacing = 3
+            for _ in 0..<2 {
+                let dot = UIView(); dot.backgroundColor = .tertiaryLabel; dot.layer.cornerRadius = 1.5
+                NSLayoutConstraint.activate([dot.widthAnchor.constraint(equalToConstant: 3), dot.heightAnchor.constraint(equalToConstant: 3)])
+                row.addArrangedSubview(dot)
+            }
+            icon.addArrangedSubview(row)
+        }
         icon.translatesAutoresizingMaskIntoConstraints = false
         view.addSubview(icon)
         NSLayoutConstraint.activate([icon.centerXAnchor.constraint(equalTo: view.centerXAnchor),
@@ -22,7 +32,7 @@ struct PaletteDragHandle: UIViewRepresentable {
         view.addGestureRecognizer(pan)
         view.isAccessibilityElement = true
         view.accessibilityLabel = "Move Quick Palette"
-        view.accessibilityHint = "Drag with one finger. Palette Options also offers corner positions."
+        view.accessibilityHint = "Drag with one finger. The profile menu also offers corner positions."
         return view
     }
     func updateUIView(_ uiView: UIView, context: Context) { context.coordinator.parent = self }

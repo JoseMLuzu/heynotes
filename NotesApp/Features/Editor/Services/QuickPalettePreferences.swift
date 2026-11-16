@@ -173,7 +173,7 @@ struct PaletteFavoriteDraft: Identifiable {
     func move(from source: IndexSet, to destination: Int) {
         saved.profiles[activeIndex].favorites.move(fromOffsets: source, toOffset: destination); persist()
     }
-    /// Same-profile drags reorder; toolbar/cross-profile drags insert an independent snapshot.
+    /// Same-profile drags reorder; external drops replace a targeted slot or append into free space.
     @discardableResult func acceptDrop(_ drag: PaletteToolDrag, onto targetID: UUID?, in profileID: UUID) -> Bool {
         guard drag.version == 1, (drag.paletteID == nil) == (drag.profileID == nil),
               profileID == saved.activeProfileID else { return false }
@@ -186,9 +186,15 @@ struct PaletteFavoriteDraft: Identifiable {
             let favorite = favorites.remove(at: source)
             favorites.insert(favorite, at: min(target ?? favorites.count, favorites.count))
         } else {
-            guard favorites.count < Self.maximumFavorites else { return false }
-            var copy = drag.preset.sanitized; copy.id = UUID()
-            favorites.insert(copy, at: target ?? favorites.count)
+            var copy = drag.preset.sanitized
+            if let target {
+                // Keep the slot's identity and position, including when the profile is full.
+                copy.id = favorites[target].id
+                favorites[target] = copy
+            } else {
+                guard favorites.count < Self.maximumFavorites else { return false }
+                copy.id = UUID(); favorites.append(copy)
+            }
         }
         saved.profiles[index].favorites = favorites; persist(); return true
     }

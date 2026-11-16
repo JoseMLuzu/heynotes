@@ -53,8 +53,8 @@ struct PaletteToolDrag: Codable, Sendable {
                 }
                 guard let drag else { completed(false, "This tool could not be added. Try dragging it again."); return }
                 let success = palette.acceptDrop(drag, onto: targetID, in: profileID)
-                completed(success, success ? nil : (palette.favorites.count >= QuickPalettePreferences.maximumFavorites
-                    ? "This profile has six favorites. Remove one or choose another profile."
+                completed(success, success ? nil : (targetID == nil && palette.favorites.count >= QuickPalettePreferences.maximumFavorites
+                    ? "This profile has six favorites. Drop onto a favorite to replace it, or choose another profile."
                     : "The favorite changed. Drop the tool again."))
             }
         }

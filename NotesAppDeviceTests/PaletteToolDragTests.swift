@@ -36,7 +36,7 @@ import UniformTypeIdentifiers
         XCTAssertFalse(f.palette.isVisible)
     }
 
-    func testNativeProviderDropPreservesSnapshotAndPersistsIndependentFavoriteAtTarget() async throws {
+    func testNativeProviderDropReplacesTargetAndAppendsOnlyOnEmptySpace() async throws {
         let f = try DragFixture(); defer { f.cleanup() }
         let old = f.palette.favorites, oldProfile = f.palette.activeProfile.id
         let snapshot = f.tools.capturePreset(for: .pencil)
@@ -47,16 +47,72 @@ import UniformTypeIdentifiers
         }
         XCTAssertTrue(receiver.receive([drag.itemProvider()], onto: old[1].id))
         try await waitUntil { completed }
-        XCTAssertEqual(f.palette.favorites.count, 6)
-        let inserted = f.palette.favorites[1]
-        XCTAssertNotEqual(inserted.id, snapshot.id); XCTAssertEqual(inserted.ink, snapshot.ink)
-        XCTAssertEqual(inserted.tool, .pencil)
-        XCTAssertEqual(f.palette.favorites.filter { $0.id != inserted.id }, old)
+        XCTAssertEqual(f.palette.favorites.count, old.count)
+        let replaced = f.palette.favorites[1]
+        XCTAssertEqual(replaced.id, old[1].id); XCTAssertNotEqual(replaced.id, snapshot.id)
+        XCTAssertEqual(replaced.ink, snapshot.ink); XCTAssertEqual(replaced.tool, .pencil)
+        XCTAssertEqual(f.palette.favorites.map(\.id), old.map(\.id))
+        XCTAssertEqual(f.palette.favorites.filter { $0.id != replaced.id }, old.filter { $0.id != replaced.id })
         let reopened = QuickPalettePreferences(defaults: f.defaults)
         XCTAssertEqual(reopened.favorites, f.palette.favorites)
+        XCTAssertTrue(f.palette.acceptDrop(drag, onto: nil, in: oldProfile))
+        XCTAssertEqual(f.palette.favorites.count, 6)
+        XCTAssertNotEqual(f.palette.favorites.last?.id, snapshot.id)
         let full = f.palette.profiles
         XCTAssertFalse(f.palette.acceptDrop(drag, onto: nil, in: oldProfile))
         XCTAssertEqual(f.palette.profiles, full)
+    }
+
+    func testReplacementWorksAtCapacityWithoutChangingOtherSlotsProfilesOrActiveTool() async throws {
+        let f = try DragFixture(); defer { f.cleanup() }
+        XCTAssertTrue(f.palette.save(ToolPreset(name: "Selection", tool: .lasso)))
+        let profileID = f.palette.activeProfile.id
+        XCTAssertTrue(f.palette.duplicateProfile(profileID, name: "Other profile"))
+        let other = f.palette.activeProfile
+        XCTAssertTrue(f.palette.selectProfile(profileID))
+        let original = f.palette.favorites
+        let toolBytes = f.defaults.data(forKey: "editor.tools.v1")
+        let snapshot = ToolPreset(name: "Green marker", tool: .marker,
+            ink: InkStyle(red: 0.1, green: 0.7, blue: 0.3, width: 24, opacity: 0.45))
+        var completed = false
+        let receiver = PaletteDropReceiver(palette: f.palette, profileID: profileID, canInteract: { true }) { success, message in
+            XCTAssertTrue(success); XCTAssertNil(message); completed = true
+        }
+        XCTAssertTrue(receiver.receive([PaletteToolDrag(preset: snapshot).itemProvider()], onto: original[2].id))
+        try await waitUntil { completed }
+        XCTAssertEqual(f.palette.favorites.count, 6)
+        XCTAssertEqual(f.palette.favorites.map(\.id), original.map(\.id))
+        var expected = snapshot.sanitized; expected.id = original[2].id
+        XCTAssertEqual(f.palette.favorites[2], expected)
+        XCTAssertEqual(f.palette.favorites.filter { $0.id != expected.id }, original.filter { $0.id != expected.id })
+        XCTAssertEqual(f.palette.profiles.first { $0.id == other.id }, other)
+        XCTAssertEqual(f.defaults.data(forKey: "editor.tools.v1"), toolBytes)
+        XCTAssertEqual(QuickPalettePreferences(defaults: f.defaults).favorites, f.palette.favorites)
+        // Render the actual hover styling for visual QA without simulating private drag events.
+        let preview = HStack(spacing: 12) {
+            PaletteFavoriteIcon(favorite: original[2], selected: false)
+            PaletteFavoriteIcon(favorite: original[2], selected: false, dropTargeted: true)
+        }.padding(20).background(.white).environment(\.colorScheme, .light)
+        let renderer = ImageRenderer(content: preview); renderer.scale = 2
+        let attachment = XCTAttachment(image: try XCTUnwrap(renderer.uiImage))
+        attachment.name = "Palette-Replacement-Hover"; attachment.lifetime = .keepAlways; add(attachment)
+    }
+
+    func testLateDropDoesNotReplaceADeletedTargetOrAppendIntoItsOldPosition() async throws {
+        let f = try DragFixture(); defer { f.cleanup() }
+        XCTAssertTrue(f.palette.save(ToolPreset(name: "Selection", tool: .lasso)))
+        let id = f.palette.activeProfile.id, target = f.palette.favorites[1].id
+        var completed = false
+        let receiver = PaletteDropReceiver(palette: f.palette, profileID: id, canInteract: { true }) { success, message in
+            XCTAssertFalse(success); XCTAssertEqual(message, "The favorite changed. Drop the tool again."); completed = true
+        }
+        let drag = PaletteToolDrag(preset: ToolPreset(name: "Incoming", tool: .eraser, eraserMode: .highlighter, eraserWidth: 50))
+        XCTAssertTrue(receiver.receive([drag.itemProvider()], onto: target))
+        f.palette.remove(target)
+        XCTAssertTrue(f.palette.save(ToolPreset(name: "New slot", tool: .laser)))
+        let unchanged = f.palette.profiles
+        try await waitUntil { completed }
+        XCTAssertEqual(f.palette.profiles, unchanged)
     }
 
     func testFavoriteReorderWorksAtCapacityRetainsIDsAndDoesNotChangeOtherProfilesOrTools() throws {
@@ -90,6 +146,11 @@ import UniformTypeIdentifiers
         let destination = f.palette.activeProfile.id
         XCTAssertTrue(f.palette.acceptDrop(source, onto: nil, in: destination))
         XCTAssertNotEqual(f.palette.favorites.last?.id, favorite.id)
+        XCTAssertEqual(f.palette.profiles.first { $0.id == original.id }, original)
+        let targetID = f.palette.favorites[0].id, count = f.palette.favorites.count
+        XCTAssertTrue(f.palette.acceptDrop(source, onto: targetID, in: destination))
+        XCTAssertEqual(f.palette.favorites.count, count); XCTAssertEqual(f.palette.favorites[0].id, targetID)
+        XCTAssertEqual(f.palette.favorites[0].ink, favorite.ink)
         XCTAssertEqual(f.palette.profiles.first { $0.id == original.id }, original)
         // Another pane may have the same persisted profile IDs but a different preference owner.
         let otherPane = QuickPalettePreferences(defaults: f.defaults)
@@ -138,12 +199,7 @@ import UniformTypeIdentifiers
         XCTAssertFalse(f.palette.isVisible, "Focus Mode favorite drags must not rewrite hidden palette presentation")
     }
 
-    func testGridTargetsAndNativeEditorKeepCanvasWhileAcceptingDropsAtEveryToolbarEdge() async throws {
-        let grid = CGRect(x: 8, y: 56, width: 140, height: 92)
-        XCTAssertEqual(PaletteDropLayout.favoriteIndex(at: CGPoint(x: 30, y: 78), in: grid, count: 5), 0)
-        XCTAssertEqual(PaletteDropLayout.favoriteIndex(at: CGPoint(x: 126, y: 126), in: grid, count: 5), nil)
-        XCTAssertEqual(PaletteDropLayout.favoriteIndex(at: CGPoint(x: 78, y: 126), in: grid, count: 5), 4)
-        XCTAssertNil(PaletteDropLayout.favoriteIndex(at: CGPoint(x: 53, y: 78), in: grid, count: 5))
+    func testNativeEditorKeepsCanvasAndIndividualTargetsAtEveryToolbarEdge() async throws {
         let f = try DragFixture(); defer { f.cleanup() }
         let container = try PersistenceController.makeContainer(inMemory: true), book = Notebook(title: "Drag tools")
         let page = NotePage(pageIndex: 0)
@@ -176,6 +232,29 @@ import UniformTypeIdentifiers
         XCTAssertFalse(session.hasPendingSave)
         let image = UIGraphicsImageRenderer(size: window.bounds.size).image { _ in window.drawHierarchy(in: window.bounds, afterScreenUpdates: true) }
         let attachment = XCTAttachment(image: image); attachment.name = "Palette-Drag-Six-Favorites"; attachment.lifetime = .keepAlways; add(attachment)
+    }
+
+    func testEachNativeDropDelegateReplacesItsOwnFavoriteAtCapacity() async throws {
+        let f = try DragFixture(); defer { f.cleanup() }
+        XCTAssertTrue(f.palette.save(ToolPreset(name: "Sixth", tool: .lasso)))
+        let original = f.palette.favorites
+        let profile = f.palette.activeProfile.id
+        for (index, target) in original.enumerated() {
+            let preset = ToolPreset(name: "Replacement \(index)", tool: .marker,
+                ink: InkStyle(red: Double(index) / 6, green: 0.3, blue: 0.8, width: 18))
+            let before = f.palette.favorites
+            var completed = false
+            let delegate = PaletteToolDrop(palette: f.palette, profileID: profile, favoriteID: target.id,
+                canInteract: { true }, hovering: { _, _ in }, completed: { success, message in
+                    XCTAssertTrue(success); XCTAssertNil(message); completed = true
+                })
+            XCTAssertTrue(delegate.receive([PaletteToolDrag(preset: preset).itemProvider()]))
+            try await waitUntil { completed }
+            XCTAssertEqual(f.palette.favorites.count, 6)
+            XCTAssertEqual(f.palette.favorites[index].id, target.id)
+            XCTAssertEqual(f.palette.favorites[index].name, preset.name)
+            XCTAssertEqual(f.palette.favorites.filter { $0.id != target.id }, before.filter { $0.id != target.id })
+        }
     }
 
     private func bytes(_ provider: NSItemProvider) async throws -> Data {

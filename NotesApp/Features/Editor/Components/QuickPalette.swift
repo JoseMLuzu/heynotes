@@ -1,11 +1,16 @@
 import SwiftUI
 
 enum QuickPaletteLayout {
+    static let cellSize: CGFloat = 44
+    static let cellSpacing: CGFloat = 8
+    static let columns = 3
     static let collapsedSize = CGSize(width: 108, height: 60)
+    static var gridWidth: CGFloat { CGFloat(columns) * cellSize + CGFloat(columns - 1) * cellSpacing }
     static func expandedSize(favorites: Int) -> CGSize {
         let items = min(6, max(1, favorites) + 1)
-        let rows = (items + 2) / 3
-        return CGSize(width: 156, height: 112 + CGFloat(rows) * 44 + CGFloat(rows - 1) * 4)
+        let rows = (items + columns - 1) / columns
+        // 12-point insets, one 44-point header, and an 8-point gap before the tools.
+        return CGSize(width: 176, height: 76 + CGFloat(rows) * cellSize + CGFloat(rows - 1) * cellSpacing)
     }
 }
 
@@ -20,8 +25,6 @@ struct QuickPalette: View {
     @State private var showingManager = false
     @State private var editing: PaletteFavoriteDraft?
     @State private var showingProfiles = false
-    @State private var gridFrame = CGRect.zero
-    @State private var dropTargeted = false
     @State private var targetFavoriteID: UUID?
     @State private var dropNotice: String?
 
@@ -35,8 +38,8 @@ struct QuickPalette: View {
             let base = PalettePlacement.origin(palette.position, palette: size, viewport: geometry.size)
             let origin = PalettePlacement.clamped(CGPoint(x: base.x + translation.width, y: base.y + translation.height),
                                                   palette: size, viewport: geometry.size)
-            VStack(spacing: 4) {
-                HStack(spacing: 4) {
+            VStack(spacing: collapsed ? 0 : 8) {
+                HStack(spacing: 0) {
                     PaletteDragHandle(canMove: canInteract) { translation = $0 } ended: { offset, cancelled in
                         if !cancelled {
                             palette.place(PalettePlacement.position(for: CGPoint(x: base.x + offset.width, y: base.y + offset.height),
@@ -45,9 +48,8 @@ struct QuickPalette: View {
                         translation = .zero
                     }.frame(width: 44, height: 44)
                     if collapsed {
-                        if onExitFocus != nil {
-                            exitFocusButton
-                        } else {
+                        if onExitFocus != nil { exitFocusButton }
+                        else {
                             Button {
                                 guard canInteract() else { return }
                                 if forcedCompact { showingManager = true } else { palette.isCollapsed = false }
@@ -57,56 +59,51 @@ struct QuickPalette: View {
                         }
                     } else {
                         Menu { paletteMenu } label: {
-                            Image(systemName: "ellipsis").frame(width: 44, height: 44).contentShape(Rectangle())
+                            HStack(spacing: 3) {
+                                Text(palette.activeProfile.name).lineLimit(1).minimumScaleFactor(0.85)
+                                Image(systemName: "chevron.down").font(.system(size: 7, weight: .semibold))
+                                    .foregroundStyle(.tertiary)
+                            }
+                            .font(.system(size: 11, weight: .medium)).foregroundStyle(.secondary)
+                            .frame(maxWidth: .infinity, minHeight: 44)
+                            .contentShape(Rectangle())
                         }
-                            .accessibilityLabel("Quick Palette Options")
-                        if onExitFocus != nil {
-                            exitFocusButton
-                        } else {
+                        .accessibilityLabel("Palette profile and options: \(palette.activeProfile.name)")
+                        .help("Switch profiles or customize the palette")
+                        if onExitFocus != nil { exitFocusButton }
+                        else {
                             Button { if canInteract() { palette.isCollapsed = true } } label: {
-                                Image(systemName: "minus").frame(width: 44, height: 44)
+                                Image(systemName: "minus").font(.system(size: 15, weight: .medium))
+                                    .foregroundStyle(.secondary).frame(width: 44, height: 44)
                             }.accessibilityLabel("Collapse Quick Palette")
                         }
                     }
                 }
                 if !collapsed {
-                    LazyVGrid(columns: Array(repeating: GridItem(.fixed(44), spacing: 4), count: 3), spacing: 4) {
+                    LazyVGrid(columns: Array(repeating: GridItem(.fixed(QuickPaletteLayout.cellSize), spacing: QuickPaletteLayout.cellSpacing), count: QuickPaletteLayout.columns), spacing: QuickPaletteLayout.cellSpacing) {
                         ForEach(palette.favorites) { favorite in favoriteButton(favorite) }
                         if palette.favorites.count < QuickPalettePreferences.maximumFavorites {
                             Button { if canInteract() { edit(tools.capturePreset()) } } label: {
-                                Image(systemName: "plus").foregroundStyle(.secondary).frame(width: 44, height: 44)
+                                Image(systemName: "plus").font(.system(size: 17, weight: .regular))
+                                    .foregroundStyle(.tertiary)
+                                    .frame(width: QuickPaletteLayout.cellSize, height: QuickPaletteLayout.cellSize)
+                                    .background(AppTheme.accent.opacity(0.025), in: RoundedRectangle(cornerRadius: 13))
+                                    .overlay(RoundedRectangle(cornerRadius: 13).strokeBorder(.primary.opacity(0.1), style: StrokeStyle(lineWidth: 1, dash: [3, 3])))
                             }
                             .accessibilityLabel("Save Current Tool as Favorite")
+                            .accessibilityIdentifier("palette.append")
+                            .onDrop(of: [.paletteTool], delegate: dropDestination())
                             .help("Save current tool")
                         }
                     }
-                    .background(GeometryReader { grid in
-                        Color.clear.preference(key: PaletteGridFrame.self, value: grid.frame(in: .named("quickPaletteDrop")))
-                    })
+                    .frame(width: QuickPaletteLayout.gridWidth)
                     .animation(reduceMotion ? nil : .easeOut(duration: 0.14), value: palette.favorites.map(\.id))
-                    Menu { profileMenu } label: {
-                        HStack(spacing: 6) {
-                            Text(palette.activeProfile.name).lineLimit(1)
-                            Spacer(minLength: 0)
-                            Image(systemName: "chevron.down").font(.caption2)
-                        }
-                        .font(.caption.weight(.medium)).padding(.horizontal, 8)
-                        .frame(maxWidth: .infinity, minHeight: 44)
-                        .background(AppTheme.controlSurface, in: RoundedRectangle(cornerRadius: 10))
-                    }
-                    .accessibilityLabel("Palette Profile: \(palette.activeProfile.name)")
                 }
             }
-            .padding(8)
+            .padding(collapsed ? 8 : 12)
             .frame(width: size.width, height: size.height)
-            .coordinateSpace(name: "quickPaletteDrop")
-            .buttonStyle(.plain)
-            .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 18))
-            .overlay(RoundedRectangle(cornerRadius: 18).strokeBorder(.primary.opacity(0.09)).allowsHitTesting(false))
-            .overlay {
-                RoundedRectangle(cornerRadius: 18).strokeBorder(AppTheme.accent, lineWidth: 2)
-                    .opacity(dropTargeted ? 1 : 0).allowsHitTesting(false)
-            }
+            .buttonStyle(EditorToolbarButtonStyle())
+            .modifier(EditorGlassSurface(shape: RoundedRectangle(cornerRadius: collapsed ? 30 : 24)))
             .overlay(alignment: .bottom) {
                 if let dropNotice {
                     Text(dropNotice).font(.caption).multilineTextAlignment(.center)
@@ -116,24 +113,16 @@ struct QuickPalette: View {
                         .allowsHitTesting(false)
                 }
             }
-            .shadow(color: .black.opacity(0.12), radius: 10, y: 3)
-            .onPreferenceChange(PaletteGridFrame.self) { gridFrame = $0 }
-            .onDrop(of: [.paletteTool], delegate: PaletteToolDrop(palette: palette, profileID: palette.activeProfile.id,
-                grid: collapsed ? .zero : gridFrame, canInteract: canInteract,
-                hovering: { targeted, favoriteID in
-                    if targeted, dropNotice != nil { dropNotice = nil }
-                    if dropTargeted != targeted { dropTargeted = targeted }
-                    if targetFavoriteID != favoriteID { targetFavoriteID = favoriteID }
-                }, completed: { _, message in
-                    dropNotice = message
-                    if let message { UIAccessibility.post(notification: .announcement, argument: message) }
-                }))
+            .shadow(color: .black.opacity(0.08), radius: 16, y: 6)
             .offset(x: origin.x, y: origin.y)
             .opacity(fits ? 1 : 0)
             .allowsHitTesting(fits)
             .accessibilityHidden(!fits)
             .animation(reduceMotion ? nil : .easeOut(duration: 0.14), value: collapsed)
             .onChange(of: geometry.size) { _, _ in translation = .zero }
+            .onChange(of: palette.activeProfile.id) { _, _ in
+                targetFavoriteID = nil; dropNotice = nil
+            }
             .task(id: dropNotice) {
                 guard dropNotice != nil else { return }
                 do { try await Task.sleep(for: .seconds(3)) } catch { return }
@@ -158,30 +147,13 @@ struct QuickPalette: View {
         return Button {
             if canInteract() { tools.apply(favorite) }
         } label: {
-            VStack(spacing: 2) {
-                Image(systemName: favorite.tool.symbol).font(.system(size: 19))
-                    .foregroundStyle(.primary)
-                    .overlay(alignment: .topTrailing) {
-                        if favorite.tool.usesInkStyle {
-                            Circle().fill(favorite.ink.color).frame(width: 10, height: 10)
-                                .overlay(Circle().strokeBorder(.primary.opacity(0.3)))
-                                .offset(x: 7, y: -2)
-                        }
-                    }
-                if favorite.tool.usesInkStyle || favorite.tool == .eraser {
-                    Text(favorite.tool == .eraser ? (favorite.eraserMode == .strokes ? "Stroke" : favorite.eraserWidth.formatted(.number.precision(.fractionLength(0)))) : favorite.ink.width.formatted(.number.precision(.fractionLength(0...1))))
-                        .font(.system(size: 9, weight: .medium, design: .rounded)).foregroundStyle(.secondary)
-                }
-            }
-            .frame(width: 44, height: 44)
-            .background(selected ? AppTheme.accent.opacity(0.12) : .clear, in: RoundedRectangle(cornerRadius: 10))
-            .overlay(RoundedRectangle(cornerRadius: 10).strokeBorder(selected ? AppTheme.accent.opacity(0.45) : .clear))
-            .contentShape(Rectangle())
+            PaletteFavoriteIcon(favorite: favorite, selected: selected, dropTargeted: targetFavoriteID == favorite.id)
         }
         .accessibilityLabel(favorite.name)
+        .accessibilityIdentifier("palette.favorite.\(favorite.id.uuidString)")
         .accessibilityValue("\(favorite.tool.title), \(favorite.detail)")
         .accessibilityAddTraits(selected ? .isSelected : [])
-        .help(favorite.name)
+        .help("\(favorite.name). Drop a toolbar tool here to replace it.")
         .contextMenu {
             Button("Edit Favorite", systemImage: "slider.horizontal.3") { edit(favorite) }
             Button("Replace with Current Tool", systemImage: "arrow.triangle.2.circlepath") {
@@ -191,14 +163,25 @@ struct QuickPalette: View {
                 .disabled(palette.favorites.count <= 1)
         }
         .modifier(PaletteToolDragSource(snapshot: { favorite }, palette: palette, fromFavorite: true, canInteract: canInteract))
-        .overlay {
-            RoundedRectangle(cornerRadius: 10).strokeBorder(AppTheme.accent, lineWidth: 2)
-                .opacity(dropTargeted && targetFavoriteID == favorite.id ? 1 : 0).allowsHitTesting(false)
-        }
+        .onDrop(of: [.paletteTool], delegate: dropDestination(favoriteID: favorite.id))
+    }
+
+    private func dropDestination(favoriteID: UUID? = nil) -> PaletteToolDrop {
+        PaletteToolDrop(palette: palette, profileID: palette.activeProfile.id, favoriteID: favoriteID,
+            canInteract: canInteract, hovering: { id, entered in
+                if entered {
+                    dropNotice = nil
+                    if let id { targetFavoriteID = id }
+                } else if targetFavoriteID == id { targetFavoriteID = nil }
+            }, completed: { _, message in
+                targetFavoriteID = nil; dropNotice = message
+                if let message { UIAccessibility.post(notification: .announcement, argument: message) }
+            })
     }
 
     @ViewBuilder private var paletteMenu: some View {
-        Menu("Profiles", systemImage: "rectangle.stack") { profileMenu }
+        Section("Profiles") { profileMenu }
+        Divider()
         Button("Customize Favorites", systemImage: "slider.horizontal.3") { showingManager = true }
         Button("Save Current Tool", systemImage: "plus") { edit(tools.capturePreset()) }
             .disabled(palette.favorites.count >= QuickPalettePreferences.maximumFavorites)

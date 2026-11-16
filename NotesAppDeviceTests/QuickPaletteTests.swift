@@ -149,7 +149,7 @@ private final class PaletteWriteCountingDefaults: UserDefaults, @unchecked Senda
         let view = QuickPalette(palette: palette, tools: tools, canInteract: { true })
             .frame(width: 360, height: 300).background(Color(white: 0.94)).environment(\.colorScheme, .light)
         // ImageRenderer cannot render UIViewRepresentable or native Menu controls.
-        // Host in a real test window so the snapshot also includes the finger-only grip.
+        // Host in a real test window so the snapshot also includes the native drag grip.
         let scene = try XCTUnwrap(UIApplication.shared.connectedScenes.compactMap { $0 as? UIWindowScene }.first)
         let window = UIWindow(windowScene: scene)
         window.frame = CGRect(x: 0, y: 0, width: 360, height: 300)
@@ -164,5 +164,17 @@ private final class PaletteWriteCountingDefaults: UserDefaults, @unchecked Senda
         }
         let attachment = XCTAttachment(image: image)
         attachment.name = "Quick-Palette"; attachment.lifetime = .keepAlways; add(attachment)
+        palette.isCollapsed = true
+        host.view.layoutIfNeeded(); try await Task.sleep(for: .milliseconds(150)); host.view.layoutIfNeeded()
+        let compactImage = renderer.image { _ in window.drawHierarchy(in: host.view.bounds, afterScreenUpdates: true) }
+        let compact = XCTAttachment(image: compactImage); compact.name = "Quick-Palette-Compact"; compact.lifetime = .keepAlways; add(compact)
+        palette.isCollapsed = false
+        XCTAssertTrue(palette.save(ToolPreset(name: "Laser", tool: .laser, ink: InkStyle(red: 1, green: 0.2, blue: 0.2))))
+        host.overrideUserInterfaceStyle = .dark
+        host.rootView = QuickPalette(palette: palette, tools: tools, canInteract: { true })
+            .frame(width: 360, height: 300).background(Color(white: 0.12)).environment(\.colorScheme, .dark)
+        host.view.layoutIfNeeded(); try await Task.sleep(for: .milliseconds(150)); host.view.layoutIfNeeded()
+        let darkImage = renderer.image { _ in window.drawHierarchy(in: host.view.bounds, afterScreenUpdates: true) }
+        let dark = XCTAttachment(image: darkImage); dark.name = "Quick-Palette-Dark-Six"; dark.lifetime = .keepAlways; add(dark)
     }
 }

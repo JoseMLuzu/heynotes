@@ -2077,6 +2077,13 @@
 			<key>productType</key>
 			<string>com.apple.product-type.bundle.unit-test</string>
 		</dict>
+		<key>75EF217868BADA8A20901F1A</key>
+		<dict>
+			<key>fileRef</key>
+			<string>DA430EB6BF29AE365FF6626C</string>
+			<key>isa</key>
+			<string>PBXBuildFile</string>
+		</dict>
 		<key>7602E9036F12415B3FD892A8</key>
 		<dict>
 			<key>fileRef</key>
@@ -3357,6 +3364,7 @@
 				<string>C9FA8528ABB68B87BD4145B5</string>
 				<string>37C87D915B1456E935098777</string>
 				<string>75EF217868BADA8A20901F1A</string>
+				<string>833F1BF52B0E2B007E9E9CE2</string>
 			</array>
 			<key>isa</key>
 			<string>PBXSourcesBuildPhase</string>
@@ -3892,6 +3900,17 @@
 			<key>isa</key>
 			<string>PBXBuildFile</string>
 		</dict>
+		<key>DA430EB6BF29AE365FF6626C</key>
+		<dict>
+			<key>isa</key>
+			<string>PBXFileReference</string>
+			<key>lastKnownFileType</key>
+			<string>sourcecode.swift</string>
+			<key>path</key>
+			<string>NotesApp/Features/Editor/Components/LaserPointerVisual.swift</string>
+			<key>sourceTree</key>
+			<string>SOURCE_ROOT</string>
+		</dict>
 		<key>DADDAAA7D709082C4039E54E</key>
 		<dict>
 			<key>isa</key>
@@ -4271,6 +4290,7 @@
 				<string>FB3C8DD2BCF0CC2123EE7E97</string>
 				<string>A2BFA95A4E764994EF46B70B</string>
 				<string>DA430EB6BF29AE365FF6626C</string>
+				<string>EE932EB6C34E428CBCE8C1C2</string>
 			</array>
 			<key>isa</key>
 			<string>PBXGroup</string>
@@ -4802,23 +4822,23 @@
 			<key>isa</key>
 			<string>PBXBuildFile</string>
 		</dict>
-		<key>DA430EB6BF29AE365FF6626C</key>
+		<key>EE932EB6C34E428CBCE8C1C2</key>
 		<dict>
 			<key>isa</key>
 			<string>PBXFileReference</string>
 			<key>lastKnownFileType</key>
 			<string>sourcecode.swift</string>
 			<key>path</key>
-			<string>NotesApp/Features/Editor/Components/LaserPointerVisual.swift</string>
+			<string>NotesApp/Features/Editor/Components/PaletteFavoriteIcon.swift</string>
 			<key>sourceTree</key>
 			<string>SOURCE_ROOT</string>
 		</dict>
-		<key>75EF217868BADA8A20901F1A</key>
+		<key>833F1BF52B0E2B007E9E9CE2</key>
 		<dict>
+			<key>fileRef</key>
+			<string>EE932EB6C34E428CBCE8C1C2</string>
 			<key>isa</key>
 			<string>PBXBuildFile</string>
-			<key>fileRef</key>
-			<string>DA430EB6BF29AE365FF6626C</string>
 		</dict>
 	</dict>
 	<key>rootObject</key>
