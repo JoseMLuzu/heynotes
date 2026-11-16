@@ -106,6 +106,10 @@ struct DocumentTabBar<TrailingActions: View>: View {
             }
             trailingActions
                 .frame(height: rowHeight)
+            if let session = workspace.activeSession {
+                DocumentSaveIndicator(session: session, height: rowHeight)
+                    .id(session.notebook.id)
+            }
         }
         .padding(.horizontal, 4)
         .frame(height: rowHeight)
@@ -115,7 +119,6 @@ struct DocumentTabBar<TrailingActions: View>: View {
 
     private func tab(_ notebook: Notebook, width: CGFloat) -> some View {
         let selected = workspace.activeID == notebook.id
-        let visibleSession = workspace.visibleSessions.first { $0.notebook.id == notebook.id }
         return HStack(spacing: 0) {
             Button { Task { await workspace.open(notebook) } } label: {
                 HStack(spacing: 7) {
@@ -123,17 +126,12 @@ struct DocumentTabBar<TrailingActions: View>: View {
                     Text(notebook.title).fontWeight(selected ? .semibold : .regular)
                         .foregroundStyle(selected ? .primary : .secondary)
                         .lineLimit(1).truncationMode(.tail)
-                    if let session = visibleSession {
-                        AuraDot(color: session.hasPendingSave || !session.ready ? .orange : .blue, diameter: 7)
-                            .help(session.status)
-                    }
                 }
                 .padding(.leading, 10)
                 .frame(width: max(0, width - 44), height: rowHeight, alignment: .leading)
                 .contentShape(Rectangle())
             }
             .accessibilityLabel("Open \(notebook.title)")
-            .accessibilityValue(selected ? workspace.activeSession?.status ?? "" : "")
             .accessibilityAddTraits(selected ? .isSelected : [])
             Button { Task { await workspace.close(notebook.id) } } label: {
                 Image(systemName: "xmark").font(.system(size: 9, weight: .medium)).foregroundStyle(.tertiary)

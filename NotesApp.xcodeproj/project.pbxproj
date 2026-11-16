@@ -3498,6 +3498,7 @@
 				<string>37C87D915B1456E935098777</string>
 				<string>75EF217868BADA8A20901F1A</string>
 				<string>833F1BF52B0E2B007E9E9CE2</string>
+				<string>33B44B6267F511BF12D850D9</string>
 			</array>
 			<key>isa</key>
 			<string>PBXSourcesBuildPhase</string>
@@ -4493,6 +4494,7 @@
 				<string>DA430EB6BF29AE365FF6626C</string>
 				<string>EE932EB6C34E428CBCE8C1C2</string>
 				<string>39D38B120CADE473DF558370</string>
+				<string>CA7DA68523F516413182F41C</string>
 			</array>
 			<key>isa</key>
 			<string>PBXGroup</string>
@@ -5035,6 +5037,24 @@
 			<string>CCCFA8569F9D1BE0BE946F21</string>
 			<key>isa</key>
 			<string>PBXBuildFile</string>
+		</dict>
+		<key>CA7DA68523F516413182F41C</key>
+		<dict>
+			<key>isa</key>
+			<string>PBXFileReference</string>
+			<key>lastKnownFileType</key>
+			<string>sourcecode.swift</string>
+			<key>path</key>
+			<string>NotesApp/Features/Workspace/Views/DocumentSaveIndicator.swift</string>
+			<key>sourceTree</key>
+			<string>SOURCE_ROOT</string>
+		</dict>
+		<key>33B44B6267F511BF12D850D9</key>
+		<dict>
+			<key>isa</key>
+			<string>PBXBuildFile</string>
+			<key>fileRef</key>
+			<string>CA7DA68523F516413182F41C</string>
 		</dict>
 	</dict>
 	<key>rootObject</key>
