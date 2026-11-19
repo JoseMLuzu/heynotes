@@ -10,6 +10,7 @@ struct ToolPreset: Identifiable, Codable, Equatable, Sendable {
     var eraserWidth: Double = 20
     var stampSymbol: StampSymbol? = nil
     var stickyStyle: StickyNoteStyle? = nil
+    var lassoScope: LassoScope? = nil
 
     static func widthRange(for tool: EditorTool) -> ClosedRange<Double> {
         let range = (tool.inkType ?? .pen).validWidthRange
@@ -36,7 +37,8 @@ struct ToolPreset: Identifiable, Codable, Equatable, Sendable {
         value.isFinite ? min(range.upperBound, max(range.lowerBound, value)) : range.lowerBound
     }
     var detail: String {
-        if tool == .lasso || tool == .objects { return "Selection" }
+        if tool == .lasso { return (lassoScope ?? .allContent).title }
+        if tool == .objects { return "Selection" }
         if tool == .tape { return "Study tape" }
         if tool == .stamp { return stampSymbol?.title ?? StampSymbol.check.title }
         if tool == .sticky { return "\((stickyStyle ?? .yellow).rawValue.capitalized) note" }
@@ -59,7 +61,8 @@ extension ToolPreferences {
     func capturePreset(for tool: EditorTool? = nil, name: String? = nil) -> ToolPreset {
         let tool = tool ?? selected
         return ToolPreset(name: name ?? tool.title, tool: tool, ink: inkStyle(for: tool), eraserMode: eraserMode, eraserWidth: eraserWidth,
-                          stampSymbol: tool == .stamp ? stampSymbol : nil, stickyStyle: tool == .sticky ? stickyStyle : nil).sanitized
+                          stampSymbol: tool == .stamp ? stampSymbol : nil, stickyStyle: tool == .sticky ? stickyStyle : nil,
+                          lassoScope: tool == .lasso ? lassoScope : nil).sanitized
     }
     func apply(_ preset: ToolPreset) {
         let preset = preset.sanitized
@@ -68,6 +71,7 @@ extension ToolPreferences {
         else if selected == .eraser { eraserMode = preset.eraserMode; eraserWidth = preset.eraserWidth }
         if selected == .stamp { stampSymbol = preset.stampSymbol ?? .check }
         if selected == .sticky { stickyStyle = preset.stickyStyle ?? .yellow }
+        if selected == .lasso { lassoScope = preset.lassoScope ?? .allContent }
     }
     func matches(_ preset: ToolPreset) -> Bool {
         let preset = preset.sanitized
@@ -75,6 +79,7 @@ extension ToolPreferences {
         if selected.usesInkStyle { return ink == preset.ink && (selected != .stamp || stampSymbol == (preset.stampSymbol ?? .check)) }
         if selected == .eraser { return eraserMode == preset.eraserMode && (eraserMode == .strokes || eraserWidth == preset.eraserWidth) }
         if selected == .sticky { return stickyStyle == (preset.stickyStyle ?? .yellow) }
+        if selected == .lasso { return lassoScope == (preset.lassoScope ?? .allContent) }
         return true
     }
 }

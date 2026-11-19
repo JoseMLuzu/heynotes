@@ -48,6 +48,10 @@ enum EraserMode: String, Codable, CaseIterable, Sendable {
     case strokes, precise, highlighter
     var title: String { switch self { case .strokes: "Whole Strokes"; case .precise: "Precise"; case .highlighter: "Highlighter Only" } }
 }
+enum LassoScope: String, Codable, CaseIterable, Sendable {
+    case allContent, handwriting
+    var title: String { self == .allContent ? "All Content" : "Handwriting Only" }
+}
 
 struct InkStyle: Codable, Equatable, Sendable {
     var red: Double = 0.08
@@ -77,6 +81,7 @@ final class ToolPreferences {
         var stampSymbol: StampSymbol? = nil
         var stickyStyle: StickyNoteStyle? = nil
         var laser: InkStyle? = nil
+        var lassoScope: LassoScope? = nil
     }
     @ObservationIgnored private var saved: Saved
     @ObservationIgnored private let defaults: UserDefaults
@@ -108,6 +113,10 @@ final class ToolPreferences {
     var smartShapes: Bool {
         get { access(keyPath: \.smartShapes); return saved.smartShapes ?? false }
         set { guard smartShapes != newValue else { return }; withMutation(keyPath: \.smartShapes) { saved.smartShapes = newValue; persist() } }
+    }
+    var lassoScope: LassoScope {
+        get { access(keyPath: \.lassoScope); return saved.lassoScope ?? .allContent }
+        set { guard lassoScope != newValue else { return }; withMutation(keyPath: \.lassoScope) { saved.lassoScope = newValue; persist() } }
     }
     var stampSymbol: StampSymbol {
         get { access(keyPath: \.stampSymbol); return saved.stampSymbol ?? .check }
