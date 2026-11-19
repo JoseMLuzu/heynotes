@@ -19,6 +19,9 @@ enum PageImageService {
     }
     static func load(_ elements: [PageElement], storage: DrawingStorage) async throws -> [String: UIImage] {
         try Task.checkCancellation()
+        if elements.contains(where: { $0.fontFilePath != nil }) {
+            try await HandwritingFontStore.shared.prepare(elements, storage: storage)
+        }
         let paths = Set(elements.compactMap(\.imagePath))
         guard !paths.isEmpty else { return [:] }
         let worker = Task.detached(priority: .userInitiated) {

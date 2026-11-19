@@ -142,7 +142,7 @@ actor PagePreparationService {
         if let path = request.source.pdfPath { pdf = try FileFingerprint(url: await storage.fileURL(for: path)) }
         else { pdf = nil }
         var images: [FileFingerprint] = []
-        for path in Set(elements.compactMap(\.imagePath)).sorted() {
+        for path in Set(elements.flatMap(\.assetPaths)).sorted() {
             images.append(try FileFingerprint(url: await storage.fileURL(for: path)))
         }
         return Sources(drawing: drawing, pdf: pdf, images: images)

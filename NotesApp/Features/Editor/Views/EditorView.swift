@@ -127,7 +127,7 @@ struct EditorView: View {
                 let success = draft.isNew ? session.insertElement(value) : session.updateElement(value)
                 if success { preferences.selected = .objects }
                 return success
-            }, remove: nil, restoreInk: { session.restoreOriginalInk(draft.element.id) })
+            }, remove: nil, restoreInk: { session.restoreOriginalInk(draft.element.id) }, storage: session.storage)
         }
         .sheet(isPresented: $showingContent) { InsertedContentView(session: session) }
         .sheet(isPresented: $showingHandwritingStyle) { HandwritingStyleView(session: session) }

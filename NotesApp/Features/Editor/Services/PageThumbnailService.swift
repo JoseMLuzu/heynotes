@@ -42,7 +42,7 @@ actor PageThumbnailService {
         if let path = request.pdfPath { pdf = try FileFingerprint(url: await storage.fileURL(for: path)) }
         else { pdf = nil }
         var sources: [FileFingerprint] = []
-        for path in Set(request.elements.compactMap(\.imagePath)).sorted() {
+        for path in Set(request.elements.flatMap(\.assetPaths)).sorted() {
             sources.append(try FileFingerprint(url: await storage.fileURL(for: path)))
         }
         let key = Key(ink: ink, pdf: pdf, pdfIndex: request.pdfIndex, width: request.size.width,

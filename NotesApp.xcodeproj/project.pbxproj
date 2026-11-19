@@ -113,6 +113,17 @@
 			<key>sourceTree</key>
 			<string>SOURCE_ROOT</string>
 		</dict>
+		<key>03E841A43E98568C84B46485</key>
+		<dict>
+			<key>isa</key>
+			<string>PBXFileReference</string>
+			<key>lastKnownFileType</key>
+			<string>sourcecode.swift</string>
+			<key>path</key>
+			<string>NotesAppDeviceTests/HandwritingTestFont.swift</string>
+			<key>sourceTree</key>
+			<string>SOURCE_ROOT</string>
+		</dict>
 		<key>040BE81769CBEC78B04C214A</key>
 		<dict>
 			<key>isa</key>
@@ -123,6 +134,13 @@
 			<string>NotesApp/Features/Study/Views/StudyTrashView.swift</string>
 			<key>sourceTree</key>
 			<string>SOURCE_ROOT</string>
+		</dict>
+		<key>0412B142A78BE331531D2432</key>
+		<dict>
+			<key>fileRef</key>
+			<string>03E841A43E98568C84B46485</string>
+			<key>isa</key>
+			<string>PBXBuildFile</string>
 		</dict>
 		<key>04CA5D83E9856E880D72AF2C</key>
 		<dict>
@@ -1399,6 +1417,8 @@
 				<string>BBB24E46741C8813B0D31C01</string>
 				<string>6CA382108169E9BC6BF78849</string>
 				<string>87F0BF3F62BA17AA928A9868</string>
+				<string>F5D0B1EDD4DAF837565B941F</string>
+				<string>0412B142A78BE331531D2432</string>
 			</array>
 			<key>isa</key>
 			<string>PBXSourcesBuildPhase</string>
@@ -2945,6 +2965,17 @@
 			<key>isa</key>
 			<string>PBXBuildFile</string>
 		</dict>
+		<key>9E473B41ADF5ACFFE2F731D6</key>
+		<dict>
+			<key>isa</key>
+			<string>PBXFileReference</string>
+			<key>lastKnownFileType</key>
+			<string>sourcecode.swift</string>
+			<key>path</key>
+			<string>NotesAppDeviceTests/HandwritingFontImportTests.swift</string>
+			<key>sourceTree</key>
+			<string>SOURCE_ROOT</string>
+		</dict>
 		<key>9ED414C68DE667A962157FF2</key>
 		<dict>
 			<key>isa</key>
@@ -3332,6 +3363,17 @@
 			<key>sourceTree</key>
 			<string>SOURCE_ROOT</string>
 		</dict>
+		<key>B4AA27D29BD1CF319C642E5D</key>
+		<dict>
+			<key>isa</key>
+			<string>PBXFileReference</string>
+			<key>lastKnownFileType</key>
+			<string>sourcecode.swift</string>
+			<key>path</key>
+			<string>NotesApp/Features/Editor/Services/HandwritingFontStore.swift</string>
+			<key>sourceTree</key>
+			<string>SOURCE_ROOT</string>
+		</dict>
 		<key>B4D72D8D9DA041C6581251C5</key>
 		<dict>
 			<key>isa</key>
@@ -3656,6 +3698,7 @@
 				<string>E98154837B45853D445B74CD</string>
 				<string>61B14A9A4541458A59A86FCA</string>
 				<string>A6E4B50BA5F8801F411C6DB5</string>
+				<string>DEE067DCE2D2C9FF7F240C29</string>
 			</array>
 			<key>isa</key>
 			<string>PBXSourcesBuildPhase</string>
@@ -4426,6 +4469,13 @@
 			<key>sourceTree</key>
 			<string>SOURCE_ROOT</string>
 		</dict>
+		<key>DEE067DCE2D2C9FF7F240C29</key>
+		<dict>
+			<key>fileRef</key>
+			<string>B4AA27D29BD1CF319C642E5D</string>
+			<key>isa</key>
+			<string>PBXBuildFile</string>
+		</dict>
 		<key>DF7E818AC756E53258B87612</key>
 		<dict>
 			<key>fileRef</key>
@@ -4757,6 +4807,9 @@
 				<string>F6B04E98D1EBC1CAEC02F214</string>
 				<string>45B066000464A4109BB201E0</string>
 				<string>D8868138EB57FA811F127333</string>
+				<string>B4AA27D29BD1CF319C642E5D</string>
+				<string>9E473B41ADF5ACFFE2F731D6</string>
+				<string>03E841A43E98568C84B46485</string>
 			</array>
 			<key>isa</key>
 			<string>PBXGroup</string>
@@ -5113,6 +5166,13 @@
 		<dict>
 			<key>fileRef</key>
 			<string>83369C789588A9D89D512B16</string>
+			<key>isa</key>
+			<string>PBXBuildFile</string>
+		</dict>
+		<key>F5D0B1EDD4DAF837565B941F</key>
+		<dict>
+			<key>fileRef</key>
+			<string>9E473B41ADF5ACFFE2F731D6</string>
 			<key>isa</key>
 			<string>PBXBuildFile</string>
 		</dict>

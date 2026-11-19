@@ -28,6 +28,9 @@ actor PDFExportService: PDFExporting {
         else { throw DocumentError.invalidPage }
         var drawingURLs: [URL?] = [], pdfURLs: [URL?] = []
         for page in pages {
+            if page.elements.contains(where: { $0.fontFilePath != nil }) {
+                try await HandwritingFontStore.shared.prepare(page.elements, storage: storage)
+            }
             if let path = page.drawingPath { drawingURLs.append(try await storage.fileURL(for: path)) }
             else { drawingURLs.append(nil) }
             if let path = page.pdfPath { pdfURLs.append(try await storage.fileURL(for: path)) }

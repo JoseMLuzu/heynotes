@@ -16,6 +16,9 @@ struct PageElementEditor: View {
     @Environment(\.dismiss) private var dismiss
     @State private var confirmingDelete = false
     @State private var failed = false
+    @State private var importedFonts: [HandwritingFontAsset] = []
+    @State private var fontError: String?
+    var storage: DrawingStorage = .shared
 
     var body: some View {
         NavigationStack {
@@ -23,9 +26,12 @@ struct PageElementEditor: View {
                 if draft.kind == .text {
                     Section("Text") {
                         TextEditor(text: $draft.text).font(Font(HandwritingFont.resolve(draft.fontName, size: draft.fontSize))).frame(minHeight: 160)
-                        Picker("Font", selection: Binding(get: { draft.fontName ?? "" }, set: { draft.fontName = $0.isEmpty ? nil : $0 })) {
+                        Picker("Font", selection: Binding(get: { draft.fontName ?? "" }, set: { name in
+                            draft.fontName = name.isEmpty ? nil : name
+                            draft.fontFilePath = importedFonts.first { $0.name == name }?.path
+                        })) {
                             Text("System").tag("")
-                            ForEach(HandwritingFont.choices) { choice in
+                            ForEach(HandwritingFont.choices(including: importedFonts, current: draft.fontName)) { choice in
                                 Text(choice.title).font(.custom(choice.name, size: 20)).tag(choice.name)
                             }
                         }
@@ -86,6 +92,14 @@ struct PageElementEditor: View {
         }
         .appSheetPresentation()
         .tint(AppTheme.accent)
+        .task {
+            guard draft.kind == .text else { return }
+            do { importedFonts = try await HandwritingFontStore.shared.catalog(storage: storage, including: [draft]) }
+            catch { fontError = error.localizedDescription }
+        }
+        .alert("Could Not Load Font", isPresented: Binding(get: { fontError != nil }, set: { if !$0 { fontError = nil } })) {
+            Button("OK") { fontError = nil }
+        } message: { Text(fontError ?? "Your saved text and font references are preserved.") }
     }
     private func slider(_ title: String, value: Binding<Double>, range: ClosedRange<Double>) -> some View {
         VStack(alignment: .leading) { Text(title).font(.subheadline); Slider(value: value, in: range).accessibilityLabel(title) }
@@ -118,12 +132,12 @@ struct InsertedContentView: View {
             .navigationTitle("Inserted Content").navigationBarTitleDisplayMode(.inline)
             .toolbar { ToolbarItem(placement: .confirmationAction) { Button("Done") { dismiss() } } }
             .sheet(item: $editing) { item in
-                PageElementEditor(draft: item, pageSize: session.page?.logicalSize ?? PageGeometry.size) { updated in
+                PageElementEditor(draft: item, pageSize: session.page?.logicalSize ?? PageGeometry.size, save: { updated in
                     var items = session.elements
                     guard let index = items.firstIndex(where: { $0.id == updated.id }) else { return false }
                     items[index] = updated; return session.replaceElements(items)
-                } remove: { _ = session.replaceElements(session.elements.filter { $0.id != item.id }, action: "Delete Object") }
-                restoreInk: { session.restoreOriginalInk(item.id) }
+                }, remove: { _ = session.replaceElements(session.elements.filter { $0.id != item.id }, action: "Delete Object") },
+                restoreInk: { session.restoreOriginalInk(item.id) }, storage: session.storage)
             }
         }
         .appSheetPresentation()
