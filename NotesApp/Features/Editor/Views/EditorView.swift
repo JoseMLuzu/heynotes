@@ -146,7 +146,7 @@ struct EditorView: View {
         }
         .onChange(of: preferences.selected) { _, value in
             session.handwriting.setTool(value, session: session)
-            if session.writingRegion != nil, value.usesAuxiliaryInput || value.editsObjects || value == .eraser && preferences.eraserMode == .highlighter { Task { _ = await session.closeZoomWriting() } }
+            if session.writingRegion != nil, value.usesAuxiliaryInput || value.editsObjects || value == .lasso || value == .eraser && preferences.eraserMode == .highlighter { Task { _ = await session.closeZoomWriting() } }
         }
         .onChange(of: preferences.eraserMode) { _, mode in
             if session.writingRegion != nil, preferences.selected == .eraser, mode == .highlighter { Task { _ = await session.closeZoomWriting() } }

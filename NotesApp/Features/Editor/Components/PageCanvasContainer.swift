@@ -85,7 +85,7 @@ final class PageCanvasContainer: UIView {
                 guard let self, let item = self.pendingPreparation.values.first else { return }
                 let state = self.current?.ink.drawingGestureRecognizer.state
                 let finger = self.current?.pagePan.state
-                if state == .began || state == .changed || finger == .began || finger == .changed ||
+                if state == .began || state == .changed || finger == .began || finger == .changed || self.current?.lasso.isTracking == true ||
                     self.animator != nil || self.interactiveNeighbor != nil || self.pendingPageID != nil ||
                     self.current?.isPagePullAnimating == true || self.current?.isDecelerating == true { continue }
                 self.pendingPreparation.removeValue(forKey: item.id)
@@ -363,6 +363,7 @@ final class PageCanvasContainer: UIView {
     /// Keep a clean return page's real canvas. Fresh source checks still gate every activation.
     private func retire(_ host: CanvasHost, identity: UUID?) {
         host.studentTools.reset()
+        host.lasso.reset()
         guard let id = host.ink.pageID, let identity, allowedNeighbors.values.contains(id), neighbors[id] == nil else {
             host.removeFromSuperview(); return
         }

@@ -11,7 +11,7 @@ struct EditorCanvasContent: View {
     var body: some View {
         PaperCanvas(session: session, tool: tools.tool, fingerDrawing: fingerDrawing,
                     editorTool: tools.selected, inkStyle: tools.ink, rulerEnabled: tools.rulerEnabled,
-                    eraserMode: tools.eraserMode, eraserWidth: tools.eraserWidth,
+                    eraserMode: tools.eraserMode, eraserWidth: tools.eraserWidth, lassoScope: tools.lassoScope,
                     stampSymbol: tools.stampSymbol, stickyStyle: tools.stickyStyle, smartShapes: tools.smartShapes,
                     onPencilDoubleTap: onPencilDoubleTap, onInteraction: onInteraction)
     }

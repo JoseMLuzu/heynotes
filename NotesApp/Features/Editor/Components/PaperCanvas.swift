@@ -30,14 +30,14 @@ private final class PagePanDelegate: NSObject, UIGestureRecognizerDelegate {
               host.ink.drawingPolicy == .pencilOnly,
               abs(host.zoomScale - host.minimumZoomScale) < 0.01,
               !host.isZooming, !host.isZoomBouncing,
-              !host.studentTools.isTracking,
+              !host.studentTools.isTracking, !host.lasso.isTracking,
               host.ink.drawingGestureRecognizer.state != .began,
               host.ink.drawingGestureRecognizer.state != .changed,
               pan.numberOfTouches == 1 else { return false }
         let point = pan.location(in: host.objectControls)
         let translation = pan.translation(in: host.objectControls)
         let start = CGPoint(x: point.x - translation.x, y: point.y - translation.y)
-        guard !host.objectControls.fingerDragEditsObject(at: start) else { return false }
+        guard !host.objectControls.fingerDragEditsObject(at: start), !host.lasso.fingerDragEditsSelection(at: start) else { return false }
         let velocity = pan.velocity(in: host)
         return abs(velocity.x) > abs(velocity.y) * 1.25
     }
@@ -50,6 +50,7 @@ final class CanvasHost: UIScrollView, UIScrollViewDelegate {
     let objectContent: PageObjectsContentView
     let objectControls: PageObjectsInteractionView
     let studentTools: StudentToolOverlay
+    let lasso: PageLassoOverlay
     let writingGuide = CAShapeLayer()
     var objectsMode = false { didSet { updateInkInteraction() } }
     private let zoomContent: UIView
@@ -88,6 +89,7 @@ final class CanvasHost: UIScrollView, UIScrollViewDelegate {
         objectContent = PageObjectsContentView(frame: CGRect(origin: .zero, size: pageSize))
         objectControls = PageObjectsInteractionView(frame: CGRect(origin: .zero, size: pageSize))
         studentTools = StudentToolOverlay(frame: CGRect(origin: .zero, size: pageSize))
+        lasso = PageLassoOverlay(frame: CGRect(origin: .zero, size: pageSize))
         ink = InkCanvas(frame: CGRect(origin: .zero, size: pageSize))
         super.init(frame: .zero)
         delegate = self
@@ -102,12 +104,15 @@ final class CanvasHost: UIScrollView, UIScrollViewDelegate {
         addGestureRecognizer(pagePan)
         objectControls.yieldFingerGestures(to: pagePan)
         studentTools.yieldFingerGestures(to: pagePan)
+        lasso.yieldFingerGestures(to: pagePan)
         panGestureRecognizer.require(toFail: pagePan)
         maximumZoomScale = 4
         contentSize = pageSize
         addSubview(zoomContent); zoomContent.addSubview(pageSurface)
         pageSurface.addSubview(paper); paper.addSubview(objectContent); paper.addSubview(ink); paper.addSubview(objectControls)
         paper.addSubview(studentTools); studentTools.isHidden = true
+        paper.addSubview(lasso); lasso.canvas = ink; lasso.content = objectContent
+        lasso.overrideUserInterfaceStyle = .light
         writingGuide.fillColor = UIColor.systemBlue.withAlphaComponent(0.06).cgColor
         writingGuide.strokeColor = UIColor.systemBlue.cgColor; writingGuide.lineWidth = 2; writingGuide.lineDashPattern = [6, 4]
         paper.layer.addSublayer(writingGuide)
@@ -131,6 +136,7 @@ final class CanvasHost: UIScrollView, UIScrollViewDelegate {
         ink.isUserInteractionEnabled = editorAllowsInk && !transitionPausesInk && !objectsMode
         objectControls.isUserInteractionEnabled = editorAllowsInk && !transitionPausesInk
         studentTools.isUserInteractionEnabled = editorAllowsInk && !transitionPausesInk
+        lasso.isUserInteractionEnabled = editorAllowsInk && !transitionPausesInk
     }
     /// Animate inside the zoom root, leaving the scroll viewport/background stationary.
     func setPageOffset(_ points: CGFloat) {
@@ -149,9 +155,11 @@ final class CanvasHost: UIScrollView, UIScrollViewDelegate {
         if objectContent.contentScaleFactor != paperScale { objectContent.contentScaleFactor = paperScale }
         if objectControls.contentScaleFactor != paperScale { objectControls.contentScaleFactor = paperScale }
         if studentTools.contentScaleFactor != paperScale { studentTools.contentScaleFactor = paperScale }
+        if lasso.contentScaleFactor != paperScale { lasso.contentScaleFactor = paperScale }
         if wasAtFit, abs(zoomScale - minimumZoomScale) > 0.001 { zoomScale = minimumZoomScale }
         fitted = true
         objectControls.zoom = zoomScale
+        lasso.zoom = zoomScale
         let insets = UIEdgeInsets(top: max(12, (bounds.height - zoomContent.frame.height) / 2), left: max(12, (bounds.width - zoomContent.frame.width) / 2), bottom: 12, right: 12)
         if contentInset != insets { contentInset = insets }
     }
@@ -272,6 +280,7 @@ struct PaperCanvas: UIViewRepresentable {
     var rulerEnabled = false
     var eraserMode: EraserMode = .strokes
     var eraserWidth: Double = 20
+    var lassoScope: LassoScope = .allContent
     var stampSymbol: StampSymbol = .check
     var stickyStyle: StickyNoteStyle = .yellow
     var smartShapes = false
@@ -326,6 +335,10 @@ struct PaperCanvas: UIViewRepresentable {
             host.objectControls.onSelect = { [weak session] in session?.selectedElementID = $0 }
             host.objectControls.onReveal = { [weak session] in session?.toggleTape($0) }
             host.objectControls.onToggleSticky = { [weak session] in session?.toggleSticky($0) }
+            host.lasso.onActivity = { [weak session] active in if session?.page?.id == pageID { session?.auxiliaryInputActive = active } }
+            host.lasso.onCommit = { [weak session] selection, drawing, items, action in
+                session?.applyLasso(selection, drawing: drawing, elements: items, pageID: pageID, action: action) ?? false
+            }
             host.onCreationProgress = { [weak container] in container?.showCreationProgress($0) }
             host.onPagePull = { [weak container] in container?.updateInteractivePull(from: pageID, translation: $0) }
             host.onPagePullCancelled = { [weak container] in container?.cancelInteractivePull() }
@@ -370,23 +383,28 @@ struct PaperCanvas: UIViewRepresentable {
         host.hasPreviousPage = page.pageIndex > 0
         host.pagePan.isEnabled = isEnabled && !fingerDrawing && session.ready && !session.busy
         let auxiliary = editorTool.usesAuxiliaryInput || editorTool == .eraser && eraserMode == .highlighter
-        host.objectsMode = editorTool.editsObjects || auxiliary || session.writingRegion != nil
+        // Pure-ink pages retain PencilKit's native copy/paste/resize workflow.
+        let allContentLasso = editorTool == .lasso && lassoScope == .allContent && !session.elements.isEmpty && session.writingRegion == nil
+        host.objectsMode = editorTool.editsObjects || auxiliary || allContentLasso || session.writingRegion != nil
         host.editorAllowsInk = isEnabled && session.ready && !session.busy
         host.ink.drawingPolicy = fingerDrawing ? .anyInput : .pencilOnly
-        host.panGestureRecognizer.minimumNumberOfTouches = fingerDrawing || editorTool.editsObjects ? 2 : 1
+        host.panGestureRecognizer.minimumNumberOfTouches = fingerDrawing || editorTool.editsObjects || allContentLasso ? 2 : 1
         host.paper.template = page.paperTemplate
         host.paper.pdfContentSize = page.contentSize
         host.ink.isRulerActive = rulerEnabled && editorTool.inkType != nil
         host.objectContent.images = session.objectImages
         host.objectContent.elements = session.elements
         host.objectContent.isHidden = !session.elements.contains { $0.kind != .tape }
-        host.objectControls.isHidden = !editorTool.editsObjects && !session.elements.contains { $0.kind == .tape || $0.stickyStyle != nil }
+        host.objectControls.isHidden = allContentLasso || !editorTool.editsObjects && !session.elements.contains { $0.kind == .tape || $0.stickyStyle != nil }
         host.objectControls.elements = session.elements
         host.objectControls.revealed = session.revealedTapes
         host.objectControls.selectedID = session.selectedElementID
         host.objectControls.tool = editorTool
         host.objectControls.fingerDrawing = fingerDrawing
         host.objectControls.style = inkStyle
+        host.lasso.active = allContentLasso
+        host.lasso.fingerDrawing = fingerDrawing
+        host.lasso.update(elements: session.elements, images: session.objectImages)
         host.writingGuide.path = session.writingRegion.map { UIBezierPath(rect: $0).cgPath }
         host.studentTools.isHidden = !auxiliary
         host.studentTools.mode = auxiliary ? editorTool : nil

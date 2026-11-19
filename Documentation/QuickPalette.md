@@ -15,6 +15,8 @@ The editor offers a floating favorites palette over its writing viewport. Five r
 - **Profile name → Move to Corner** provides accessible alternatives to dragging. Hide the palette from this menu. The **paint palette button pinned at the right end of the tools** brings it back expanded. **Page Options (…) → Show Quick Palette** also restores it while preserving favorites and position. **Restore Quick Palette Position** resets the viewport position and reveals it. These actions stay near the top of the header menu, reachable even when the floating palette is hidden or outside a resized viewport.
 
 
+Lasso favorites also retain All Content or Handwriting Only scope; existing lasso favorites default to All Content. See [LassoSelection.md](LassoSelection.md) for mixed-content selection and the native ink fallback.
+
 Saved favorites do not change when the top toolbar's settings are adjusted. Applying a favorite updates the active tool preferences, so normal tool switching still remembers each tool's latest settings. Saving an edited favorite does not automatically apply it; tap the favorite to use it.
 
 Switching profiles changes the available favorites without automatically changing the active writing tool. The last selected profile persists across notebooks and launches. The viewport anchor, visibility and collapsed state are shared across profiles; the box can adjust its size/clamping when the favorite count changes. Editing drafts retain their source profile UUID: saving after a selection change updates the original profile, and saving to a deleted profile is rejected rather than writing to another profile.

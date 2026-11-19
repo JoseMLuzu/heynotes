@@ -3,7 +3,7 @@ import Foundation
 extension EditorTool {
     var guidance: String {
         switch self {
-        case .lasso: "Draw a loop around handwriting, then move the selection. Touch and hold selected ink for editing actions."
+        case .lasso: "Circle handwriting and inserted content, then drag the selection. Choose Handwriting Only in settings for native ink editing actions."
         case .objects: "Select an inserted object, drag it to move, or drag its corner to resize."
         case .laser: "Write or point with Apple Pencil. Each trail stays for 3 seconds after lifting, then fades. It is not saved or exported."
         case .stamp: "Tap the page to place the selected stamp. Use Select Objects to move or resize it."

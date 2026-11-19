@@ -1392,6 +1392,13 @@
 			<key>isa</key>
 			<string>PBXBuildFile</string>
 		</dict>
+		<key>4650F16FC587F6D247C82E32</key>
+		<dict>
+			<key>fileRef</key>
+			<string>814037E54DE92FBFB479668D</string>
+			<key>isa</key>
+			<string>PBXBuildFile</string>
+		</dict>
 		<key>467007097149A1BCF7C63B65</key>
 		<dict>
 			<key>fileRef</key>
@@ -1450,6 +1457,7 @@
 				<string>0412B142A78BE331531D2432</string>
 				<string>7A0105121F022634A0D4EA24</string>
 				<string>37CB2AA34B4EB7324AA238BE</string>
+				<string>6D9B74090DB82DFA74D68051</string>
 			</array>
 			<key>isa</key>
 			<string>PBXSourcesBuildPhase</string>
@@ -2108,6 +2116,13 @@
 			<key>sourceTree</key>
 			<string>SOURCE_ROOT</string>
 		</dict>
+		<key>6D9B74090DB82DFA74D68051</key>
+		<dict>
+			<key>fileRef</key>
+			<string>BE72ED90EAE7A7F8E52029D3</string>
+			<key>isa</key>
+			<string>PBXBuildFile</string>
+		</dict>
 		<key>6E2296555AAA39B54D31A066</key>
 		<dict>
 			<key>isa</key>
@@ -2578,6 +2593,17 @@
 			<string>NotesApp</string>
 			<key>sourceTree</key>
 			<string>&lt;group&gt;</string>
+		</dict>
+		<key>814037E54DE92FBFB479668D</key>
+		<dict>
+			<key>isa</key>
+			<string>PBXFileReference</string>
+			<key>lastKnownFileType</key>
+			<string>sourcecode.swift</string>
+			<key>path</key>
+			<string>NotesApp/Features/Editor/Services/EditorLasso.swift</string>
+			<key>sourceTree</key>
+			<string>SOURCE_ROOT</string>
 		</dict>
 		<key>814750FEA8DB32FA27D2AA82</key>
 		<dict>
@@ -3774,6 +3800,8 @@
 				<string>A6E4B50BA5F8801F411C6DB5</string>
 				<string>DEE067DCE2D2C9FF7F240C29</string>
 				<string>5C9C2A6D1CBC32546587FBEE</string>
+				<string>EE75C223C3D54683503F51A2</string>
+				<string>4650F16FC587F6D247C82E32</string>
 				<string>4FD5A5D9E39F6DF5C771D9A2</string>
 			</array>
 			<key>isa</key>
@@ -3801,6 +3829,17 @@
 			<string>EB48512B2F3A07BE66EE1AE6</string>
 			<key>isa</key>
 			<string>PBXBuildFile</string>
+		</dict>
+		<key>BE72ED90EAE7A7F8E52029D3</key>
+		<dict>
+			<key>isa</key>
+			<string>PBXFileReference</string>
+			<key>lastKnownFileType</key>
+			<string>sourcecode.swift</string>
+			<key>path</key>
+			<string>NotesAppDeviceTests/PageLassoIntegrationTests.swift</string>
+			<key>sourceTree</key>
+			<string>SOURCE_ROOT</string>
 		</dict>
 		<key>C0797F1E76169F06452CE36A</key>
 		<dict>
@@ -4132,6 +4171,17 @@
 			<string>sourcecode.swift</string>
 			<key>path</key>
 			<string>NotesApp/Features/Workspace/Views/DocumentSaveIndicator.swift</string>
+			<key>sourceTree</key>
+			<string>SOURCE_ROOT</string>
+		</dict>
+		<key>CAC340AACEA542BF802B663B</key>
+		<dict>
+			<key>isa</key>
+			<string>PBXFileReference</string>
+			<key>lastKnownFileType</key>
+			<string>sourcecode.swift</string>
+			<key>path</key>
+			<string>NotesApp/Features/Editor/Components/PageLassoOverlay.swift</string>
 			<key>sourceTree</key>
 			<string>SOURCE_ROOT</string>
 		</dict>
@@ -4888,8 +4938,11 @@
 				<string>9E473B41ADF5ACFFE2F731D6</string>
 				<string>03E841A43E98568C84B46485</string>
 				<string>5290659CA2EF653F02DCE509</string>
+				<string>CAC340AACEA542BF802B663B</string>
+				<string>814037E54DE92FBFB479668D</string>
 				<string>4C470F263EF82416206A74DE</string>
 				<string>0843C6A6CAEC4EA3CC2AA2D9</string>
+				<string>BE72ED90EAE7A7F8E52029D3</string>
 			</array>
 			<key>isa</key>
 			<string>PBXGroup</string>
@@ -5114,6 +5167,13 @@
 			<string>NotesApp/Features/Editor/Components/PaletteProfileManager.swift</string>
 			<key>sourceTree</key>
 			<string>SOURCE_ROOT</string>
+		</dict>
+		<key>EE75C223C3D54683503F51A2</key>
+		<dict>
+			<key>fileRef</key>
+			<string>CAC340AACEA542BF802B663B</string>
+			<key>isa</key>
+			<string>PBXBuildFile</string>
 		</dict>
 		<key>EE932EB6C34E428CBCE8C1C2</key>
 		<dict>

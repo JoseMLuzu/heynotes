@@ -40,6 +40,11 @@ struct ToolPresetEditor: View {
                         ForEach(StampSymbol.allCases, id: \.self) { Text("\($0.rawValue)  \($0.title)").tag($0) }
                     }
                 }
+                if draft.tool == .lasso {
+                    Picker("Select", selection: Binding(get: { draft.lassoScope ?? .allContent }, set: { draft.lassoScope = $0 })) {
+                        ForEach(LassoScope.allCases, id: \.self) { Text($0.title).tag($0) }
+                    }
+                }
                 if draft.tool == .sticky {
                     Picker("Note Color", selection: Binding(get: { draft.stickyStyle ?? .yellow }, set: { draft.stickyStyle = $0 })) {
                         ForEach(StickyNoteStyle.allCases, id: \.self) { Text($0.rawValue.capitalized).tag($0) }

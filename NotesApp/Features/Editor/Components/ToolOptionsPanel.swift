@@ -37,9 +37,16 @@ struct ToolOptionsPanel: View {
 
     private var options: some View {
         VStack(alignment: .leading, spacing: 22) {
+            if preferences.selected == .lasso {
+                Picker("Select", selection: $preferences.lassoScope) {
+                    ForEach(LassoScope.allCases, id: \.self) { Text($0.title).tag($0) }
+                }.pickerStyle(.segmented)
+                Text(preferences.lassoScope == .allContent ? "Circle handwriting, text, images, shapes or notes, then drag the group. Tap the selection to delete or deselect. Items touched by the loop are included." : "Use PencilKit's native ink selection and its copy, paste and resize actions. Inserted objects stay separate.")
+                    .font(.caption).foregroundStyle(.secondary)
+            }
             if preferences.selected.usesInkStyle { inkOptions }
             else if preferences.selected == .eraser { eraserOptions }
-            else {
+            else if preferences.selected != .lasso {
                 Text(preferences.selected.guidance)
                     .font(.subheadline).foregroundStyle(.secondary)
             }
