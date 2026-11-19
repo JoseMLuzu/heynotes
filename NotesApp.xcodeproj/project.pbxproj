@@ -1765,6 +1765,17 @@
 			<key>sourceTree</key>
 			<string>SOURCE_ROOT</string>
 		</dict>
+		<key>59F248A54DBBD030CCADE33B</key>
+		<dict>
+			<key>isa</key>
+			<string>PBXFileReference</string>
+			<key>lastKnownFileType</key>
+			<string>sourcecode.swift</string>
+			<key>path</key>
+			<string>NotesApp/Core/Models/SmartShapeGeometry.swift</string>
+			<key>sourceTree</key>
+			<string>SOURCE_ROOT</string>
+		</dict>
 		<key>5A34D903501985CC35985C53</key>
 		<dict>
 			<key>buildConfigurationList</key>
@@ -3512,6 +3523,13 @@
 			<key>isa</key>
 			<string>PBXBuildFile</string>
 		</dict>
+		<key>B3D0C372462AB2AC77A889A4</key>
+		<dict>
+			<key>fileRef</key>
+			<string>59F248A54DBBD030CCADE33B</string>
+			<key>isa</key>
+			<string>PBXBuildFile</string>
+		</dict>
 		<key>B3F0736535F7D8969A09371B</key>
 		<dict>
 			<key>isa</key>
@@ -3865,6 +3883,7 @@
 				<string>4FD5A5D9E39F6DF5C771D9A2</string>
 				<string>2AE423C5561862743C8C2ACA</string>
 				<string>1D586AFF79E408D1CB7EDB7F</string>
+				<string>B3D0C372462AB2AC77A889A4</string>
 			</array>
 			<key>isa</key>
 			<string>PBXSourcesBuildPhase</string>
@@ -5009,6 +5028,7 @@
 				<string>55558DAC5B55632CB120AFA2</string>
 				<string>72706AE28F65A9AE3BEF63FB</string>
 				<string>6610DA3973A385066DA49717</string>
+				<string>59F248A54DBBD030CCADE33B</string>
 			</array>
 			<key>isa</key>
 			<string>PBXGroup</string>
