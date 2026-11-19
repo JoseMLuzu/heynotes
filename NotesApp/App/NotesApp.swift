@@ -24,6 +24,7 @@ struct NotesApp: App {
                             await PDFDocumentService.shared.clearCaches()
                             await PDFDocumentService.thumbnails.clearCaches()
                             await PageThumbnailService.shared.clearCache()
+                            await StudyImageLoader.shared.clearCache()
                         }
                     }
             case .failure(let error):

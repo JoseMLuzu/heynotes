@@ -67,7 +67,7 @@ struct FlashcardForm: View {
             Form {
                 Section("Question") {
                     if let questionImage {
-                        StudyAttachmentImage(path: questionImage).frame(maxHeight: 220)
+                        StudyAttachmentImage(path: questionImage, maximumDimension: 500).frame(maxHeight: 220)
                         Button("Remove Question Image", role: .destructive) { self.questionImage = nil }
                     }
                     TextEditor(text: $question).frame(minHeight: 100)
@@ -75,7 +75,7 @@ struct FlashcardForm: View {
                 }
                 Section("Answer") {
                     if let answerImage {
-                        StudyAttachmentImage(path: answerImage).frame(maxHeight: 220)
+                        StudyAttachmentImage(path: answerImage, maximumDimension: 500).frame(maxHeight: 220)
                         Button("Remove Answer Image", role: .destructive) { self.answerImage = nil }
                     }
                     TextEditor(text: $answer).frame(minHeight: 160)

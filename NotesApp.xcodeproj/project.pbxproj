@@ -1316,6 +1316,17 @@
 			<key>isa</key>
 			<string>PBXBuildFile</string>
 		</dict>
+		<key>45B066000464A4109BB201E0</key>
+		<dict>
+			<key>isa</key>
+			<string>PBXFileReference</string>
+			<key>lastKnownFileType</key>
+			<string>sourcecode.swift</string>
+			<key>path</key>
+			<string>NotesAppDeviceTests/StudyImageLoaderTests.swift</string>
+			<key>sourceTree</key>
+			<string>SOURCE_ROOT</string>
+		</dict>
 		<key>45FBE086519972D35C1529F6</key>
 		<dict>
 			<key>isa</key>
@@ -1386,6 +1397,7 @@
 				<string>42BB35A6F9A7527E5B4F83D3</string>
 				<string>A9B05A51C9E4C043352E035F</string>
 				<string>BBB24E46741C8813B0D31C01</string>
+				<string>6CA382108169E9BC6BF78849</string>
 			</array>
 			<key>isa</key>
 			<string>PBXSourcesBuildPhase</string>
@@ -1772,6 +1784,13 @@
 			<key>sourceTree</key>
 			<string>SOURCE_ROOT</string>
 		</dict>
+		<key>61B14A9A4541458A59A86FCA</key>
+		<dict>
+			<key>fileRef</key>
+			<string>D204D40B75E86C1CEC443B7A</string>
+			<key>isa</key>
+			<string>PBXBuildFile</string>
+		</dict>
 		<key>61BC33751AD5BCC477210F80</key>
 		<dict>
 			<key>fileRef</key>
@@ -1957,6 +1976,13 @@
 			<string>NotesApp/Features/Editor/Services/EditorHandwriting.swift</string>
 			<key>sourceTree</key>
 			<string>SOURCE_ROOT</string>
+		</dict>
+		<key>6CA382108169E9BC6BF78849</key>
+		<dict>
+			<key>fileRef</key>
+			<string>45B066000464A4109BB201E0</string>
+			<key>isa</key>
+			<string>PBXBuildFile</string>
 		</dict>
 		<key>6CC5212231B004C0B6CBF0C6</key>
 		<dict>
@@ -3620,6 +3646,7 @@
 				<string>99945D71C28E94084A941B69</string>
 				<string>3F30BDC577CCA6EC6B2D85AE</string>
 				<string>E98154837B45853D445B74CD</string>
+				<string>61B14A9A4541458A59A86FCA</string>
 				<string>A6E4B50BA5F8801F411C6DB5</string>
 			</array>
 			<key>isa</key>
@@ -4134,6 +4161,17 @@
 			<string>0B49BD6C3CF16D5D58D482E5</string>
 			<key>isa</key>
 			<string>PBXBuildFile</string>
+		</dict>
+		<key>D204D40B75E86C1CEC443B7A</key>
+		<dict>
+			<key>isa</key>
+			<string>PBXFileReference</string>
+			<key>lastKnownFileType</key>
+			<string>sourcecode.swift</string>
+			<key>path</key>
+			<string>NotesApp/Features/Study/Services/StudyImageLoader.swift</string>
+			<key>sourceTree</key>
+			<string>SOURCE_ROOT</string>
 		</dict>
 		<key>D2202E05531BE534631865FC</key>
 		<dict>
@@ -4696,7 +4734,9 @@
 				<string>DE908D976A28FC5CCA1781D4</string>
 				<string>009FDA337ED8D7E64DCAAD76</string>
 				<string>0B9DB2AA1E154599B3EB3320</string>
+				<string>D204D40B75E86C1CEC443B7A</string>
 				<string>F6B04E98D1EBC1CAEC02F214</string>
+				<string>45B066000464A4109BB201E0</string>
 			</array>
 			<key>isa</key>
 			<string>PBXGroup</string>
