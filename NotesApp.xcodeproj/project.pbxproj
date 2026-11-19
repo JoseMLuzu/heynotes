@@ -220,6 +220,17 @@
 			<key>sourceTree</key>
 			<string>SOURCE_ROOT</string>
 		</dict>
+		<key>0843C6A6CAEC4EA3CC2AA2D9</key>
+		<dict>
+			<key>isa</key>
+			<string>PBXFileReference</string>
+			<key>lastKnownFileType</key>
+			<string>sourcecode.swift</string>
+			<key>path</key>
+			<string>NotesAppDeviceTests/PageLassoGeometryTests.swift</string>
+			<key>sourceTree</key>
+			<string>SOURCE_ROOT</string>
+		</dict>
 		<key>0850111ABE3A881AFD3DEEB9</key>
 		<dict>
 			<key>fileRef</key>
@@ -1085,6 +1096,13 @@
 			<key>isa</key>
 			<string>PBXBuildFile</string>
 		</dict>
+		<key>37CB2AA34B4EB7324AA238BE</key>
+		<dict>
+			<key>fileRef</key>
+			<string>0843C6A6CAEC4EA3CC2AA2D9</string>
+			<key>isa</key>
+			<string>PBXBuildFile</string>
+		</dict>
 		<key>37D4F310A61DDB5C18FCD2E0</key>
 		<dict>
 			<key>fileRef</key>
@@ -1431,6 +1449,7 @@
 				<string>F5D0B1EDD4DAF837565B941F</string>
 				<string>0412B142A78BE331531D2432</string>
 				<string>7A0105121F022634A0D4EA24</string>
+				<string>37CB2AA34B4EB7324AA238BE</string>
 			</array>
 			<key>isa</key>
 			<string>PBXSourcesBuildPhase</string>
@@ -1513,6 +1532,17 @@
 			<key>sourceTree</key>
 			<string>SOURCE_ROOT</string>
 		</dict>
+		<key>4C470F263EF82416206A74DE</key>
+		<dict>
+			<key>isa</key>
+			<string>PBXFileReference</string>
+			<key>lastKnownFileType</key>
+			<string>sourcecode.swift</string>
+			<key>path</key>
+			<string>NotesApp/Features/Editor/Services/PageLassoSelection.swift</string>
+			<key>sourceTree</key>
+			<string>SOURCE_ROOT</string>
+		</dict>
 		<key>4C578EFBADCD9C53964D0DB9</key>
 		<dict>
 			<key>isa</key>
@@ -1535,6 +1565,13 @@
 		<dict>
 			<key>fileRef</key>
 			<string>C7E8EA6EAC06EED5B3084685</string>
+			<key>isa</key>
+			<string>PBXBuildFile</string>
+		</dict>
+		<key>4FD5A5D9E39F6DF5C771D9A2</key>
+		<dict>
+			<key>fileRef</key>
+			<string>4C470F263EF82416206A74DE</string>
 			<key>isa</key>
 			<string>PBXBuildFile</string>
 		</dict>
@@ -3737,6 +3774,7 @@
 				<string>A6E4B50BA5F8801F411C6DB5</string>
 				<string>DEE067DCE2D2C9FF7F240C29</string>
 				<string>5C9C2A6D1CBC32546587FBEE</string>
+				<string>4FD5A5D9E39F6DF5C771D9A2</string>
 			</array>
 			<key>isa</key>
 			<string>PBXSourcesBuildPhase</string>
@@ -4850,6 +4888,8 @@
 				<string>9E473B41ADF5ACFFE2F731D6</string>
 				<string>03E841A43E98568C84B46485</string>
 				<string>5290659CA2EF653F02DCE509</string>
+				<string>4C470F263EF82416206A74DE</string>
+				<string>0843C6A6CAEC4EA3CC2AA2D9</string>
 			</array>
 			<key>isa</key>
 			<string>PBXGroup</string>
