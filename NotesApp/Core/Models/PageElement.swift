@@ -31,13 +31,19 @@ public struct PageElement: Identifiable, Codable, Equatable, Sendable {
     public var lineWidth = 3.0
     public var fontSize = 24.0
     public var fontName: String? = nil
+    /// Relative immutable font asset, shared by text objects using an imported face.
+    public var fontFilePath: String? = nil
     /// Editable source strokes for handwriting conversions. Missing on older text objects.
     public var originalInk: Data? = nil
+    /// Initial text origin: restoring an aligned conversion preserves the source ink position.
+    public var originalInkAnchorX: Double? = nil
+    public var originalInkAnchorY: Double? = nil
     public var reversed = false
     public var stickyStyle: StickyNoteStyle? = nil
     public var folded: Bool? = nil
     public var filled: Bool? = nil
     public var rect: CGRect { CGRect(x: x, y: y, width: width, height: height) }
+    public var assetPaths: [String] { [imagePath, fontFilePath].compactMap { $0 } }
     public var visibleRect: CGRect { stickyStyle != nil && folded == true ? CGRect(x: x, y: y, width: width, height: min(32, height)) : rect }
     public init(kind: PageElementKind, rect: CGRect) {
         self.kind = kind; x = rect.minX; y = rect.minY; width = rect.width; height = rect.height
@@ -78,7 +84,13 @@ public enum PageElementsCodec {
                   (0...1).contains(item.red), (0...1).contains(item.green), (0...1).contains(item.blue),
                   (0.05...1).contains(item.opacity), (0.5...60).contains(item.lineWidth), (12...96).contains(item.fontSize),
                   (item.fontName?.count ?? 0) <= 128, (item.originalInk?.count ?? 0) <= 8_388_608,
+                  [item.originalInkAnchorX, item.originalInkAnchorY].compactMap({ $0 }).allSatisfy(\.isFinite),
                   item.kind != .image || item.imagePath != nil else { throw PageElementError.invalid }
+            if let path = item.fontFilePath {
+                let parts = path.split(separator: "/", omittingEmptySubsequences: false)
+                guard !path.isEmpty, path.utf8.count <= 1024, !path.contains("\\"), !path.contains("\0"),
+                      parts.allSatisfy({ !$0.isEmpty && $0 != "." && $0 != ".." }) else { throw PageElementError.invalid }
+            }
         }
     }
 }

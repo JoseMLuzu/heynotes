@@ -73,8 +73,11 @@ extension BackupMetadataStore {
             item.pdfRightMargin = record.margin
             if record.objects != nil {
                 var objects = try PageElementsCodec.decode(record.objects)
-                if objects.contains(where: { $0.imagePath != nil }) {
-                    for index in objects.indices { objects[index].imagePath = try path(objects[index].imagePath) }
+                if objects.contains(where: { $0.imagePath != nil || $0.fontFilePath != nil }) {
+                    for index in objects.indices {
+                        objects[index].imagePath = try path(objects[index].imagePath)
+                        objects[index].fontFilePath = try path(objects[index].fontFilePath)
+                    }
                     item.objectsData = try PageElementsCodec.encode(objects)
                 } else { item.objectsData = record.objects }
             }

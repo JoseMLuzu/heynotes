@@ -5,6 +5,37 @@ import Testing
 @testable import NotesAppCore
 
 @MainActor struct LibraryBackupTests {
+    @Test func importedFontAssetsAndRecoveryAnchorsSurviveBackupAndIndependentRestore() async throws {
+        let f = try BackupFixture(); defer { f.cleanup() }; try await f.seed()
+        let page = try #require(f.container.mainContext.fetch(FetchDescriptor<NotePage>()).first { $0.id == f.pageID })
+        var objects = try PageElementsCodec.decode(page.objectsData)
+        let bytes = Data("user-owned font bytes".utf8)
+        objects[0].fontName = "MyHandwriting"; objects[0].fontFilePath = "Fonts/personal.ttf"
+        objects[0].originalInkAnchorX = 12; objects[0].originalInkAnchorY = 26
+        page.objectsData = try PageElementsCodec.encode(objects)
+        try f.container.mainContext.saveRecordingSyncChanges()
+        try await f.storage.write(bytes, to: "Fonts/personal.ttf")
+        let service = LibraryBackupService(container: f.container, storage: f.storage)
+        let url = try await service.exportLibrary(); defer { Task { await service.discardExport(url) } }
+        let prepared = try await service.prepareRestore(from: url); defer { Task { await service.discard(prepared) } }
+        let target = try BackupFixture(); defer { target.cleanup() }
+        _ = try await LibraryBackupService(container: target.container, storage: target.storage).restore(prepared)
+        let restored = try #require(target.container.mainContext.fetch(FetchDescriptor<NotePage>()).first { $0.id == f.pageID })
+        let text = try #require(PageElementsCodec.decode(restored.objectsData).first)
+        let path = try #require(text.fontFilePath)
+        #expect(path.hasPrefix("Restored/") && path.hasSuffix("/Fonts/personal.ttf"))
+        #expect(try await target.storage.read(path) == bytes)
+        #expect(text.fontName == "MyHandwriting" && text.originalInkAnchorX == 12 && text.originalInkAnchorY == 26)
+        // Required font data cannot be silently omitted from an otherwise valid archive.
+        var files: [(String, Data)] = []
+        for file in prepared.files where file.path != "Fonts/personal.ttf" {
+            files.append((file.path, try await f.storage.read(file.path)))
+        }
+        let incomplete = f.root.appendingPathComponent("missing-font.heynotesbackup")
+        try rawArchive(prepared.manifest, files: files).write(to: incomplete)
+        await #expect(throws: (any Error).self) { try await service.prepareRestore(from: incomplete) }
+    }
+
     @Test func completeLibraryRoundTripRetainsIDsFilesTrashAndStudyAfterDiskReopen() async throws {
         let fixture = try BackupFixture(); defer { fixture.cleanup() }
         try await fixture.seed()

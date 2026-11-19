@@ -13,7 +13,7 @@ enum BackupValidation {
             if let drawing = page.drawing { paths.insert(drawing) }
             if let pdf = page.pdf { paths.insert(pdf) }
             for item in try PageElementsCodec.decode(page.objects) {
-                if let image = item.imagePath { paths.insert(image) }
+                paths.formUnion(item.assetPaths)
             }
         }
         for card in manifest.cards {
