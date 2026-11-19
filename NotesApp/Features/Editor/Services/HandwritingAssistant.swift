@@ -11,6 +11,18 @@ final class HandwritingAssistant {
     var language: String {
         didSet { defaults.set(language, forKey: "editor.handwriting.language") }
     }
+    var fontFilePath: String? {
+        didSet { defaults.set(fontFilePath, forKey: "editor.handwriting.fontFile") }
+    }
+    var alignToPaper: Bool {
+        didSet { defaults.set(alignToPaper, forKey: "editor.handwriting.alignToPaper") }
+    }
+    var sizeScale: Double {
+        didSet { defaults.set(sizeScale, forKey: "editor.handwriting.sizeScale") }
+    }
+    var baselineOffset: Double {
+        didSet { defaults.set(baselineOffset, forKey: "editor.handwriting.baselineOffset") }
+    }
     private(set) var message = "Off — your handwriting stays unchanged."
     private(set) var processing = false
     @ObservationIgnored private var baseline = PKDrawing()
@@ -23,7 +35,11 @@ final class HandwritingAssistant {
     init(defaults: UserDefaults = .standard, recognizer: any HandwritingRecognizing = VisionHandwritingRecognizer.shared) {
         self.defaults = defaults; self.recognizer = recognizer
         let savedFont = defaults.string(forKey: "editor.handwriting.font")
-        fontName = HandwritingFont.choices.first(where: { $0.name == savedFont })?.name ?? HandwritingFont.defaultName
+        fontName = savedFont.flatMap { !$0.isEmpty && $0.count <= 128 ? $0 : nil } ?? HandwritingFont.defaultName
+        fontFilePath = defaults.string(forKey: "editor.handwriting.fontFile")
+        alignToPaper = defaults.object(forKey: "editor.handwriting.alignToPaper") as? Bool ?? true
+        sizeScale = ToolPreset.clamp(defaults.object(forKey: "editor.handwriting.sizeScale") as? Double ?? 1, to: 0.7...1.3)
+        baselineOffset = ToolPreset.clamp(defaults.double(forKey: "editor.handwriting.baselineOffset"), to: -8...8)
         let savedLanguage = defaults.string(forKey: "editor.handwriting.language")
         language = ["en-US", "es-ES"].first(where: { $0 == savedLanguage }) ?? (Locale.preferredLanguages.first?.hasPrefix("es") == true ? "es-ES" : "en-US")
     }
@@ -55,7 +71,7 @@ final class HandwritingAssistant {
         guard enabled, acceptsTool, session.ready, !session.busy else { return }
         guard drawing.strokes.count > baseline.strokes.count else { baseline = drawing; return }
         let count = baseline.strokes.count, prefix = baseline, token = generation
-        let font = fontName, selectedLanguage = language
+        let font = fontName, selectedLanguage = language, fontPath = fontFilePath, layout = layoutOptions
         task = Task { [weak self, weak session] in
             do { try await Task.sleep(for: .milliseconds(1_200)) } catch { return }
             guard let self, let session, self.generation == token else { return }
@@ -66,7 +82,7 @@ final class HandwritingAssistant {
             guard validPrefix else { self.reset(to: drawing); return }
             let source = PKDrawing(strokes: Array(drawing.strokes.dropFirst(count)))
             await self.convert(source, snapshot: drawing, session: session, token: token,
-                               font: font, language: selectedLanguage)
+                               font: font, fontPath: fontPath, language: selectedLanguage, options: layout)
         }
     }
 
@@ -76,33 +92,38 @@ final class HandwritingAssistant {
         let snapshot = session.canvas?.drawing ?? session.drawing
         guard !snapshot.strokes.isEmpty else { message = "Write something on this page first."; return }
         await convert(snapshot, snapshot: snapshot, session: session, token: generation,
-                      font: fontName, language: language)
+                      font: fontName, fontPath: fontFilePath, language: language, options: layoutOptions)
     }
 
     private func convert(_ source: PKDrawing, snapshot: PKDrawing, session: EditorSession,
-                         token: Int, font: String, language: String) async {
+                         token: Int, font: String, fontPath: String?, language: String, options: HandwritingLayoutOptions) async {
         guard session.ready, !session.busy, let pageID = session.page?.id,
               !source.strokes.isEmpty, session.canvas != nil,
               UIApplication.shared.applicationState == .active else { return }
         processing = true; message = "Reading handwriting on this iPad…"
         do {
-            let result = try await recognizer.recognize(source, language: language)
+            if let fontPath { _ = try await HandwritingFontStore.shared.load(path: fontPath, storage: session.storage) }
+            let result = try await recognizer.recognizeLines(source, language: language)
             guard generation == token, !Task.isCancelled else { return }
             processing = false
             guard let result else {
                 message = "Could not read this phrase confidently. Original ink was kept."
                 return
             }
-            let applied = await session.applyRecognizedHandwriting(result, source: source, snapshot: snapshot,
-                                                                 pageID: pageID, fontName: font,
+            let applied = await session.applyRecognizedHandwriting(result.map(\.text).joined(separator: "\n"), source: source, snapshot: snapshot,
+                                                                 pageID: pageID, fontName: font, fontPath: fontPath,
+                                                                 recognizedLines: result, options: options,
                                                                  isCurrent: { self.generation == token })
             // apply resets the baseline and invalidates this generation after a successful edit.
             if applied { message = "Converted. Edit the text or restore its original ink from Inserted Content." }
-            else if generation == token { message = "The page changed. Original ink was kept." }
+            else if generation == token { message = "This phrase could not fit safely, or the page changed. Original ink was kept." }
         } catch is CancellationError { }
         catch {
             guard generation == token else { return }
-            processing = false; message = "Recognition is unavailable. Original ink was kept."
+            processing = false; message = "Could not convert this phrase. Original ink was kept. \(error.localizedDescription)"
         }
+    }
+    private var layoutOptions: HandwritingLayoutOptions {
+        .init(alignToPaper: alignToPaper, sizeScale: sizeScale, baselineOffset: baselineOffset)
     }
 }

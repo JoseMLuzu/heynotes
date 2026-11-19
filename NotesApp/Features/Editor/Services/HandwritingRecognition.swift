@@ -4,6 +4,20 @@ import Vision
 
 protocol HandwritingRecognizing: Sendable {
     func recognize(_ drawing: PKDrawing, language: String) async throws -> String?
+    func recognizeLines(_ drawing: PKDrawing, language: String) async throws -> [RecognizedHandwritingLine]?
+}
+
+struct RecognizedHandwritingLine: Sendable {
+    let text: String
+    /// Logical page points, with the same top-left origin as PencilKit.
+    let bounds: CGRect
+}
+
+extension HandwritingRecognizing {
+    func recognizeLines(_ drawing: PKDrawing, language: String) async throws -> [RecognizedHandwritingLine]? {
+        guard let text = try await recognize(drawing, language: language) else { return nil }
+        return [RecognizedHandwritingLine(text: text, bounds: drawing.bounds)]
+    }
 }
 
 /// Raster OCR is intentionally a replaceable adapter, not a calligraphy/style-transfer model.
@@ -12,6 +26,10 @@ actor VisionHandwritingRecognizer: HandwritingRecognizing {
     static let shared = VisionHandwritingRecognizer()
 
     func recognize(_ drawing: PKDrawing, language: String) async throws -> String? {
+        try await recognizeLines(drawing, language: language)?.map(\.text).joined(separator: "\n")
+    }
+
+    func recognizeLines(_ drawing: PKDrawing, language: String) async throws -> [RecognizedHandwritingLine]? {
         try Task.checkCancellation()
         guard let (image, bounds) = Self.raster(drawing), let cgImage = image.cgImage else { return nil }
         return try recognizeImage(cgImage, bounds: bounds, strokes: drawing.strokes, language: language)
@@ -48,7 +66,7 @@ actor VisionHandwritingRecognizer: HandwritingRecognizing {
         return (image, bounds)
     }
 
-    private func recognizeImage(_ cgImage: CGImage, bounds: CGRect, strokes: [PKStroke], language: String) throws -> String? {
+    private func recognizeImage(_ cgImage: CGImage, bounds: CGRect, strokes: [PKStroke], language: String) throws -> [RecognizedHandwritingLine]? {
         try Task.checkCancellation()
         let request = VNRecognizeTextRequest()
         request.recognitionLevel = .accurate
@@ -60,22 +78,21 @@ actor VisionHandwritingRecognizer: HandwritingRecognizing {
         try Task.checkCancellation()
         let lines = (request.results ?? []).sorted { $0.boundingBox.midY > $1.boundingBox.midY }
         guard !lines.isEmpty, lines.count <= 12 else { return nil }
-        var strings: [String] = []
+        var recognized: [RecognizedHandwritingLine] = []
         var regions: [CGRect] = []
         for line in lines {
             guard let candidate = line.topCandidates(1).first, candidate.confidence >= 0.5 else { return nil }
-            strings.append(candidate.string)
             let box = line.boundingBox
-            regions.append(CGRect(x: bounds.minX + box.minX * bounds.width,
+            let rect = CGRect(x: bounds.minX + box.minX * bounds.width,
                                   y: bounds.minY + (1 - box.maxY) * bounds.height,
                                   width: box.width * bounds.width, height: box.height * bounds.height)
-                .insetBy(dx: -12, dy: -12))
+            recognized.append(.init(text: candidate.string, bounds: rect))
+            regions.append(rect.insetBy(dx: -12, dy: -12))
         }
         // Do not remove a diagram or marginal marks alongside recognized text.
         guard strokes.allSatisfy({ stroke in
             regions.contains { $0.contains(CGPoint(x: stroke.renderBounds.midX, y: stroke.renderBounds.midY)) }
         }) else { return nil }
-        let text = strings.joined(separator: "\n").trimmingCharacters(in: .whitespacesAndNewlines)
-        return text.isEmpty ? nil : text
+        return recognized.allSatisfy({ !$0.text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }) ? recognized : nil
     }
 }

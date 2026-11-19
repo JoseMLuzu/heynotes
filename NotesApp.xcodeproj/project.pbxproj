@@ -489,6 +489,17 @@
 			<key>isa</key>
 			<string>PBXBuildFile</string>
 		</dict>
+		<key>160A6F774CC9FC81A7099BD7</key>
+		<dict>
+			<key>isa</key>
+			<string>PBXFileReference</string>
+			<key>lastKnownFileType</key>
+			<string>sourcecode.swift</string>
+			<key>path</key>
+			<string>NotesApp/Features/Editor/Services/HandwritingTextLayout.swift</string>
+			<key>sourceTree</key>
+			<string>SOURCE_ROOT</string>
+		</dict>
 		<key>16B7464A432CA496DF5C9649</key>
 		<dict>
 			<key>isa</key>
@@ -1419,6 +1430,7 @@
 				<string>87F0BF3F62BA17AA928A9868</string>
 				<string>F5D0B1EDD4DAF837565B941F</string>
 				<string>0412B142A78BE331531D2432</string>
+				<string>7A0105121F022634A0D4EA24</string>
 			</array>
 			<key>isa</key>
 			<string>PBXSourcesBuildPhase</string>
@@ -1587,6 +1599,17 @@
 			<key>sourceTree</key>
 			<string>SOURCE_ROOT</string>
 		</dict>
+		<key>5290659CA2EF653F02DCE509</key>
+		<dict>
+			<key>isa</key>
+			<string>PBXFileReference</string>
+			<key>lastKnownFileType</key>
+			<string>sourcecode.swift</string>
+			<key>path</key>
+			<string>NotesAppDeviceTests/HandwritingAlignmentTests.swift</string>
+			<key>sourceTree</key>
+			<string>SOURCE_ROOT</string>
+		</dict>
 		<key>538F6F0C4C4E72A87632BAF1</key>
 		<dict>
 			<key>fileRef</key>
@@ -1729,6 +1752,13 @@
 		<dict>
 			<key>fileRef</key>
 			<string>6CF7F1D54F555C39197DEB0C</string>
+			<key>isa</key>
+			<string>PBXBuildFile</string>
+		</dict>
+		<key>5C9C2A6D1CBC32546587FBEE</key>
+		<dict>
+			<key>fileRef</key>
+			<string>160A6F774CC9FC81A7099BD7</string>
 			<key>isa</key>
 			<string>PBXBuildFile</string>
 		</dict>
@@ -2360,6 +2390,13 @@
 			<string>NotesApp/Features/Editor/Components/ZoomWritingPanel.swift</string>
 			<key>sourceTree</key>
 			<string>SOURCE_ROOT</string>
+		</dict>
+		<key>7A0105121F022634A0D4EA24</key>
+		<dict>
+			<key>fileRef</key>
+			<string>5290659CA2EF653F02DCE509</string>
+			<key>isa</key>
+			<string>PBXBuildFile</string>
 		</dict>
 		<key>7A0D578ABE2A24472D8F29A9</key>
 		<dict>
@@ -3699,6 +3736,7 @@
 				<string>61B14A9A4541458A59A86FCA</string>
 				<string>A6E4B50BA5F8801F411C6DB5</string>
 				<string>DEE067DCE2D2C9FF7F240C29</string>
+				<string>5C9C2A6D1CBC32546587FBEE</string>
 			</array>
 			<key>isa</key>
 			<string>PBXSourcesBuildPhase</string>
@@ -4808,8 +4846,10 @@
 				<string>45B066000464A4109BB201E0</string>
 				<string>D8868138EB57FA811F127333</string>
 				<string>B4AA27D29BD1CF319C642E5D</string>
+				<string>160A6F774CC9FC81A7099BD7</string>
 				<string>9E473B41ADF5ACFFE2F731D6</string>
 				<string>03E841A43E98568C84B46485</string>
+				<string>5290659CA2EF653F02DCE509</string>
 			</array>
 			<key>isa</key>
 			<string>PBXGroup</string>

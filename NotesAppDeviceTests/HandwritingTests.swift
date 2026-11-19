@@ -124,6 +124,49 @@ private actor HeldHandwritingRecognizer: HandwritingRecognizing {
         XCTAssertEqual(session.drawing, newer); XCTAssertTrue(session.elements.isEmpty)
     }
 
+    func testMultilineConversionUndoAndRestorationPreserveSourcePositions() async throws {
+        let root = URL.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        defer { try? FileManager.default.removeItem(at: root) }
+        let session = try await fixture(root), page = try XCTUnwrap(session.page)
+        let first = ink(), second = ink(100).transformed(using: CGAffineTransform(translationX: 0, y: 96))
+        let original = PKDrawing(strokes: first.strokes + second.strokes)
+        put(original, in: session)
+        let applied = await session.applyRecognizedHandwriting("First\nSecond", source: original, snapshot: original,
+            pageID: page.id, fontName: HandwritingFont.defaultName,
+            recognizedLines: [.init(text: "First", bounds: first.bounds), .init(text: "Second", bounds: second.bounds)])
+        XCTAssertTrue(applied); XCTAssertEqual(session.elements.count, 2); XCTAssertTrue(session.drawing.strokes.isEmpty)
+        let items = session.elements
+        session.canvas?.undoManager?.undo(); assertInk(session.drawing, original); XCTAssertTrue(session.elements.isEmpty)
+        session.canvas?.undoManager?.redo(); XCTAssertEqual(session.elements, items)
+        XCTAssertTrue(session.restoreOriginalInk(items[0].id)); assertInk(session.drawing, first)
+        var moved = items[1]; moved.x += 20; moved.y += 16
+        XCTAssertTrue(session.updateElement(moved)); XCTAssertTrue(session.restoreOriginalInk(moved.id))
+        let expected = PKDrawing(strokes: first.strokes + second.transformed(using: CGAffineTransform(translationX: 20, y: 16)).strokes)
+        assertInk(session.drawing, expected)
+        let saved = await session.flush(); XCTAssertTrue(saved)
+        await session.open(page); assertInk(session.drawing, expected)
+    }
+
+    func testImportedFontConversionPersistsAssetReferenceAndOriginalInk() async throws {
+        let root = URL.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        defer { try? FileManager.default.removeItem(at: root) }
+        let session = try await fixture(root), page = try XCTUnwrap(session.page)
+        let fontURL = root.appendingPathComponent("MyFont.ttf")
+        try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
+        try HandwritingTestFont.data.write(to: fontURL)
+        let font = try await HandwritingFontStore.shared.importFont(from: fontURL, storage: session.storage)
+        let original = ink(); put(original, in: session)
+        let applied = await session.applyRecognizedHandwriting("A", source: original, snapshot: original, pageID: page.id,
+            fontName: font.name, fontPath: font.path)
+        XCTAssertTrue(applied)
+        let saved = await session.flush(); XCTAssertTrue(saved)
+        await session.open(page)
+        let item = try XCTUnwrap(session.elements.first)
+        XCTAssertEqual(item.fontName, font.name); XCTAssertEqual(item.fontFilePath, font.path)
+        XCTAssertEqual(item.originalInkAnchorX, item.x); XCTAssertEqual(item.originalInkAnchorY, item.y)
+        XCTAssertTrue(session.restoreOriginalInk(item.id)); assertInk(session.drawing, original)
+    }
+
     func testPausedConversionOnlyConsumesNewInkAndSkipsHighlighter() async throws {
         let root = URL.temporaryDirectory.appendingPathComponent(UUID().uuidString)
         defer { try? FileManager.default.removeItem(at: root) }
@@ -209,7 +252,7 @@ private actor HeldHandwritingRecognizer: HandwritingRecognizing {
         XCTAssertGreaterThanOrEqual(HandwritingFont.choices.count, 2)
         var items: [PageElement] = []
         for (index, choice) in HandwritingFont.choices.enumerated() {
-            var item = PageElement(kind: .text, rect: CGRect(x: 40, y: 60 + index * 100, width: 600, height: 80))
+            var item = PageElement(kind: .text, rect: CGRect(x: 40, y: 50 + index * 80, width: 650, height: 75))
             item.fontName = choice.name; item.fontSize = 30; item.text = "\(choice.title): Write. Study. Remember."
             XCTAssertEqual(HandwritingFont.resolve(choice.name, size: 30).fontName, choice.name)
             items.append(item)
