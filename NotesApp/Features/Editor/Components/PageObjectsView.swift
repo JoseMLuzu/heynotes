@@ -1,17 +1,14 @@
 import UIKit
 
 final class PageObjectsContentView: UIView {
-    private let textLayouts = PageTextLayoutCache()
-    var elements: [PageElement] = [] { didSet { if oldValue != elements { setNeedsDisplay() } } }
+    override class var layerClass: AnyClass { PageObjectsTileLayer.self }
+    var elements: [PageElement] = [] { didSet { if oldValue != elements { refresh() } } }
     var images: [String: UIImage] = [:] {
         didSet {
-            if oldValue.count != images.count || images.contains(where: { oldValue[$0.key] !== $0.value }) { setNeedsDisplay() }
+            if oldValue.count != images.count || images.contains(where: { oldValue[$0.key] !== $0.value }) { refresh() }
         }
     }
-    override func draw(_ rect: CGRect) {
-        guard let context = UIGraphicsGetCurrentContext() else { return }
-        PageElementRenderer.draw(elements.filter { $0.kind != .tape }, images: images, textLayouts: textLayouts, in: context)
-    }
+    private func refresh() { (layer as? PageObjectsTileLayer)?.update(elements: elements, images: images) }
 }
 
 /// Tape sits over ink; the other inserted objects sit below ink. Only explicit object tools

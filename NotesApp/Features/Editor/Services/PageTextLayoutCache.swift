@@ -1,7 +1,8 @@
 import Foundation
 import CoreText
 
-/// One cache per canvas content view, confined to that view's drawing thread.
+/// One cache per rendering owner. Tiled content serializes access across its workers;
+/// ordinary overlays access theirs on the main thread.
 /// Layouts are never shared with PDF/thumbnail workers. Position is excluded from
 /// the signature so dragging text reuses its typesetting while resizing invalidates it.
 final class PageTextLayoutCache {

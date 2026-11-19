@@ -152,7 +152,7 @@ final class CanvasHost: UIScrollView, UIScrollViewDelegate {
         if minimumZoomScale != minimum { minimumZoomScale = minimum }
         let paperScale = min(traitCollection.displayScale, 2400 / max(pageSize.width, pageSize.height))
         if paper.contentScaleFactor != paperScale { paper.contentScaleFactor = paperScale }
-        if objectContent.contentScaleFactor != paperScale { objectContent.contentScaleFactor = paperScale }
+        if objectContent.contentScaleFactor != traitCollection.displayScale { objectContent.contentScaleFactor = traitCollection.displayScale }
         if objectControls.contentScaleFactor != paperScale { objectControls.contentScaleFactor = paperScale }
         if studentTools.contentScaleFactor != paperScale { studentTools.contentScaleFactor = paperScale }
         if lasso.contentScaleFactor != paperScale { lasso.contentScaleFactor = paperScale }
