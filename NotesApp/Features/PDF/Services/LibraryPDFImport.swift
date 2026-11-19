@@ -22,7 +22,7 @@ extension LibraryViewModel {
                 page.pageWidth = size.width; page.pageHeight = size.height
                 modelContext.insert(page); notebook.pages.append(page)
             }
-            try modelContext.save()
+            try modelContext.saveRecordingSyncChanges()
             reload()
             return true
         } catch {

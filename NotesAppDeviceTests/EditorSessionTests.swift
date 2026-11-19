@@ -4,6 +4,36 @@ import PencilKit
 @testable import NotesApp
 
 @MainActor final class EditorSessionTests: XCTestCase {
+    func testNativeInkAndStudyTransactionsRecordLocalSyncChanges() async throws {
+        let root = URL.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        defer { try? FileManager.default.removeItem(at: root) }
+        let container = try PersistenceController.makeContainer(inMemory: true), context = container.mainContext
+        let book = Notebook(title: "Local changes"), page = NotePage(pageIndex: 0)
+        context.insert(book); context.insert(page); book.pages = [page]; try context.saveRecordingSyncChanges()
+        let key = SyncEntityIdentity(kind: .page, id: page.id).recordName
+        let first = try XCTUnwrap(context.fetch(FetchDescriptor<SyncChange>()).first { $0.recordName == key }).revision
+        let storage = DrawingStorage(root: root), session = EditorSession(notebook: book, context: context, storage: storage)
+        await session.open(page); defer { session.discardPreparedPages() }
+        let canvas = InkCanvas(); canvas.pageID = page.id
+        let point = PKStrokePoint(location: CGPoint(x: 20, y: 20), timeOffset: 0,
+                                  size: CGSize(width: 3, height: 3), opacity: 1, force: 1, azimuth: 0, altitude: .pi / 2)
+        canvas.drawing = PKDrawing(strokes: [PKStroke(ink: PKInk(.pen, color: .black),
+                                                     path: PKStrokePath(controlPoints: [point], creationDate: .now))])
+        session.canvas = canvas // The final native delegate callback has not fired.
+        let saved = await session.flush(); XCTAssertTrue(saved)
+        let data = try await storage.read(try XCTUnwrap(page.drawingFilePath))
+        XCTAssertEqual(try PKDrawing(data: data), canvas.drawing)
+        let observer = ModelContext(container)
+        XCTAssertNotEqual(try XCTUnwrap(observer.fetch(FetchDescriptor<SyncChange>()).first { $0.recordName == key }).revision, first)
+        let study = StudyViewModel(container: container)
+        let deck = try study.saveDeck(title: "Linked", notebookID: book.id)
+        let card = try study.saveCard(deckID: deck.id, question: "Q", answer: "A", source: .init(notebookID: book.id, pageID: page.id))
+        try study.review(card.id, rating: .good, at: .now)
+        let recorded = try ModelContext(container).fetch(FetchDescriptor<SyncChange>())
+        XCTAssertEqual(Set(recorded.map(\.kindRawValue)), Set(["notebook", "page", "deck", "card", "review"]))
+        XCTAssertEqual(recorded.filter { $0.kindRawValue == "card" }.count, 1)
+    }
+
     func testConcurrentFlushesKeepNewestDrawing() async throws {
         let root = URL.temporaryDirectory.appendingPathComponent(UUID().uuidString)
         defer { try? FileManager.default.removeItem(at: root) }

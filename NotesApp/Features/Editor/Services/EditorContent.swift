@@ -8,7 +8,7 @@ extension EditorSession {
         do {
             let encoded = try PageElementsCodec.encode(replacement)
             page.objectsData = encoded; page.updatedAt = .now; notebook.updatedAt = .now
-            try context.save()
+            try context.saveRecordingSyncChanges()
             elements = replacement
             if undo {
                 canvas?.undoManager?.registerUndo(withTarget: self) { target in
@@ -105,7 +105,7 @@ extension EditorSession {
         _ = saveMetadata()
     }
     @discardableResult private func saveMetadata() -> Bool {
-        do { notebook.updatedAt = .now; try context.save(); return true }
+        do { notebook.updatedAt = .now; try context.saveRecordingSyncChanges(); return true }
         catch { context.rollback(); errorMessage = error.localizedDescription; return false }
     }
 }

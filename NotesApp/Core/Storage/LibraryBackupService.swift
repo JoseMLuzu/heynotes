@@ -8,7 +8,7 @@ actor LibraryBackupService {
     private let save: @Sendable (ModelContext) throws -> Void
 
     init(container: ModelContainer, storage: DrawingStorage = .shared,
-         save: @escaping @Sendable (ModelContext) throws -> Void = { try $0.save() }) {
+         save: @escaping @Sendable (ModelContext) throws -> Void = { try $0.saveRecordingSyncChanges() }) {
         self.container = container; self.storage = storage; self.save = save
     }
     func exportLibrary() async throws -> URL {

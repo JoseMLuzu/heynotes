@@ -212,13 +212,14 @@ final class DocumentWorkspace {
     }
 
     func rememberCurrentPage() { persist() }
+
     /// Quiesce both native editors while producing or installing a consistent library snapshot.
     func withSavedLibrary<T: Sendable>(_ operation: @MainActor () async throws -> T) async throws -> T {
         guard !blocksNavigation else { throw LibraryBackupError.busy }
         isSwitching = true
         defer { isSwitching = false }
         guard await saveAll() else { throw LibraryBackupError.savePending }
-        if context.hasChanges { try context.save() }
+        if context.hasChanges { try context.saveRecordingSyncChanges() }
         persist()
         return try await operation()
     }

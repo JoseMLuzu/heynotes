@@ -194,7 +194,7 @@ public final class LibraryViewModel {
     private func perform(_ operation: () throws -> Void) -> Bool {
         do {
             try operation()
-            try context.save()
+            try context.saveRecordingSyncChanges()
             reload()
             return true
         } catch {

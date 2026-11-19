@@ -32,7 +32,7 @@ import SwiftData
             let card = Flashcard(question: question, answer: answer, now: now)
             context.insert(card); card.deck = deck
         }
-        do { try context.save() }
+        do { try context.saveRecordingSyncChanges() }
         catch { context.rollback(); throw error }
         return Result(id: deck.id, cardCount: deck.cards.count, trashed: false)
     }

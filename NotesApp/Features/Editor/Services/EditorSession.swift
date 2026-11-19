@@ -187,7 +187,7 @@ final class EditorSession {
                 try await storage.write(data, to: path)
                 page.drawingFilePath = path
                 page.updatedAt = .now; notebook.updatedAt = .now
-                try context.save()
+                try context.saveRecordingSyncChanges()
                 savedRevision = version
                 hasPendingSave = revision != savedRevision
                 status = revision == savedRevision ? "Saved on iPad" : "Unsaved changes"
@@ -372,7 +372,7 @@ final class EditorSession {
     }
 
     private func commit() -> Bool {
-        do { notebook.updatedAt = .now; try context.save(); return true }
+        do { notebook.updatedAt = .now; try context.saveRecordingSyncChanges(); return true }
         catch { context.rollback(); errorMessage = error.localizedDescription; return false }
     }
 }

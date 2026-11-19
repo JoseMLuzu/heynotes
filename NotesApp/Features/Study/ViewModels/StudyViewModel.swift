@@ -42,7 +42,7 @@ enum StudyError: LocalizedError {
     @ObservationIgnored private let saveContext: (ModelContext) throws -> Void
 
     init(container: ModelContainer, scheduler: any ReviewScheduling = SimpleReviewScheduler(),
-         save: @escaping (ModelContext) throws -> Void = { try $0.save() }) {
+         save: @escaping (ModelContext) throws -> Void = { try $0.saveRecordingSyncChanges() }) {
         context = ModelContext(container); context.autosaveEnabled = false
         self.scheduler = scheduler; self.saveContext = save
         reload()

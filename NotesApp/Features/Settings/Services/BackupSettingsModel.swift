@@ -80,7 +80,7 @@ final class BackupSettingsModel {
 
     private func savedLibrary<T: Sendable>(_ operation: @MainActor () async throws -> T) async throws -> T {
         if let workspace { return try await workspace.withSavedLibrary(operation) }
-        if container.mainContext.hasChanges { try container.mainContext.save() }
+        if container.mainContext.hasChanges { try container.mainContext.saveRecordingSyncChanges() }
         return try await operation()
     }
     private func begin(_ message: String) { busy = true; activity = message; errorMessage = nil; notice = nil }
