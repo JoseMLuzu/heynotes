@@ -1,14 +1,11 @@
 import UIKit
 
-/// Observes Pencil movement without preventing or delaying PencilKit's recognizers.
+/// Observes actual (not predicted) Pencil samples without delaying PencilKit input.
 final class ShapeHoldObserver: UIGestureRecognizer {
-    var onBegin: (() -> Void)?
-    var onMatch: ((SmartShapeMatch?) -> Void)?
-    var onEnd: ((Bool) -> Void)?
-    private var points: [CGPoint] = []
-    private var anchor = CGPoint.zero
-    private var timer: Task<Void, Never>?
-    private var matched = false
+    let tracker = ShapeHoldTracker()
+    var onBegin: (() -> Void)? { get { tracker.onBegin } set { tracker.onBegin = newValue } }
+    var onMatch: ((SmartShapeMatch?) -> Void)? { get { tracker.onMatch } set { tracker.onMatch = newValue } }
+    var onEnd: ((Bool) -> Void)? { get { tracker.onEnd } set { tracker.onEnd = newValue } }
     override init(target: Any?, action: Selector?) {
         super.init(target: target, action: action)
         allowedTouchTypes = [NSNumber(value: UITouch.TouchType.pencil.rawValue)]
@@ -18,29 +15,28 @@ final class ShapeHoldObserver: UIGestureRecognizer {
     override func canBePrevented(by preventingGestureRecognizer: UIGestureRecognizer) -> Bool { false }
     override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent) {
         guard touches.count == 1, let touch = touches.first, let view else { state = .failed; return }
-        let location = touch.location(in: view)
-        anchor = (view as? InkCanvas)?.pagePoint(fromViewPoint: location) ?? location
-        points = [anchor]; matched = false; onBegin?(); state = .began
+        let point = pagePoint(touch, in: view)
+        let origin = view.convert(CGPoint.zero, to: nil)
+        let unit = view.convert(CGPoint(x: (view as? InkCanvas)?.zoomScale ?? 1, y: 0), to: nil)
+        tracker.begin(at: point, screenPoint: touch.preciseLocation(in: view.window), screenScale: hypot(unit.x - origin.x, unit.y - origin.y))
+        state = .began
     }
     override func touchesMoved(_ touches: Set<UITouch>, with event: UIEvent) {
         guard let touch = touches.first, let view else { return }
-        let location = touch.location(in: view)
-        let point = (view as? InkCanvas)?.pagePoint(fromViewPoint: location) ?? location
-        if points.count < 4096 { points.append(point) }
-        if hypot(point.x - anchor.x, point.y - anchor.y) > 2 {
-            anchor = point; timer?.cancel(); matched = false; onMatch?(nil)
-            let snapshot = points
-            timer = Task { [weak self] in
-                do { try await Task.sleep(for: .milliseconds(450)) } catch { return }
-                guard let self else { return }
-                let match = SmartShapeGeometry.match(snapshot)
-                self.matched = match != nil; self.onMatch?(match)
-            }
-        }
+        tracker.append((event.coalescedTouches(for: touch) ?? [touch]).map { pagePoint($0, in: view) },
+                       screenPoint: touch.preciseLocation(in: view.window))
         state = .changed
     }
-    override func touchesEnded(_ touches: Set<UITouch>, with event: UIEvent) { timer?.cancel(); onEnd?(matched); state = .ended }
-    override func touchesCancelled(_ touches: Set<UITouch>, with event: UIEvent) { timer?.cancel(); onMatch?(nil); onEnd?(false); state = .cancelled }
-    override func reset() { super.reset(); timer?.cancel(); points = []; matched = false }
-    deinit { timer?.cancel() }
+    override func touchesEnded(_ touches: Set<UITouch>, with event: UIEvent) {
+        if let touch = touches.first, let view {
+            tracker.append([pagePoint(touch, in: view)], screenPoint: touch.preciseLocation(in: view.window))
+        }
+        tracker.end(); state = .ended
+    }
+    override func touchesCancelled(_ touches: Set<UITouch>, with event: UIEvent) { tracker.end(cancelled: true); state = .cancelled }
+    override func reset() { super.reset(); tracker.reset() }
+    private func pagePoint(_ touch: UITouch, in view: UIView) -> CGPoint {
+        let point = touch.preciseLocation(in: view)
+        return (view as? InkCanvas)?.pagePoint(fromViewPoint: point) ?? point
+    }
 }

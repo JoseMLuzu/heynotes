@@ -754,6 +754,13 @@
 			<key>sourceTree</key>
 			<string>SOURCE_ROOT</string>
 		</dict>
+		<key>26688CD108B4D78DCB214200</key>
+		<dict>
+			<key>fileRef</key>
+			<string>95ED86787EDA4F7B942505A5</string>
+			<key>isa</key>
+			<string>PBXBuildFile</string>
+		</dict>
 		<key>26BA66AD1EC7016FE7F4A47A</key>
 		<dict>
 			<key>isa</key>
@@ -1474,6 +1481,7 @@
 				<string>37CB2AA34B4EB7324AA238BE</string>
 				<string>6D9B74090DB82DFA74D68051</string>
 				<string>EEC409481B5417475966530E</string>
+				<string>BCD7B9096034E752800816EE</string>
 			</array>
 			<key>isa</key>
 			<string>PBXSourcesBuildPhase</string>
@@ -2992,6 +3000,17 @@
 			<key>sourceTree</key>
 			<string>SOURCE_ROOT</string>
 		</dict>
+		<key>95ED86787EDA4F7B942505A5</key>
+		<dict>
+			<key>isa</key>
+			<string>PBXFileReference</string>
+			<key>lastKnownFileType</key>
+			<string>sourcecode.swift</string>
+			<key>path</key>
+			<string>NotesApp/Features/Editor/Components/ShapeHoldTracker.swift</string>
+			<key>sourceTree</key>
+			<string>SOURCE_ROOT</string>
+		</dict>
 		<key>95FE3DC708A02737174ACE9F</key>
 		<dict>
 			<key>isa</key>
@@ -3884,6 +3903,7 @@
 				<string>2AE423C5561862743C8C2ACA</string>
 				<string>1D586AFF79E408D1CB7EDB7F</string>
 				<string>B3D0C372462AB2AC77A889A4</string>
+				<string>26688CD108B4D78DCB214200</string>
 			</array>
 			<key>isa</key>
 			<string>PBXSourcesBuildPhase</string>
@@ -5029,6 +5049,8 @@
 				<string>72706AE28F65A9AE3BEF63FB</string>
 				<string>6610DA3973A385066DA49717</string>
 				<string>59F248A54DBBD030CCADE33B</string>
+				<string>95ED86787EDA4F7B942505A5</string>
+				<string>D4192BCCE37736E217216492</string>
 			</array>
 			<key>isa</key>
 			<string>PBXGroup</string>
@@ -5635,6 +5657,24 @@
 			<string>CCCFA8569F9D1BE0BE946F21</string>
 			<key>isa</key>
 			<string>PBXBuildFile</string>
+		</dict>
+		<key>D4192BCCE37736E217216492</key>
+		<dict>
+			<key>isa</key>
+			<string>PBXFileReference</string>
+			<key>lastKnownFileType</key>
+			<string>sourcecode.swift</string>
+			<key>path</key>
+			<string>NotesAppDeviceTests/SmartShapeTests.swift</string>
+			<key>sourceTree</key>
+			<string>SOURCE_ROOT</string>
+		</dict>
+		<key>BCD7B9096034E752800816EE</key>
+		<dict>
+			<key>isa</key>
+			<string>PBXBuildFile</string>
+			<key>fileRef</key>
+			<string>D4192BCCE37736E217216492</string>
 		</dict>
 	</dict>
 	<key>rootObject</key>

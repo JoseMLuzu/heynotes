@@ -11,6 +11,7 @@ extension EditorSession {
         }.value
         guard valid else { return false }
         var item = PageElement(kind: match.kind, rect: match.rect)
+        item.originalInkAnchorX = item.x; item.originalInkAnchorY = item.y
         item.reversed = match.reversed; item.red = style.red; item.green = style.green; item.blue = style.blue
         item.lineWidth = style.width; item.opacity = style.opacity
         let data = await Task.detached(priority: .utility) { source.dataRepresentation() }.value
