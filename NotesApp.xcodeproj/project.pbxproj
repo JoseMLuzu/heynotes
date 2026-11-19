@@ -1398,6 +1398,7 @@
 				<string>A9B05A51C9E4C043352E035F</string>
 				<string>BBB24E46741C8813B0D31C01</string>
 				<string>6CA382108169E9BC6BF78849</string>
+				<string>87F0BF3F62BA17AA928A9868</string>
 			</array>
 			<key>isa</key>
 			<string>PBXSourcesBuildPhase</string>
@@ -2618,6 +2619,13 @@
 		<dict>
 			<key>fileRef</key>
 			<string>C1BC0DAAA6EC93D3E327F69D</string>
+			<key>isa</key>
+			<string>PBXBuildFile</string>
+		</dict>
+		<key>87F0BF3F62BA17AA928A9868</key>
+		<dict>
+			<key>fileRef</key>
+			<string>D8868138EB57FA811F127333</string>
 			<key>isa</key>
 			<string>PBXBuildFile</string>
 		</dict>
@@ -4291,6 +4299,17 @@
 			<key>sourceTree</key>
 			<string>SOURCE_ROOT</string>
 		</dict>
+		<key>D8868138EB57FA811F127333</key>
+		<dict>
+			<key>isa</key>
+			<string>PBXFileReference</string>
+			<key>lastKnownFileType</key>
+			<string>sourcecode.swift</string>
+			<key>path</key>
+			<string>NotesAppDeviceTests/LaserPointerTests.swift</string>
+			<key>sourceTree</key>
+			<string>SOURCE_ROOT</string>
+		</dict>
 		<key>D8B6CC640CA7F5815261392F</key>
 		<dict>
 			<key>fileRef</key>
@@ -4737,6 +4756,7 @@
 				<string>D204D40B75E86C1CEC443B7A</string>
 				<string>F6B04E98D1EBC1CAEC02F214</string>
 				<string>45B066000464A4109BB201E0</string>
+				<string>D8868138EB57FA811F127333</string>
 			</array>
 			<key>isa</key>
 			<string>PBXGroup</string>

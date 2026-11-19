@@ -1,7 +1,53 @@
 import UIKit
 
-/// Temporary vector light. Concentric strokes avoid a full-page blurred offscreen surface.
+/// Each completed stroke keeps its own light and deadline, so writing the next letter
+/// never removes the previous one. Temporary layers never enter the document drawing.
 @MainActor final class LaserPointerVisual {
+    let layer = CALayer()
+    var style = InkStyle(red: 1, green: 0.15, blue: 0.2, width: 3) {
+        didSet { active?.style = style }
+    }
+    private let holdDuration: TimeInterval
+    private let fadeDuration: TimeInterval
+    private var active: LaserStrokeVisual?
+    private var retiring: [UUID: (visual: LaserStrokeVisual, cleanup: Task<Void, Never>)] = [:]
+
+    init(holdDuration: TimeInterval = 3, fadeDuration: TimeInterval = 0.6) {
+        self.holdDuration = holdDuration; self.fadeDuration = fadeDuration
+    }
+
+    func show(_ points: [CGPoint]) {
+        guard !points.isEmpty else { return }
+        if active == nil {
+            let stroke = LaserStrokeVisual(); stroke.style = style
+            layer.addSublayer(stroke.layer); active = stroke
+        }
+        active?.show(points)
+    }
+
+    func finishStroke() {
+        guard let stroke = active else { return }
+        active = nil
+        stroke.fadeOut(after: holdDuration, duration: fadeDuration)
+        let id = UUID(), lifetime = holdDuration + fadeDuration
+        let cleanup = Task { [weak self] in
+            do { try await Task.sleep(for: .seconds(lifetime)) } catch { return }
+            self?.retiring.removeValue(forKey: id)?.visual.layer.removeFromSuperlayer()
+        }
+        retiring[id] = (stroke, cleanup)
+    }
+
+    func clear() {
+        active?.layer.removeFromSuperlayer(); active = nil
+        for entry in retiring.values { entry.cleanup.cancel(); entry.visual.layer.removeFromSuperlayer() }
+        retiring.removeAll()
+    }
+
+    deinit { for entry in retiring.values { entry.cleanup.cancel() } }
+}
+
+/// Concentric strokes avoid a full-page blurred offscreen surface.
+@MainActor private final class LaserStrokeVisual {
     let layer = CALayer()
     private let glowLayers = (0..<3).map { _ in CAShapeLayer() }
     private let beam = CAShapeLayer()
@@ -60,9 +106,11 @@ import UIKit
         }
     }
 
-    func fadeOut() {
+    func fadeOut(after delay: TimeInterval, duration: TimeInterval) {
         let animation = CABasicAnimation(keyPath: "opacity")
-        animation.fromValue = 1; animation.toValue = 0; animation.duration = 0.9
+        animation.fromValue = 1; animation.toValue = 0; animation.duration = duration
+        animation.beginTime = layer.convertTime(CACurrentMediaTime(), from: nil) + delay
+        animation.timingFunction = CAMediaTimingFunction(name: .easeOut)
         animation.fillMode = .forwards; animation.isRemovedOnCompletion = false
         layer.add(animation, forKey: "fade")
     }

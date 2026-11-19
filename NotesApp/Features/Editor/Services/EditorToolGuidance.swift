@@ -5,7 +5,7 @@ extension EditorTool {
         switch self {
         case .lasso: "Draw a loop around handwriting, then move the selection. Touch and hold selected ink for editing actions."
         case .objects: "Select an inserted object, drag it to move, or drag its corner to resize."
-        case .laser: "Point with Apple Pencil. Laser trails disappear and are not saved or exported."
+        case .laser: "Write or point with Apple Pencil. Each trail stays for 3 seconds after lifting, then fades. It is not saved or exported."
         case .stamp: "Tap the page to place the selected stamp. Use Select Objects to move or resize it."
         case .sticky: "Tap to add a note. Tap its header with a finger to fold it. Use Select Objects to move or edit it."
         case .protractor: "Tap the vertex, then one point on each arm. A fourth tap resets the measurement. Measurements are temporary."

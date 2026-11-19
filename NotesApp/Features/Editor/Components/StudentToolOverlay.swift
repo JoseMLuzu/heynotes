@@ -19,7 +19,6 @@ final class StudentToolOverlay: UIView {
     private let pan = UIPanGestureRecognizer()
     private let tap = UITapGestureRecognizer()
     private let laser = LaserPointerVisual()
-    private var fade: Task<Void, Never>?
 
     override init(frame: CGRect) {
         super.init(frame: frame); backgroundColor = .clear; isOpaque = false
@@ -48,7 +47,7 @@ final class StudentToolOverlay: UIView {
         accessibilityLabel = "Protractor. Tap the vertex, then one point on each arm. A fourth tap starts a new measurement."
     }
     func reset() {
-        fade?.cancel(); fade = nil; laser.clear()
+        laser.clear()
         points = []; vertices = []; isTracking = false; onActivity?(false); setNeedsDisplay()
     }
     private func bounded(_ point: CGPoint) -> CGPoint {
@@ -61,14 +60,13 @@ final class StudentToolOverlay: UIView {
         case .began:
             let delta = gesture.translation(in: self)
             points = [bounded(CGPoint(x: point.x - delta.x, y: point.y - delta.y)), point]
-            fade?.cancel(); laser.layer.removeAllAnimations()
             isTracking = true; onActivity?(true); updateLaser(); if mode != .laser { setNeedsDisplay() }
         case .changed:
             if points.count < 4096 { points.append(point) } else { points[points.count - 1] = point }
             updateLaser(); if mode != .laser { setNeedsDisplay() }
         case .ended:
             points.append(point)
-            if mode == .laser { updateLaser(); fadeLaser() }
+            if mode == .laser { updateLaser(); laser.finishStroke() }
             else if mode == .eraser { onErase?(points, radius) }
             else if let start = points.first {
                 if mode == .compass, let circle = StudentToolGeometry.circle(center: start, end: point, bounds: bounds) { onCircle?(circle) }
@@ -91,19 +89,13 @@ final class StudentToolOverlay: UIView {
                 UIAccessibility.post(notification: .announcement, argument: accessibilityValue)
             }
         } else if mode == .laser {
-            points = [point, CGPoint(x: point.x + 0.1, y: point.y)]; updateLaser(); points = []; fadeLaser()
+            points = [point, CGPoint(x: point.x + 0.1, y: point.y)]; updateLaser(); points = []; laser.finishStroke()
         } else if mode == .eraser { onErase?([point], radius) }
         else if mode == .stamp || mode == .sticky { onTap?(mode, point) }
     }
     private func updateLaser() {
         guard mode == .laser else { return }
         laser.show(points)
-    }
-    private func fadeLaser() {
-        fade?.cancel(); laser.fadeOut()
-        fade = Task { [weak self] in
-            do { try await Task.sleep(for: .seconds(1)) } catch { return }; self?.laser.clear()
-        }
     }
 
     override func draw(_ rect: CGRect) {
@@ -121,5 +113,4 @@ final class StudentToolOverlay: UIView {
             context.setLineDash(phase: 0, lengths: [5, 3]); context.stroke(selection)
         }
     }
-    deinit { fade?.cancel() }
 }
