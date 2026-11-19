@@ -1,9 +1,53 @@
 import XCTest
 import PDFKit
 import PencilKit
+import SwiftData
 @testable import NotesApp
 
 @MainActor final class PerformanceTests: XCTestCase {
+    func testStudyOverviewWorkload() throws {
+        let container = try PersistenceController.makeContainer(inMemory: true), context = container.mainContext
+        let now = Date(timeIntervalSince1970: 1_800_000_000)
+        for index in 0..<60 {
+            let deck = StudyDeck(title: "Deck \(index)"); context.insert(deck)
+            for cardIndex in 0..<40 {
+                let card = Flashcard(question: "Q \(cardIndex)", answer: "A", now: now)
+                card.nextReviewAt = now.addingTimeInterval(cardIndex.isMultiple(of: 2) ? -60 : 172_800)
+                context.insert(card); deck.cards.append(card)
+            }
+        }
+        try context.save()
+        let model = StudyViewModel(container: container), clock = ContinuousClock()
+        var checksum = 0
+        let start = clock.now
+        for _ in 0..<3 {
+            checksum += model.activeCards.count + model.dueTodayCount(at: now) + model.due(at: now).count
+            for deck in model.activeDecks {
+                checksum += model.cards(in: deck).count + model.due(at: now, deckID: deck.id).count
+            }
+        }
+        let duration = start.duration(to: clock.now)
+        let ms = Double(duration.components.seconds) * 1000 + Double(duration.components.attoseconds) / 1e15
+        XCTAssertEqual(checksum, 25_200)
+        print("PERFORMANCE study_overview_60_decks_2400_cards_3_passes_legacy_ms=\(ms)")
+        let optimizedStart = clock.now
+        var optimizedChecksum = 0
+        for _ in 0..<3 {
+            let snapshot = model.overview(at: now)
+            optimizedChecksum += snapshot.totalCards + snapshot.dueToday + snapshot.dueCards.count
+            for deck in model.activeDecks {
+                let counts = snapshot.counts(for: deck.id)
+                optimizedChecksum += counts.cards + counts.due
+            }
+        }
+        let optimizedDuration = optimizedStart.duration(to: clock.now)
+        let optimizedMS = Double(optimizedDuration.components.seconds) * 1000 + Double(optimizedDuration.components.attoseconds) / 1e15
+        XCTAssertEqual(optimizedChecksum, checksum)
+        print("PERFORMANCE study_overview_60_decks_2400_cards_3_passes_snapshot_ms=\(optimizedMS)")
+        let attachment = XCTAttachment(string: "60 decks/2,400 cards, 3 passes: legacy \(ms) ms, snapshot \(optimizedMS) ms. Identical counts. Simulator only.")
+        attachment.lifetime = .keepAlways; add(attachment)
+    }
+
     func testRepeatedPDFPreviewWorkload() async throws {
         let root = URL.temporaryDirectory.appendingPathComponent(UUID().uuidString)
         try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)

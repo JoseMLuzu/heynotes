@@ -3061,6 +3061,13 @@
 			<key>sourceTree</key>
 			<string>SOURCE_ROOT</string>
 		</dict>
+		<key>A6E4B50BA5F8801F411C6DB5</key>
+		<dict>
+			<key>fileRef</key>
+			<string>F6B04E98D1EBC1CAEC02F214</string>
+			<key>isa</key>
+			<string>PBXBuildFile</string>
+		</dict>
 		<key>A6EAD68F63D6A824A5982C29</key>
 		<dict>
 			<key>fileRef</key>
@@ -3613,6 +3620,7 @@
 				<string>99945D71C28E94084A941B69</string>
 				<string>3F30BDC577CCA6EC6B2D85AE</string>
 				<string>E98154837B45853D445B74CD</string>
+				<string>A6E4B50BA5F8801F411C6DB5</string>
 			</array>
 			<key>isa</key>
 			<string>PBXSourcesBuildPhase</string>
@@ -4688,6 +4696,7 @@
 				<string>DE908D976A28FC5CCA1781D4</string>
 				<string>009FDA337ED8D7E64DCAAD76</string>
 				<string>0B9DB2AA1E154599B3EB3320</string>
+				<string>F6B04E98D1EBC1CAEC02F214</string>
 			</array>
 			<key>isa</key>
 			<string>PBXGroup</string>
@@ -5073,6 +5082,17 @@
 			<string>sourcecode.swift</string>
 			<key>path</key>
 			<string>NotesApp/Features/Editor/Services/EditorCapture.swift</string>
+			<key>sourceTree</key>
+			<string>SOURCE_ROOT</string>
+		</dict>
+		<key>F6B04E98D1EBC1CAEC02F214</key>
+		<dict>
+			<key>isa</key>
+			<string>PBXFileReference</string>
+			<key>lastKnownFileType</key>
+			<string>sourcecode.swift</string>
+			<key>path</key>
+			<string>NotesApp/Features/Study/Services/StudyOverview.swift</string>
 			<key>sourceTree</key>
 			<string>SOURCE_ROOT</string>
 		</dict>
