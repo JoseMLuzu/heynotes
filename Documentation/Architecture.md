@@ -1,6 +1,6 @@
 # Architecture and delivery plan
 
-Current delivery: Study and the expanded student tools are implemented. The phase descriptions below also retain the original planning context; see [ExpandedStudentTools.md](ExpandedStudentTools.md) for the current V7 schema, controls and verification.
+Current delivery: Study and the expanded student tools are implemented. The phase descriptions below also retain the original planning context; see [ExpandedStudentTools.md](ExpandedStudentTools.md) for the student tools and image-card schema; see [CloudKitPreparation.md](CloudKitPreparation.md) for the current V8 local journal.
 
 Current status — November 14, 2026: schema V6, Phases 1–4, notebook sections, PDF margins, two-document workspace and local library backups are implemented. v1.0 is offline; iCloud is post-launch. Early proposals below are historical. See [ReleaseReadiness.md](ReleaseReadiness.md), [Study.md](Study.md) and [LibraryBackups.md](LibraryBackups.md) for current scope and acceptance gaps.
 
@@ -123,4 +123,14 @@ DocumentWorkspace now retains up to two live EditorSessions in stable primary/se
 
 ## Expanded student tools (November 14, 2026)
 
-Current live metadata is `NotesSchemaV7`. `SchemaV6.swift` freezes the previously installed seven-entity schema; V7 adds only optional question/answer image paths on Flashcard with a lightweight migration. Existing IDs, drawing/PDF paths, due dates and review records remain unchanged. See [ExpandedStudentTools.md](ExpandedStudentTools.md) for native input overlays, conservative shape recognition, canonical-drawing zoom writing, image-region study cards and shared PDF geometry. These features retain the existing light MVVM and local SwiftData/FileManager boundaries. Cloud synchronization remains deferred.
+The expanded-tool delivery used `NotesSchemaV7`. Current live metadata is `NotesSchemaV8`, which adds only a device-local change journal; `SchemaV7.swift` freezes the preceding user-data layout. `SchemaV6.swift` freezes the previously installed seven-entity schema; V7 adds only optional question/answer image paths on Flashcard with a lightweight migration. Existing IDs, drawing/PDF paths, due dates and review records remain unchanged. See [ExpandedStudentTools.md](ExpandedStudentTools.md) for native input overlays, conservative shape recognition, canonical-drawing zoom writing, image-region study cards and shared PDF geometry. These features retain the existing light MVVM and local SwiftData/FileManager boundaries. Cloud synchronization remains deferred.
+
+
+## Local sync preparation (V8)
+
+`SyncChange` records stable model-kind/UUID identities, upsert or deletion intent and a fresh revision token. `saveRecordingSyncChanges()` commits intents with application metadata in one SwiftData save. This preserves the local MVVM/services architecture and actor-owned file storage; it does not enable automatic SwiftData CloudKit integration. The seven user-data entity layouts and all relative asset paths remain unchanged. Acknowledgements cannot clear a newer local edit; cascade and nullify relationships are covered by journal tests. Initial cloud enrollment, account binding, asset snapshots, engine state and remote conflict/apply policies remain separate milestones. No cloud entitlements or networking are enabled. See [CloudKitPreparation.md](CloudKitPreparation.md) for boundaries and gates.
+
+
+## Immutable upload snapshots
+
+The local sync preparation now includes private value snapshots and read-only source descriptors captured through the existing workspace save boundary. Chunked copying, content hashes, atomic package publication and retry verification belong to `SyncUploadStagingStore`, outside both the main actor and the drawing-write executor. Editable backup capture and upload capture share one user-record mapping without changing the backup format. CKAsset construction uses prepared files; the CloudKit engine/account/wire protocol is still absent. No additional metadata migration is needed. See [SyncUploadPreparation.md](SyncUploadPreparation.md).
