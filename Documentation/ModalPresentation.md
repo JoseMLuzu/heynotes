@@ -18,6 +18,12 @@ Compact sheets use a preferred width of 440 pt and a scaled ideal height on iPad
 
 The native PDF share controller, photo/file pickers, alerts, tool popovers and full-screen cover/template galleries retain their separate platform presentations. There are no global UIKit appearance changes, persistence changes or schema migrations.
 
+## Content-fitted tool options
+
+The toolbar's `ToolOptionsPanel` no longer assigns a 540-point height to every tool or a separate 240-point height to Lasso. Its header stays visible while `ViewThatFits(in: .vertical)` chooses between the options' intrinsic height and a scrolling fallback. Short tool panels shrink to their actual content; the eraser also resizes when its mode adds/removes size controls. Long ink/stamp panels can use available space and scroll when the window or larger text requires it. Scroll bouncing is limited to content that overflows.
+
+This shared panel is used by the toolbar and Focus Mode, with existing settings bindings and destructive-action confirmation unchanged. It uses APIs available at the iPadOS 17 deployment target and does not depend on screen-size estimates, asynchronous height measurements or a list of per-tool heights.
+
 ## APIs and compatibility
 
 The project targets iPadOS 17. `presentationDetents` is available at this target. `presentationSizing`, `.page` and `.fitted` are guarded with an iPadOS 18 availability check, verified against the installed SDK interface. Apple documents content-based ideal sizing in [FittedPresentationSizing](https://developer.apple.com/documentation/swiftui/fittedpresentationsizing) and [presentationSizing(_:)](https://developer.apple.com/documentation/swiftui/view/presentationsizing(_:)). NavigationStack and Form are flexible containers, so the compact policy supplies an ideal size for the fitted presentation.

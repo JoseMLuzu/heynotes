@@ -22,36 +22,42 @@ struct ToolOptionsPanel: View {
                 Button("Done") { dismiss() }.frame(minHeight: 44)
             }.padding(.horizontal, 20).padding(.top, 8)
             Divider()
-            ScrollView {
-                VStack(alignment: .leading, spacing: 22) {
-                    if preferences.selected.usesInkStyle { inkOptions }
-                    else if preferences.selected == .eraser { eraserOptions }
-                    else {
-                        Text(preferences.selected.guidance)
-                            .font(.subheadline).foregroundStyle(.secondary)
-                    }
-                    if preferences.selected.usesInkStyle || preferences.selected == .eraser {
-                        Button("Reset This Tool") { preferences.resetCurrentTool() }
-                            .font(.subheadline).frame(minHeight: 44)
-                    }
-                    if preferences.selected == .stamp {
-                        Picker("Stamp", selection: $preferences.stampSymbol) {
-                            ForEach(StampSymbol.allCases, id: \.self) { Text("\($0.rawValue)  \($0.title)").tag($0) }
-                        }
-                    }
-                    if preferences.selected == .sticky {
-                        Picker("Note Color", selection: $preferences.stickyStyle) {
-                            ForEach(StickyNoteStyle.allCases, id: \.self) { Text($0.rawValue.capitalized).tag($0) }
-                        }
-                    }
-                }.padding(20)
+            ViewThatFits(in: .vertical) {
+                options.fixedSize(horizontal: false, vertical: true)
+                ScrollView { options }
+                    .scrollBounceBehavior(.basedOnSize)
             }
         }
-        .frame(width: 336, height: preferences.selected == .lasso ? 240 : 540)
+        .frame(width: 336)
         .presentationCompactAdaptation(.popover)
         .confirmationDialog("Clear all handwriting on this page?", isPresented: $confirmingClear, titleVisibility: .visible) {
             Button("Clear Handwriting", role: .destructive) { clearInk(); dismiss() }
         } message: { Text("The page background stays. Use Undo to restore the handwriting during this canvas session.") }
+    }
+
+    private var options: some View {
+        VStack(alignment: .leading, spacing: 22) {
+            if preferences.selected.usesInkStyle { inkOptions }
+            else if preferences.selected == .eraser { eraserOptions }
+            else {
+                Text(preferences.selected.guidance)
+                    .font(.subheadline).foregroundStyle(.secondary)
+            }
+            if preferences.selected.usesInkStyle || preferences.selected == .eraser {
+                Button("Reset This Tool") { preferences.resetCurrentTool() }
+                    .font(.subheadline).frame(minHeight: 44)
+            }
+            if preferences.selected == .stamp {
+                Picker("Stamp", selection: $preferences.stampSymbol) {
+                    ForEach(StampSymbol.allCases, id: \.self) { Text("\($0.rawValue)  \($0.title)").tag($0) }
+                }
+            }
+            if preferences.selected == .sticky {
+                Picker("Note Color", selection: $preferences.stickyStyle) {
+                    ForEach(StickyNoteStyle.allCases, id: \.self) { Text($0.rawValue.capitalized).tag($0) }
+                }
+            }
+        }.padding(20)
     }
 
     private var inkOptions: some View {

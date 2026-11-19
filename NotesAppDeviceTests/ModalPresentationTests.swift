@@ -5,6 +5,7 @@ import SwiftData
 
 @MainActor private final class ModalTestState: ObservableObject {
     @Published var isPresented = false
+    @Published var maximumHeight: CGFloat? = nil
 }
 
 @MainActor private struct ModalTestHost: View {
@@ -16,6 +17,57 @@ import SwiftData
 }
 
 @MainActor final class ModalPresentationTests: XCTestCase {
+    func testToolPopoverResizesWithItsOptionsAndKeepsOverflowScrollable() async throws {
+        let name = "ToolPopover.\(UUID())", defaults = try XCTUnwrap(UserDefaults(suiteName: name))
+        defer { defaults.removePersistentDomain(forName: name) }
+        let tools = ToolPreferences(defaults: defaults), state = ModalTestState()
+        let scene = try XCTUnwrap(UIApplication.shared.connectedScenes.compactMap { $0 as? UIWindowScene }.first)
+        let window = UIWindow(windowScene: scene)
+        window.frame = CGRect(x: 0, y: 0, width: 1180, height: 820)
+        let host = UIHostingController(rootView: ToolPopoverTestHost(state: state, tools: tools))
+        window.rootViewController = host; window.isHidden = false
+        defer { host.dismiss(animated: false); window.isHidden = true; window.rootViewController = nil }
+        host.view.frame = window.bounds; host.view.layoutIfNeeded()
+        tools.selected = .lasso
+        try await Task.sleep(for: .milliseconds(100))
+        state.isPresented = true
+        try await Task.sleep(for: .milliseconds(500))
+        let popover = try XCTUnwrap(host.presentedViewController)
+        var heights: [String: CGFloat] = [:]
+        for (label, tool, mode) in [("Lasso", EditorTool.lasso, EraserMode.strokes),
+                                    ("Whole Stroke Eraser", .eraser, .strokes),
+                                    ("Precise Eraser", .eraser, .precise),
+                                    ("Pen", .pen, .strokes), ("Stamp", .stamp, .strokes),
+                                    ("Sticky Note", .sticky, .strokes)] {
+            tools.selected = tool; tools.eraserMode = mode
+            try await Task.sleep(for: .milliseconds(350))
+            popover.view.layoutIfNeeded()
+            heights[label] = popover.view.bounds.height
+            let image = UIGraphicsImageRenderer(size: window.bounds.size).image { _ in
+                window.drawHierarchy(in: window.bounds, afterScreenUpdates: true)
+            }
+            let attachment = XCTAttachment(image: image); attachment.name = "Fitted-Tool-\(label)"
+            attachment.lifetime = .keepAlways; add(attachment)
+        }
+        let measurements = XCTAttachment(string: heights.sorted { $0.key < $1.key }
+            .map { "\($0.key): \($0.value) points" }.joined(separator: "\n"))
+        measurements.name = "Native tool popover heights"; measurements.lifetime = .keepAlways; add(measurements)
+        XCTAssertLessThan(try XCTUnwrap(heights["Lasso"]), 250)
+        XCTAssertLessThan(try XCTUnwrap(heights["Sticky Note"]), 300)
+        XCTAssertGreaterThan(try XCTUnwrap(heights["Precise Eraser"]), try XCTUnwrap(heights["Whole Stroke Eraser"]) + 100)
+        tools.selected = .pen
+        state.maximumHeight = 260
+        try await Task.sleep(for: .milliseconds(500))
+        let constrained = try XCTUnwrap(host.presentedViewController)
+        constrained.view.layoutIfNeeded()
+        let contentBounds = constrained.view.bounds.inset(by: constrained.view.safeAreaInsets)
+        XCTAssertLessThanOrEqual(contentBounds.height, 261, "Exclude the native popover arrow's safe area.")
+        let scrolling = descendants(constrained.view).compactMap { $0 as? UIScrollView }.filter {
+            $0.isScrollEnabled && $0.bounds.height > 0 && $0.contentSize.height > $0.bounds.height + 20
+        }
+        XCTAssertFalse(scrolling.isEmpty, "Ink options must stay reachable when the available height is small.")
+    }
+
     func testAppFormsOpenExpandedWithoutDraggingInPortrait() async throws {
         let container = try PersistenceController.makeContainer(inMemory: true)
         let notebook = Notebook(title: "Modal check"), page = NotePage(pageIndex: 0), folder = Folder(title: "Biology")
@@ -113,4 +165,21 @@ import SwiftData
         try await Task.sleep(for: .milliseconds(80))
     }
     private func descendants(_ view: UIView) -> [UIView] { [view] + view.subviews.flatMap(descendants) }
+}
+
+@MainActor private struct ToolPopoverTestHost: View {
+    @ObservedObject var state: ModalTestState
+    let tools: ToolPreferences
+
+    var body: some View {
+        VStack {
+            Button("Tool Options") {}.padding(.top, 40)
+                .popover(isPresented: $state.isPresented) {
+                    ToolOptionsPanel(preferences: tools, clearInk: {})
+                        .environment(\.dynamicTypeSize, state.maximumHeight == nil ? .large : .accessibility3)
+                        .frame(maxHeight: state.maximumHeight)
+                }
+            Spacer()
+        }.frame(maxWidth: .infinity)
+    }
 }
