@@ -53,7 +53,8 @@ import PencilKit
             capture(window, name: "Organized-Toolbar-\(Int(size.width))")
         }
         for group in ToolbarToolGroup.allCases {
-            let panel = UIHostingController(rootView: ToolbarToolGroupPanel(group: group, preferences: controls.tools, page: page) { controls.tools.selected = $0 }.padding().background(AppTheme.background))
+            let panel = UIHostingController(rootView: ToolbarToolGroupPanel(group: group, preferences: controls.tools, page: page,
+                palette: controls.palette, canInteract: { true }) { controls.tools.selected = $0 }.padding().background(AppTheme.background))
             window.frame = CGRect(x: 0, y: 0, width: 360, height: group == .drawing ? 520 : 380)
             window.rootViewController = panel; panel.view.frame = window.bounds; panel.view.layoutIfNeeded()
             await Task.yield(); capture(window, name: "Tool-Panel-\(group.rawValue)")

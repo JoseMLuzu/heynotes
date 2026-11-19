@@ -60,6 +60,23 @@ import XCTest
                 XCTAssertEqual(app.buttons[ids[other]].value as? String, previous[other])
             }
         }
+        // Drag directly out of each grouped popover, including non-ink configurations.
+        for (group, tool, slot) in [("Study Tools", "Sticky Note", 0), ("Study Tools", "Stamp", 1),
+                                   ("Draw and Measure", "Rectangle", 2)] {
+            app.buttons[group].tap()
+            let source = toolbarTool(tool, in: app)
+            XCTAssertTrue(source.waitForExistence(timeout: 5), app.debugDescription)
+            let destination = app.buttons[ids[slot]]
+            source.press(forDuration: 0.7, thenDragTo: destination)
+            let changed = NSPredicate { _, _ in (destination.value as? String)?.hasPrefix(tool) == true }
+            XCTAssertEqual(XCTWaiter.wait(for: [XCTNSPredicateExpectation(predicate: changed, object: nil)], timeout: 5), .completed,
+                           app.debugDescription)
+            XCTAssertEqual(favorites.count, 6)
+            XCTAssertEqual(favorites.allElementsBoundByIndex.map(\.identifier), ids)
+            if app.buttons["Done"].exists { app.buttons["Done"].tap() }
+            destination.tap()
+            XCTAssertTrue((destination.value as? String)?.hasPrefix(tool) == true)
+        }
         let screenshot = XCTAttachment(screenshot: app.screenshot())
         screenshot.name = "Six favorites after individually targeted replacements"
         screenshot.lifetime = .keepAlways

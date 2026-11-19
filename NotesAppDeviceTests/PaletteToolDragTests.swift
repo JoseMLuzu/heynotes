@@ -6,6 +6,33 @@ import UniformTypeIdentifiers
 @testable import NotesApp
 
 @MainActor final class PaletteToolDragTests: XCTestCase {
+    func testGroupedToolsReplaceFavoritesWithTheirStylesAndSurviveReopen() async throws {
+        let f = try DragFixture(); defer { f.cleanup() }
+        XCTAssertTrue(f.palette.save(ToolPreset(name: "Sixth", tool: .laser)))
+        f.tools.stickyStyle = .rose; f.tools.stampSymbol = .star
+        f.tools.ink = InkStyle(red: 0.2, green: 0.4, blue: 0.8, width: 5)
+        let active = f.tools.selected, savedTools = f.defaults.data(forKey: "editor.tools.v1")
+        let slot = f.palette.favorites[2].id, ids = f.palette.favorites.map(\.id)
+        for tool in ToolbarToolGroup.allCases.flatMap(\.tools) {
+            let source = PaletteToolDragSource(snapshot: { f.tools.capturePreset(for: tool) },
+                palette: f.palette, canInteract: { true })
+            let drag = try PaletteToolDrag.decode(await bytes(source.provider()))
+            XCTAssertEqual(drag.preset.tool, tool)
+            XCTAssertTrue(f.palette.acceptDrop(drag, onto: slot, in: f.palette.activeProfile.id))
+            let reopened = QuickPalettePreferences(defaults: f.defaults)
+            let preset = try XCTUnwrap(reopened.favorites.first { $0.id == slot })
+            XCTAssertEqual(preset.tool, tool); XCTAssertEqual(reopened.favorites.map(\.id), ids)
+            if tool == .sticky { XCTAssertEqual(preset.stickyStyle, .rose) }
+            if tool == .stamp { XCTAssertEqual(preset.stampSymbol, .star) }
+            let applied = ToolPreferences(defaults: UserDefaults(suiteName: f.suite + ".applied")!)
+            defer { UserDefaults().removePersistentDomain(forName: f.suite + ".applied") }
+            applied.apply(preset)
+            XCTAssertTrue(applied.matches(preset)); XCTAssertEqual(applied.selected, tool)
+        }
+        XCTAssertEqual(f.tools.selected, active)
+        XCTAssertEqual(f.defaults.data(forKey: "editor.tools.v1"), savedTools)
+    }
+
     func testToolbarDragCapturesInactiveToolWithoutSelectingItAndRevealsPalette() async throws {
         let f = try DragFixture(); defer { f.cleanup() }
         f.tools.selected = .marker

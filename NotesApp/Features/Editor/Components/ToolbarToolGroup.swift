@@ -33,6 +33,8 @@ struct ToolbarToolGroupButton: View {
     let page: NotePage?
     let arrowEdge: Edge
     @Binding var presentedGroup: ToolbarToolGroup?
+    let palette: QuickPalettePreferences
+    let canInteract: () -> Bool
     let select: (EditorTool) -> Void
 
     private var active: Bool { group.contains(preferences.selected) }
@@ -45,8 +47,12 @@ struct ToolbarToolGroupButton: View {
         .accessibilityValue(active ? preferences.selected.title : "Choose a tool")
         .accessibilityAddTraits(active ? .isSelected : [])
         .help(group.fullTitle)
+        .accessibilityHint(active ? "Tap to choose a tool, or hold and drag the selected tool to Quick Palette." : "Tap to choose a tool.")
+        .modifier(PaletteToolDragSource(snapshot: { preferences.capturePreset() }, palette: palette,
+                                       canInteract: { active && canInteract() }))
         .popover(isPresented: Binding(get: { presentedGroup == group }, set: { if !$0, presentedGroup == group { presentedGroup = nil } }), arrowEdge: arrowEdge) {
-            ToolbarToolGroupPanel(group: group, preferences: preferences, page: page) { tool in
+            ToolbarToolGroupPanel(group: group, preferences: preferences, page: page, palette: palette, canInteract: canInteract,
+                                 dismissForDrag: { presentedGroup = nil }) { tool in
                 presentedGroup = nil; select(tool)
             }
             .tint(AppTheme.accent)
@@ -69,6 +75,9 @@ struct ToolbarToolGroupPanel: View {
     let group: ToolbarToolGroup
     @Bindable var preferences: ToolPreferences
     let page: NotePage?
+    let palette: QuickPalettePreferences
+    let canInteract: () -> Bool
+    var dismissForDrag: (() -> Void)? = nil
     let select: (EditorTool) -> Void
     @Environment(\.dismiss) private var dismiss
 
@@ -98,6 +107,15 @@ struct ToolbarToolGroupPanel: View {
                     .accessibilityIdentifier("editor.tool.\(tool.rawValue)")
                     .accessibilityAddTraits(selected ? .isSelected : [])
                     .help(tool.guidance)
+                    .accessibilityHint("Select this tool, or hold and drag it to Quick Palette.")
+                    .modifier(PaletteToolDragSource(snapshot: { preferences.capturePreset(for: tool) }, palette: palette,
+                        canInteract: { canInteract() && ToolbarToolGroup.isAvailable(tool, on: page) }, didPrepareDrag: {
+                            // Return the immutable provider to UIKit before removing its popover anchor.
+                            Task { @MainActor in
+                                await Task.yield()
+                                if let dismissForDrag { dismissForDrag() } else { dismiss() }
+                            }
+                        }))
                 }
             }
             if group == .drawing {
@@ -113,6 +131,8 @@ struct ToolbarToolGroupPanel: View {
                 Text("Draw a region with Apple Pencil. PDF highlighting requires a PDF page with selectable text.")
                     .font(.caption).foregroundStyle(.secondary)
             }
+            Text("Hold and drag a tool onto a Quick Palette favorite to replace it, or onto + to add it.")
+                .font(.caption).foregroundStyle(.secondary)
         }
         .padding(16).frame(width: 320)
         .buttonStyle(EditorToolbarButtonStyle())

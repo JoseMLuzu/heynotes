@@ -99,7 +99,8 @@ struct EditorToolbar<InsertMenu: View>: View {
         separator
         ForEach(ToolbarToolGroup.allCases) { group in
             ToolbarToolGroupButton(group: group, preferences: preferences, page: session.page,
-                                   arrowEdge: position.popoverEdge, presentedGroup: $presentedGroup) { tool in
+                                   arrowEdge: position.popoverEdge, presentedGroup: $presentedGroup,
+                                   palette: quickPalette, canInteract: canDragTool) { tool in
                 preferences.selected = tool
             }
         }
@@ -131,10 +132,13 @@ struct EditorToolbar<InsertMenu: View>: View {
         .accessibilityIdentifier("editor.tool.\(item.rawValue)")
         .accessibilityAddTraits(preferences.selected == item || item == .writingZoom && session.writingRegion != nil ? .isSelected : [])
         .accessibilityHint("Select this tool. Tap again for settings, or hold and drag to Quick Palette.")
-        .modifier(PaletteToolDragSource(snapshot: { preferences.capturePreset(for: item) }, palette: quickPalette) {
-            let stroke = (session.zoomCanvas ?? session.canvas)?.drawingGestureRecognizer.state
-            return session.ready && !session.busy && !session.exporting && stroke != .began && stroke != .changed
-        })
+        .modifier(PaletteToolDragSource(snapshot: { preferences.capturePreset(for: item) }, palette: quickPalette,
+                                       canInteract: canDragTool))
+    }
+
+    private func canDragTool() -> Bool {
+        let stroke = (session.zoomCanvas ?? session.canvas)?.drawingGestureRecognizer.state
+        return session.ready && !session.busy && !session.exporting && stroke != .began && stroke != .changed
     }
 
     private func openToolSettings() {

@@ -6,12 +6,14 @@ struct PaletteToolDragSource: ViewModifier {
     let palette: QuickPalettePreferences
     var fromFavorite = false
     let canInteract: () -> Bool
+    var didPrepareDrag: (() -> Void)? = nil
 
     func provider() -> NSItemProvider {
         guard canInteract() else { return NSItemProvider() }
         let drag = PaletteToolDrag(preset: snapshot(), paletteID: fromFavorite ? palette.dragScopeID : nil,
                                    profileID: fromFavorite ? palette.activeProfile.id : nil)
         if !fromFavorite { palette.show() }
+        didPrepareDrag?()
         return drag.itemProvider()
     }
 
