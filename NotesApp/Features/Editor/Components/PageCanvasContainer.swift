@@ -367,7 +367,7 @@ final class PageCanvasContainer: UIView {
         guard let id = host.ink.pageID, let identity, allowedNeighbors.values.contains(id), neighbors[id] == nil else {
             host.removeFromSuperview(); return
         }
-        host.ink.delegate = nil
+        host.ink.delegate = host.ink
         host.onPageSwipe = nil; host.onPagePull = nil; host.onPagePullCancelled = nil
         host.editorAllowsInk = false; host.isUserInteractionEnabled = false; host.accessibilityElementsHidden = true
         host.objectControls.selectedID = nil; host.objectControls.revealed = []

@@ -61,7 +61,8 @@ import PencilKit
             path.move(to: CGPoint(x: match.rect.minX, y: match.reversed ? match.rect.maxY : match.rect.minY))
             path.addLine(to: CGPoint(x: match.rect.maxX, y: match.reversed ? match.rect.minY : match.rect.maxY))
         }
-        preview.path = path.cgPath
+        var transform = CGAffineTransform(scaleX: canvas?.zoomScale ?? 1, y: canvas?.zoomScale ?? 1)
+        preview.path = path.cgPath.copy(using: &transform)
     }
     func detach() { finishing?.cancel(); canvas?.removeGestureRecognizer(observer); preview.removeFromSuperlayer(); canvas = nil }
 }

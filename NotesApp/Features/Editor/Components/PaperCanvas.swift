@@ -17,12 +17,6 @@ final class PaperView: UIView {
     }
 }
 
-final class InkCanvas: PKCanvasView {
-    var pageID: UUID?
-    private let history = UndoManager()
-    override var undoManager: UndoManager? { history }
-}
-
 private final class PagePanDelegate: NSObject, UIGestureRecognizerDelegate {
     weak var host: CanvasHost?
     func gestureRecognizerShouldBegin(_ gestureRecognizer: UIGestureRecognizer) -> Bool {
@@ -67,6 +61,7 @@ final class CanvasHost: UIScrollView, UIScrollViewDelegate {
     private let pagingDelegate = PagePanDelegate()
     private var startingOffset = CGPoint.zero
     private var fitted = false
+    private var fittedViewport = CGSize.zero
     private var gestureViewport = CGSize.zero
     private var gesturePageID: UUID?
     private var lastTranslation = CGPoint.zero
@@ -126,10 +121,12 @@ final class CanvasHost: UIScrollView, UIScrollViewDelegate {
         paper.layer.shadowPath = UIBezierPath(rect: paper.bounds).cgPath
         ink.isOpaque = false; ink.backgroundColor = .clear
         ink.isScrollEnabled = false
+        ink.delegate = ink
         ink.contentSize = pageSize
         ink.drawingPolicy = .pencilOnly
         ink.overrideUserInterfaceStyle = .light
         accessibilityLabel = "Handwriting page. At full-page view, flick left or right with one finger to turn pages. On the last page, pull left and hold to add a page. Pinch to zoom; drag to scroll when zoomed."
+        accessibilityIdentifier = "editor.pageViewport"
     }
     required init?(coder: NSCoder) { fatalError("init(coder:) is not supported") }
     private func updateInkInteraction() {
@@ -148,6 +145,7 @@ final class CanvasHost: UIScrollView, UIScrollViewDelegate {
         guard bounds.width > 0, bounds.height > 0 else { return }
         let fit = min((bounds.width - 24) / pageSize.width, (bounds.height - 24) / pageSize.height)
         let wasAtFit = !fitted || abs(zoomScale - minimumZoomScale) < 0.01
+        let viewportChanged = fittedViewport != bounds.size
         let minimum = max(0.01, fit)
         if minimumZoomScale != minimum { minimumZoomScale = minimum }
         let paperScale = min(traitCollection.displayScale, 2400 / max(pageSize.width, pageSize.height))
@@ -156,12 +154,15 @@ final class CanvasHost: UIScrollView, UIScrollViewDelegate {
         if objectControls.contentScaleFactor != paperScale { objectControls.contentScaleFactor = paperScale }
         if studentTools.contentScaleFactor != paperScale { studentTools.contentScaleFactor = paperScale }
         if lasso.contentScaleFactor != paperScale { lasso.contentScaleFactor = paperScale }
-        if wasAtFit, abs(zoomScale - minimumZoomScale) > 0.001 { zoomScale = minimumZoomScale }
+        if (!fitted || viewportChanged && wasAtFit), !isZooming, !isZoomBouncing,
+           abs(zoomScale - minimumZoomScale) > 0.001 { zoomScale = minimumZoomScale }
         fitted = true
+        fittedViewport = bounds.size
         objectControls.zoom = zoomScale
         lasso.zoom = zoomScale
         let insets = UIEdgeInsets(top: max(12, (bounds.height - zoomContent.frame.height) / 2), left: max(12, (bounds.width - zoomContent.frame.width) / 2), bottom: 12, right: 12)
         if contentInset != insets { contentInset = insets }
+        synchronizeInkViewport()
     }
     @objc func handlePagePan(_ pan: UIPanGestureRecognizer) {
         switch pan.state {
@@ -268,7 +269,22 @@ final class CanvasHost: UIScrollView, UIScrollViewDelegate {
     }
 
     func viewForZooming(in scrollView: UIScrollView) -> UIView? { zoomContent }
-    func scrollViewDidZoom(_ scrollView: UIScrollView) { setNeedsLayout() }
+    func scrollViewWillBeginZooming(_ scrollView: UIScrollView, with view: UIView?) { ink.beginViewportGesture() }
+    func scrollViewDidEndZooming(_ scrollView: UIScrollView, with view: UIView?, atScale scale: CGFloat) {
+        ink.endViewportGesture()
+        setNeedsLayout()
+        synchronizeInkViewport()
+    }
+    func scrollViewDidZoom(_ scrollView: UIScrollView) {
+        accessibilityValue = String(format: "%.0f%%", zoomScale * 100)
+        setNeedsLayout(); synchronizeInkViewport()
+    }
+    func scrollViewDidScroll(_ scrollView: UIScrollView) { synchronizeInkViewport() }
+    private func synchronizeInkViewport() {
+        guard !isZooming, !isZoomBouncing, bounds.width > 0, bounds.height > 0, pageSurface.transform == .identity, !transitionPausesInk else { return }
+        ink.synchronizeViewport(pageSize: pageSize, visibleRect: zoomContent.convert(bounds, from: self),
+                                scale: zoomScale, displayScale: traitCollection.displayScale)
+    }
 }
 
 struct PaperCanvas: UIViewRepresentable {
@@ -388,6 +404,7 @@ struct PaperCanvas: UIViewRepresentable {
         host.objectsMode = editorTool.editsObjects || auxiliary || allContentLasso || session.writingRegion != nil
         host.editorAllowsInk = isEnabled && session.ready && !session.busy
         host.ink.drawingPolicy = fingerDrawing ? .anyInput : .pencilOnly
+        host.setNeedsLayout()
         host.panGestureRecognizer.minimumNumberOfTouches = fingerDrawing || editorTool.editsObjects || allContentLasso ? 2 : 1
         host.paper.template = page.paperTemplate
         host.paper.pdfContentSize = page.contentSize
@@ -451,5 +468,8 @@ struct PaperCanvas: UIViewRepresentable {
             session.changed(canvasView.drawing); shapes.didChange(canvasView)
         }
         func canvasViewDidEndUsingTool(_ canvasView: PKCanvasView) { shapes.didEnd(canvasView) }
+        func canvasViewDidFinishRendering(_ canvasView: PKCanvasView) {
+            (canvasView as? InkCanvas)?.canvasViewDidFinishRendering(canvasView)
+        }
     }
 }

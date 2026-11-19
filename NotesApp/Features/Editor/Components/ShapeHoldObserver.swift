@@ -18,11 +18,14 @@ final class ShapeHoldObserver: UIGestureRecognizer {
     override func canBePrevented(by preventingGestureRecognizer: UIGestureRecognizer) -> Bool { false }
     override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent) {
         guard touches.count == 1, let touch = touches.first, let view else { state = .failed; return }
-        anchor = touch.location(in: view); points = [anchor]; matched = false; onBegin?(); state = .began
+        let location = touch.location(in: view)
+        anchor = (view as? InkCanvas)?.pagePoint(fromViewPoint: location) ?? location
+        points = [anchor]; matched = false; onBegin?(); state = .began
     }
     override func touchesMoved(_ touches: Set<UITouch>, with event: UIEvent) {
         guard let touch = touches.first, let view else { return }
-        let point = touch.location(in: view)
+        let location = touch.location(in: view)
+        let point = (view as? InkCanvas)?.pagePoint(fromViewPoint: location) ?? location
         if points.count < 4096 { points.append(point) }
         if hypot(point.x - anchor.x, point.y - anchor.y) > 2 {
             anchor = point; timer?.cancel(); matched = false; onMatch?(nil)

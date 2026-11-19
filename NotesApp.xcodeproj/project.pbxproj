@@ -632,6 +632,13 @@
 			<key>sourceTree</key>
 			<string>SOURCE_ROOT</string>
 		</dict>
+		<key>1D586AFF79E408D1CB7EDB7F</key>
+		<dict>
+			<key>fileRef</key>
+			<string>72706AE28F65A9AE3BEF63FB</string>
+			<key>isa</key>
+			<string>PBXBuildFile</string>
+		</dict>
 		<key>1D98252BE56C83993D779E09</key>
 		<dict>
 			<key>fileRef</key>
@@ -1153,6 +1160,7 @@
 			<key>files</key>
 			<array>
 				<string>BCF528E43B401CBC81156409</string>
+				<string>E79A71BC48ECD2127CDFEB31</string>
 			</array>
 			<key>isa</key>
 			<string>PBXSourcesBuildPhase</string>
@@ -2046,6 +2054,17 @@
 			<key>sourceTree</key>
 			<string>SOURCE_ROOT</string>
 		</dict>
+		<key>6610DA3973A385066DA49717</key>
+		<dict>
+			<key>isa</key>
+			<string>PBXFileReference</string>
+			<key>lastKnownFileType</key>
+			<string>sourcecode.swift</string>
+			<key>path</key>
+			<string>NotesAppUITests/ZoomGestureUITests.swift</string>
+			<key>sourceTree</key>
+			<string>SOURCE_ROOT</string>
+		</dict>
 		<key>67547A1BA02F8DD49C541219</key>
 		<dict>
 			<key>fileRef</key>
@@ -2292,6 +2311,17 @@
 			<string>CDCD99C39329F7D806ABFE51</string>
 			<key>isa</key>
 			<string>PBXBuildFile</string>
+		</dict>
+		<key>72706AE28F65A9AE3BEF63FB</key>
+		<dict>
+			<key>isa</key>
+			<string>PBXFileReference</string>
+			<key>lastKnownFileType</key>
+			<string>sourcecode.swift</string>
+			<key>path</key>
+			<string>NotesApp/Features/Editor/Components/InkCanvas.swift</string>
+			<key>sourceTree</key>
+			<string>SOURCE_ROOT</string>
 		</dict>
 		<key>72B91817CBCDB8F4F6AD2F94</key>
 		<dict>
@@ -3834,6 +3864,7 @@
 				<string>4650F16FC587F6D247C82E32</string>
 				<string>4FD5A5D9E39F6DF5C771D9A2</string>
 				<string>2AE423C5561862743C8C2ACA</string>
+				<string>1D586AFF79E408D1CB7EDB7F</string>
 			</array>
 			<key>isa</key>
 			<string>PBXSourcesBuildPhase</string>
@@ -4976,6 +5007,8 @@
 				<string>BE72ED90EAE7A7F8E52029D3</string>
 				<string>4BA560399B993E642EC986F0</string>
 				<string>55558DAC5B55632CB120AFA2</string>
+				<string>72706AE28F65A9AE3BEF63FB</string>
+				<string>6610DA3973A385066DA49717</string>
 			</array>
 			<key>isa</key>
 			<string>PBXGroup</string>
@@ -5029,6 +5062,13 @@
 		<dict>
 			<key>fileRef</key>
 			<string>68B0B493C72011A8826AC612</string>
+			<key>isa</key>
+			<string>PBXBuildFile</string>
+		</dict>
+		<key>E79A71BC48ECD2127CDFEB31</key>
+		<dict>
+			<key>fileRef</key>
+			<string>6610DA3973A385066DA49717</string>
 			<key>isa</key>
 			<string>PBXBuildFile</string>
 		</dict>

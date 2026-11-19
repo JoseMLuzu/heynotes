@@ -45,6 +45,7 @@ final class ZoomWritingHost: UIScrollView, UIScrollViewDelegate {
         paper.isUserInteractionEnabled = true
         objects.isUserInteractionEnabled = false; objects.backgroundColor = .clear; objects.isOpaque = false
         ink.isOpaque = false; ink.backgroundColor = .clear; ink.isScrollEnabled = false
+        ink.delegate = ink
         ink.contentSize = size; ink.overrideUserInterfaceStyle = .light
         contentSize = size; showsHorizontalScrollIndicator = false; showsVerticalScrollIndicator = false
         accessibilityLabel = "Magnified handwriting window. Write with Apple Pencil; use two fingers to pan."
@@ -54,14 +55,27 @@ final class ZoomWritingHost: UIScrollView, UIScrollViewDelegate {
         super.layoutSubviews()
         guard bounds.width > 0, bounds.height > 0, region.width > 0 else { return }
         let scale = min(traitCollection.displayScale, 2400 / max(pageSize.width, pageSize.height))
-        paper.contentScaleFactor = scale; objects.contentScaleFactor = scale; covers.contentScaleFactor = scale
-        guard needsPosition || lastSize != bounds.size else { return }
-        needsPosition = false; lastSize = bounds.size
-        zoomScale = min(6, max(0.25, min(bounds.width / region.width, bounds.height / region.height)))
-        contentOffset = CGPoint(x: min(max(0, region.midX * zoomScale - bounds.width / 2), max(0, contentSize.width - bounds.width)),
-                                y: min(max(0, region.minY * zoomScale), max(0, contentSize.height - bounds.height)))
+        paper.contentScaleFactor = scale; objects.contentScaleFactor = traitCollection.displayScale; covers.contentScaleFactor = scale
+        if needsPosition || lastSize != bounds.size {
+            needsPosition = false; lastSize = bounds.size
+            zoomScale = min(6, max(0.25, min(bounds.width / region.width, bounds.height / region.height)))
+            contentOffset = CGPoint(x: min(max(0, region.midX * zoomScale - bounds.width / 2), max(0, contentSize.width - bounds.width)),
+                                    y: min(max(0, region.minY * zoomScale), max(0, contentSize.height - bounds.height)))
+        }
+        synchronizeInkViewport()
     }
     func viewForZooming(in scrollView: UIScrollView) -> UIView? { paper }
+    func scrollViewWillBeginZooming(_ scrollView: UIScrollView, with view: UIView?) { ink.beginViewportGesture() }
+    func scrollViewDidEndZooming(_ scrollView: UIScrollView, with view: UIView?, atScale scale: CGFloat) {
+        ink.endViewportGesture(); setNeedsLayout(); synchronizeInkViewport()
+    }
+    func scrollViewDidZoom(_ scrollView: UIScrollView) { setNeedsLayout(); synchronizeInkViewport() }
+    func scrollViewDidScroll(_ scrollView: UIScrollView) { synchronizeInkViewport() }
+    private func synchronizeInkViewport() {
+        guard !isZooming, !isZoomBouncing, bounds.width > 0, bounds.height > 0 else { return }
+        ink.synchronizeViewport(pageSize: pageSize, visibleRect: paper.convert(bounds, from: self),
+                                scale: zoomScale, displayScale: traitCollection.displayScale)
+    }
 }
 
 struct ZoomWritingCanvas: UIViewRepresentable {
@@ -96,6 +110,9 @@ struct ZoomWritingCanvas: UIViewRepresentable {
     @MainActor final class Coordinator: NSObject, PKCanvasViewDelegate {
         let session: EditorSession
         init(session: EditorSession) { self.session = session }
+        func canvasViewDidFinishRendering(_ canvasView: PKCanvasView) {
+            (canvasView as? InkCanvas)?.canvasViewDidFinishRendering(canvasView)
+        }
         func canvasViewDidBeginUsingTool(_ canvasView: PKCanvasView) {
             guard session.zoomCanvas === canvasView else { return }; session.auxiliaryInputActive = true
         }
