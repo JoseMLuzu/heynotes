@@ -26,6 +26,9 @@ import Testing
         #expect(path.hasPrefix("Restored/") && path.hasSuffix("/Fonts/personal.ttf"))
         #expect(try await target.storage.read(path) == bytes)
         #expect(text.fontName == "MyHandwriting" && text.originalInkAnchorX == 12 && text.originalInkAnchorY == 26)
+        let metadata = SyncUploadMetadataStore(modelContainer: target.container)
+        let plan = try await metadata.capture(SyncEntityIdentity(kind: .page, id: restored.id).recordName)
+        #expect(plan.sources.contains { $0.path == path && $0.role.hasPrefix("font.") })
         // Required font data cannot be silently omitted from an otherwise valid archive.
         var files: [(String, Data)] = []
         for file in prepared.files where file.path != "Fonts/personal.ttf" {

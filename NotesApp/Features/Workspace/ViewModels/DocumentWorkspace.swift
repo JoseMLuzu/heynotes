@@ -213,6 +213,20 @@ final class DocumentWorkspace {
 
     func rememberCurrentPage() { persist() }
 
+    /// Only descriptor capture pauses edits. Streaming/hash work runs after both editors resume.
+    func captureSyncUpload(_ recordName: String) async throws -> CapturedSyncUpload {
+        try await withSavedLibrary {
+            let metadata = SyncUploadMetadataStore(modelContainer: context.container)
+            let plan = try await metadata.capture(recordName)
+            return try await storage.captureSyncSources(plan)
+        }
+    }
+
+    func prepareSyncUpload(_ recordName: String, staging: SyncUploadStagingStore) async throws -> PreparedSyncUpload {
+        let captured = try await captureSyncUpload(recordName)
+        return try await staging.prepare(captured)
+    }
+
     /// Quiesce both native editors while producing or installing a consistent library snapshot.
     func withSavedLibrary<T: Sendable>(_ operation: @MainActor () async throws -> T) async throws -> T {
         guard !blocksNavigation else { throw LibraryBackupError.busy }

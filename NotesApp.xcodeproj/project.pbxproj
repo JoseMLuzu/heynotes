@@ -274,6 +274,17 @@
 			<key>isa</key>
 			<string>PBXBuildFile</string>
 		</dict>
+		<key>0B9DB2AA1E154599B3EB3320</key>
+		<dict>
+			<key>isa</key>
+			<string>PBXFileReference</string>
+			<key>lastKnownFileType</key>
+			<string>sourcecode.swift</string>
+			<key>path</key>
+			<string>NotesAppDeviceTests/SyncUploadIntegrationTests.swift</string>
+			<key>sourceTree</key>
+			<string>SOURCE_ROOT</string>
+		</dict>
 		<key>0BD1C7977A9684C195500326</key>
 		<dict>
 			<key>fileRef</key>
@@ -715,6 +726,17 @@
 			<string>sourcecode.swift</string>
 			<key>path</key>
 			<string>NotesApp/Core/Persistence/SchemaV6.swift</string>
+			<key>sourceTree</key>
+			<string>SOURCE_ROOT</string>
+		</dict>
+		<key>26E221ADC93EB3176F5C0701</key>
+		<dict>
+			<key>isa</key>
+			<string>PBXFileReference</string>
+			<key>lastKnownFileType</key>
+			<string>sourcecode.swift</string>
+			<key>path</key>
+			<string>NotesApp/Core/Storage/SyncUploadMetadataStore.swift</string>
 			<key>sourceTree</key>
 			<string>SOURCE_ROOT</string>
 		</dict>
@@ -1363,6 +1385,7 @@
 				<string>E5ECCD1141DBFCD55488F7B4</string>
 				<string>42BB35A6F9A7527E5B4F83D3</string>
 				<string>A9B05A51C9E4C043352E035F</string>
+				<string>BBB24E46741C8813B0D31C01</string>
 			</array>
 			<key>isa</key>
 			<string>PBXSourcesBuildPhase</string>
@@ -2838,6 +2861,13 @@
 				<string>5A34D903501985CC35985C53</string>
 			</array>
 		</dict>
+		<key>99945D71C28E94084A941B69</key>
+		<dict>
+			<key>fileRef</key>
+			<string>26E221ADC93EB3176F5C0701</string>
+			<key>isa</key>
+			<string>PBXBuildFile</string>
+		</dict>
 		<key>9BBFE9BA7023ADA22336F3C7</key>
 		<dict>
 			<key>isa</key>
@@ -3388,6 +3418,13 @@
 			<key>isa</key>
 			<string>PBXBuildFile</string>
 		</dict>
+		<key>BBB24E46741C8813B0D31C01</key>
+		<dict>
+			<key>fileRef</key>
+			<string>0B9DB2AA1E154599B3EB3320</string>
+			<key>isa</key>
+			<string>PBXBuildFile</string>
+		</dict>
 		<key>BCE16DD0260827ECF338C787</key>
 		<dict>
 			<key>buildActionMask</key>
@@ -3572,6 +3609,8 @@
 				<string>FAACC26CD29471E8792AA812</string>
 				<string>48A75DC4DBF3DD9D8FC2BA70</string>
 				<string>61BC33751AD5BCC477210F80</string>
+				<string>C1E78EB5C2FBE4E6B528D1EB</string>
+				<string>99945D71C28E94084A941B69</string>
 				<string>3F30BDC577CCA6EC6B2D85AE</string>
 				<string>E98154837B45853D445B74CD</string>
 			</array>
@@ -3690,6 +3729,13 @@
 			<string>NotesApp/Features/Library/Views/NotebookForm.swift</string>
 			<key>sourceTree</key>
 			<string>SOURCE_ROOT</string>
+		</dict>
+		<key>C1E78EB5C2FBE4E6B528D1EB</key>
+		<dict>
+			<key>fileRef</key>
+			<string>CDEEC1BF54E0C7C31F5FBBA4</string>
+			<key>isa</key>
+			<string>PBXBuildFile</string>
 		</dict>
 		<key>C30993122508BE7C8BBC2779</key>
 		<dict>
@@ -3996,6 +4042,17 @@
 			<string>sourcecode.swift</string>
 			<key>path</key>
 			<string>NotesApp/Features/Library/ViewModels/LibrarySortOrder.swift</string>
+			<key>sourceTree</key>
+			<string>SOURCE_ROOT</string>
+		</dict>
+		<key>CDEEC1BF54E0C7C31F5FBBA4</key>
+		<dict>
+			<key>isa</key>
+			<string>PBXFileReference</string>
+			<key>lastKnownFileType</key>
+			<string>sourcecode.swift</string>
+			<key>path</key>
+			<string>NotesApp/Core/Storage/SyncUploadCloudAssets.swift</string>
 			<key>sourceTree</key>
 			<string>SOURCE_ROOT</string>
 		</dict>
@@ -4626,8 +4683,11 @@
 				<string>E4817D9F2C957E09FCE081EA</string>
 				<string>EBD9BB5F5E1D3D64B424A4A0</string>
 				<string>B66FFBB44D0A145D6616E533</string>
+				<string>CDEEC1BF54E0C7C31F5FBBA4</string>
+				<string>26E221ADC93EB3176F5C0701</string>
 				<string>DE908D976A28FC5CCA1781D4</string>
 				<string>009FDA337ED8D7E64DCAAD76</string>
+				<string>0B9DB2AA1E154599B3EB3320</string>
 			</array>
 			<key>isa</key>
 			<string>PBXGroup</string>
