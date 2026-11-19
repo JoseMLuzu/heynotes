@@ -1362,6 +1362,13 @@
 			<key>sourceTree</key>
 			<string>SOURCE_ROOT</string>
 		</dict>
+		<key>48A75DC4DBF3DD9D8FC2BA70</key>
+		<dict>
+			<key>fileRef</key>
+			<string>EBD9BB5F5E1D3D64B424A4A0</string>
+			<key>isa</key>
+			<string>PBXBuildFile</string>
+		</dict>
 		<key>49107F019744DB18B643EDB5</key>
 		<dict>
 			<key>fileRef</key>
@@ -3527,6 +3534,7 @@
 				<string>CCD504E71649EFD7CFB30534</string>
 				<string>3456027B7681BB3550B155AC</string>
 				<string>FAACC26CD29471E8792AA812</string>
+				<string>48A75DC4DBF3DD9D8FC2BA70</string>
 			</array>
 			<key>isa</key>
 			<string>PBXSourcesBuildPhase</string>
@@ -4566,6 +4574,7 @@
 				<string>86F6683FA2E2FDE23D5989D1</string>
 				<string>DB141F3FA2BDE4DFB17E4321</string>
 				<string>E4817D9F2C957E09FCE081EA</string>
+				<string>EBD9BB5F5E1D3D64B424A4A0</string>
 			</array>
 			<key>isa</key>
 			<string>PBXGroup</string>
@@ -4732,6 +4741,17 @@
 			<string>11B4DB62A8871AE676CDB290</string>
 			<key>isa</key>
 			<string>PBXBuildFile</string>
+		</dict>
+		<key>EBD9BB5F5E1D3D64B424A4A0</key>
+		<dict>
+			<key>isa</key>
+			<string>PBXFileReference</string>
+			<key>lastKnownFileType</key>
+			<string>sourcecode.swift</string>
+			<key>path</key>
+			<string>NotesApp/Core/Storage/BackupRecordSnapshots.swift</string>
+			<key>sourceTree</key>
+			<string>SOURCE_ROOT</string>
 		</dict>
 		<key>EC75C5DD2D6E289B17296178</key>
 		<dict>
