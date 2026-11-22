@@ -79,3 +79,28 @@ All 72 selected native regressions and the signed Release build passed. These ar
 ### Pinch follow-up
 
 The first physical install exposed a gesture regression despite passing programmatic rendering tests. The corrected build isolates finger navigation to the outer page, defers ink viewport changes until pinch release and restricts fitted-page resets to initial layout/size changes. It passed 74 selected native regressions plus a real XCUI pinch/pan/small-stroke workflow. See [ZoomRendering.md](ZoomRendering.md) and Validation.md for coverage and physical acceptance limits.
+
+
+## Page-panel thumbnail pipeline — November 21–22, 2026
+
+The page index previously decoded inserted-content JSON in its SwiftUI task, including potentially large archived PKDrawing data. The thumbnail actor then base64-encoded those recovery archives again on every cache lookup. Image assets were also loaded at their full imported size even though the final composite's longest side is 180 pixels.
+
+The view now passes copied metadata Data to the thumbnail worker; SwiftData models stay on their own context. The existing cancellable background decoder validates the complete payload before rendering. For cache identity and rendering, temporary value copies omit originalInk and original-position anchors, which do not affect visible pixels. The original models/files remain unchanged. Direct element requests still validate recovery fields before omitting them, so corrupt metadata cannot become a warmed-cache success. Visible changes and asset fingerprints continue to invalidate thumbnails.
+
+Thumbnail image loading opts into ImageIO downsampling at 180 pixels, with EXIF transformation and immediate decode on its worker. Editor and PDF-export callers keep the existing full-resolution default. There is no extra full-size asset cache. The composite LRU now charges the encoded appearance key in addition to raster bytes against its existing 4 MiB budget; this estimate excludes dictionary/fingerprint overhead and is not a measurement or total app RAM cap. Cancellation and missing/replaced/corrupt asset checks remain active.
+
+### Local workload
+
+Debug, iPad Pro 13-inch (M5) simulator, iPadOS 26.5, Xcode 27.2. The warm-cache fixture contains 12 text objects with 256 KiB archived ink each. Its source JSON is 4,197,144 bytes. Both warm-cache samples pass the same already-decoded elements; this measures cache lookup/key work, not JSON decoding, cold rendering, gallery FPS or physical Pencil latency. No timing threshold is asserted.
+
+| Workload | Prior implementation | Optimized implementation |
+| --- | ---: | ---: |
+| Eight warm thumbnail lookups | 59.019 ms | 3.561 ms |
+| Encoded metadata retained in that appearance key | 4,197,144 bytes | 2,604 bytes |
+| Decoded photo bitmap in the EXIF fixture | 12,000,000 bytes | 97,920 bytes |
+
+The photo source is a 2000 × 1500 JPEG with orientation metadata. The preview is 135 × 180 with normalized orientation; original bytes and full-resolution default loading are asserted unchanged. Earlier optimized warm-cache samples were 2.989 and 3.082 ms, illustrating ordinary simulator variation. These are specific operation/buffer measurements, not an app-wide speedup or peak-memory measurement.
+
+Five new native tests cover warm reuse/key size, appearance edits versus recovery-only edits, validation despite cache hits, raw metadata corruption, image replacement/corruption/missing files, cancellation, EXIF output size, source preservation, bounded cache cost/eviction and repeatable rendering after eviction. Existing editor saving, font import, PDF export, lasso, shape snapping, page preparation/turns and zoom cases pass. See Validation.md for exact run scope and the final fixture rerun. Signed Release compilation passed. Physical review and the latest installation status are recorded separately below.
+
+Apple references: [ImageIO thumbnail generation](https://developer.apple.com/documentation/imageio/cgimagesourcecreatethumbnailatindex(_:_:_:)), [thumbnail pixel limit](https://developer.apple.com/documentation/imageio/kcgimagesourcethumbnailmaxpixelsize), [immediate caching](https://developer.apple.com/documentation/imageio/kcgimagesourceshouldcacheimmediately).
