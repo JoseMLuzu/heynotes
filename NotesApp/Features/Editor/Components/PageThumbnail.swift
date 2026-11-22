@@ -30,7 +30,7 @@ struct PageThumbnail: View {
                                            drawingPath: page.drawingFilePath,
                                            fallbackPath: DrawingStorage.path(notebook: notebookID, page: page.id),
                                            pdfPath: page.pdfFilePath, pdfIndex: page.pdfPageIndex,
-                                           pdfContentSize: page.contentSize, elements: try PageElementsCodec.decode(page.objectsData))
+                                           pdfContentSize: page.contentSize, objectsData: page.objectsData)
                 let result = try await PageThumbnailService.shared.thumbnail(request, storage: storage)
                 try Task.checkCancellation()
                 image = result; failed = false

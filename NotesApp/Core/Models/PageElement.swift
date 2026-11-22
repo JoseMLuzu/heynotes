@@ -75,7 +75,8 @@ public enum PageElementsCodec {
         let encoder = JSONEncoder(); encoder.outputFormatting = .sortedKeys
         return try encoder.encode(Envelope(items: items))
     }
-    private static func validate(_ items: [PageElement]) throws {
+    // Render workers can validate values before dropping nonvisual recovery fields.
+    static func validate(_ items: [PageElement]) throws {
         var ids = Set<UUID>()
         for item in items {
             guard ids.insert(item.id).inserted,

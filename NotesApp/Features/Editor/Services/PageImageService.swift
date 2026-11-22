@@ -17,8 +17,9 @@ enum PageImageService {
         try await storage.write(result.0, to: path)
         return (path, result.1)
     }
-    static func load(_ elements: [PageElement], storage: DrawingStorage) async throws -> [String: UIImage] {
+    static func load(_ elements: [PageElement], storage: DrawingStorage, maximumPixelSize: Int? = nil) async throws -> [String: UIImage] {
         try Task.checkCancellation()
+        if let maximumPixelSize, !(1...4096).contains(maximumPixelSize) { throw PageElementError.invalid }
         if elements.contains(where: { $0.fontFilePath != nil }) {
             try await HandwritingFontStore.shared.prepare(elements, storage: storage)
         }
@@ -29,6 +30,20 @@ enum PageImageService {
             var preparationBudget = 24 * 1024 * 1024
             for path in paths.sorted() {
                 try Task.checkCancellation()
+                if let maximumPixelSize {
+                    // Gallery output is tiny. Decode only the pixels it can display;
+                    // editor/export callers retain the original-resolution default.
+                    let url = try await storage.fileURL(for: path)
+                    guard let source = CGImageSourceCreateWithURL(url as CFURL, [kCGImageSourceShouldCache: false] as CFDictionary),
+                          let cg = CGImageSourceCreateThumbnailAtIndex(source, 0, [
+                            kCGImageSourceCreateThumbnailFromImageAlways: true,
+                            kCGImageSourceCreateThumbnailWithTransform: true,
+                            kCGImageSourceShouldCacheImmediately: true,
+                            kCGImageSourceThumbnailMaxPixelSize: maximumPixelSize
+                          ] as CFDictionary) else { throw PageElementError.unreadable }
+                    images[path] = UIImage(cgImage: cg)
+                    continue
+                }
                 let data = try await storage.read(path)
                 guard let image = UIImage(data: data) else { throw PageElementError.unreadable }
                 // Predecode common images without eagerly expanding every photograph on a page.

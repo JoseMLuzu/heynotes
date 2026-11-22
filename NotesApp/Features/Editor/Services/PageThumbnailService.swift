@@ -11,6 +11,8 @@ struct ThumbnailRequest: Sendable {
     let pdfIndex: Int?
     var pdfContentSize: CGSize? = nil
     var elements: [PageElement] = []
+    /// Raw SwiftData value is captured by the view; decoding belongs to the worker.
+    var objectsData: Data? = nil
 }
 
 actor PageThumbnailService {
@@ -27,12 +29,33 @@ actor PageThumbnailService {
         let imageSources: [FileFingerprint]
     }
     private var images = CostLimitedCache<Key, UIImage>(costLimit: 4 * 1024 * 1024, countLimit: 128)
+    private var hits = 0, renders = 0, largestKeyBytes = 0
+    struct Statistics: Sendable {
+        let hits: Int
+        let renders: Int
+        let cachedImages: Int
+        let estimatedBytes: Int
+        let largestKeyBytes: Int
+    }
+    func statistics() -> Statistics {
+        Statistics(hits: hits, renders: renders, cachedImages: images.count, estimatedBytes: images.totalCost, largestKeyBytes: largestKeyBytes)
+    }
     func clearCache() { images.removeAll() }
 
     func thumbnail(_ request: ThumbnailRequest, storage: DrawingStorage = .shared) async throws -> UIImage {
         try Task.checkCancellation()
         guard request.size.width.isFinite, request.size.height.isFinite,
               request.size.width > 0, request.size.height > 0 else { throw DocumentError.invalidPage }
+        let decoded: [PageElement]
+        if let data = request.objectsData { decoded = try await PageLoader.elements(data) }
+        else { decoded = request.elements; try PageElementsCodec.validate(decoded) }
+        // Recovery archives and their initial anchors do not affect pixels. Never
+        // base64-encode or retain megabytes of source ink in an image-cache key.
+        let elements = decoded.map { original in
+            var item = original
+            item.originalInk = nil; item.originalInkAnchorX = nil; item.originalInkAnchorY = nil
+            return item
+        }
         let inkURL = try await storage.fileURL(for: request.drawingPath ?? request.fallbackPath)
         let ink: FileFingerprint?
         if FileManager.default.fileExists(atPath: inkURL.path) { ink = try FileFingerprint(url: inkURL) }
@@ -42,20 +65,23 @@ actor PageThumbnailService {
         if let path = request.pdfPath { pdf = try FileFingerprint(url: await storage.fileURL(for: path)) }
         else { pdf = nil }
         var sources: [FileFingerprint] = []
-        for path in Set(request.elements.flatMap(\.assetPaths)).sorted() {
+        for path in Set(elements.flatMap(\.assetPaths)).sorted() {
             sources.append(try FileFingerprint(url: await storage.fileURL(for: path)))
         }
         let key = Key(ink: ink, pdf: pdf, pdfIndex: request.pdfIndex, width: request.size.width,
                       height: request.size.height, template: request.template,
-                      objects: try PageElementsCodec.encode(request.elements), pdfWidth: request.pdfContentSize.map { Double($0.width) }, imageSources: sources)
-        if let cached = images.value(for: key) { return cached }
+                      objects: try PageElementsCodec.encode(elements), pdfWidth: request.pdfContentSize.map { Double($0.width) }, imageSources: sources)
+        try Task.checkCancellation()
+        largestKeyBytes = max(largestKeyBytes, key.objects.count)
+        if let cached = images.value(for: key) { hits += 1; return cached }
         let background: UIImage?
         if let source = request.pdfPath {
             guard let index = request.pdfIndex else { throw DocumentError.invalidPage }
             background = try await PDFDocumentService.thumbnails.background(path: source, index: index, storage: storage, maxPixels: 180)
         } else { background = nil }
         try Task.checkCancellation()
-        let objectImages = try await PageImageService.load(request.elements, storage: storage)
+        let objectImages = try await PageImageService.load(elements, storage: storage, maximumPixelSize: 180)
+        renders += 1
         let image = try autoreleasepool {
             let drawing: PKDrawing?
             if ink != nil { drawing = try PKDrawing(data: Data(contentsOf: inkURL)) } else { drawing = nil }
@@ -69,14 +95,14 @@ actor PageThumbnailService {
                 renderer.cgContext.scaleBy(x: scale, y: scale)
                 PDFRendering.paper(request.template, size: request.size, in: renderer.cgContext)
                 if let background { background.draw(in: CGRect(origin: .zero, size: request.pdfContentSize ?? request.size)) }
-                PageElementRenderer.draw(request.elements.filter { $0.kind != .tape }, images: objectImages, in: renderer.cgContext)
+                PageElementRenderer.draw(elements.filter { $0.kind != .tape }, images: objectImages, in: renderer.cgContext)
                 drawing?.image(from: CGRect(origin: .zero, size: request.size), scale: scale)
                     .draw(in: CGRect(origin: .zero, size: request.size))
-                PageElementRenderer.draw(request.elements.filter { $0.kind == .tape }, images: [:], in: renderer.cgContext)
+                PageElementRenderer.draw(elements.filter { $0.kind == .tape }, images: [:], in: renderer.cgContext)
             }
         }
         try Task.checkCancellation()
-        if let cg = image.cgImage { images.insert(image, for: key, cost: cg.bytesPerRow * cg.height) }
+        if let cg = image.cgImage { images.insert(image, for: key, cost: cg.bytesPerRow * cg.height + key.objects.count) }
         return image
     }
 }
