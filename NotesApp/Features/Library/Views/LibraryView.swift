@@ -16,12 +16,13 @@ private enum LibrarySheet: Identifiable {
 }
 
 struct LibraryView: View {
-    @State private var model: LibraryViewModel
-    @State private var navigation: LibraryNavigation
+    @StateObject private var state: LibraryViewState
+    private var model: LibraryViewModel { state.model }
+    private var navigation: LibraryNavigation { state.navigation }
+    private var workspace: DocumentWorkspace { state.workspace }
+    private var focusMode: EditorFocusMode { state.focusMode }
     @State private var search = ""
     @AppStorage("library.sortOrder") private var sortOrder: LibrarySortOrder = .recent
-    @State private var workspace: DocumentWorkspace
-    @State private var focusMode: EditorFocusMode
     @Environment(\.scenePhase) private var scenePhase
     @State private var showingImporter = false
     @State private var importing = false
@@ -48,11 +49,10 @@ struct LibraryView: View {
     @State private var isOpeningDocument = false
 
     init(context: ModelContext, workspace: DocumentWorkspace? = nil, focusMode: EditorFocusMode? = nil,
-         navigation: LibraryNavigation? = nil, columnVisibility: NavigationSplitViewVisibility = .automatic) {
-        _model = State(initialValue: LibraryViewModel(context: context))
-        _navigation = State(initialValue: navigation ?? LibraryNavigation())
-        _workspace = State(initialValue: workspace ?? DocumentWorkspace(context: context))
-        _focusMode = State(initialValue: focusMode ?? EditorFocusMode())
+         navigation: LibraryNavigation? = nil, columnVisibility: NavigationSplitViewVisibility = .automatic,
+         workspaceDefaults: UserDefaults = .standard) {
+        _state = StateObject(wrappedValue: LibraryViewState(context: context, workspace: workspace,
+            focusMode: focusMode, navigation: navigation, workspaceDefaults: workspaceDefaults))
         _columnVisibility = State(initialValue: columnVisibility)
         _wideColumnVisibility = State(initialValue: columnVisibility)
     }
@@ -127,7 +127,8 @@ struct LibraryView: View {
     }
 
     private var content: some View {
-        NavigationSplitView(columnVisibility: focusColumnVisibility, preferredCompactColumn: focusCompactColumn) {
+        @Bindable var navigation = state.navigation
+        return NavigationSplitView(columnVisibility: focusColumnVisibility, preferredCompactColumn: focusCompactColumn) {
             List(selection: Binding(get: { navigation.selection }, set: { destination in
                 Task {
                     if await workspace.showLibrary() {

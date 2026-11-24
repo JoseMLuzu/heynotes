@@ -29,6 +29,67 @@ private final class ChangeCount: @unchecked Sendable {
 }
 
 @MainActor final class FluidityTests: XCTestCase {
+    func testLibraryRefreshesKeepRestoredCanvasAndAvoidRepeatedWorkspaceReads() async throws {
+        let suite = "LibraryRefresh.\(UUID())"
+        let defaults = try XCTUnwrap(FluidityDefaults(suiteName: suite))
+        defer { defaults.removePersistentDomain(forName: suite) }
+        let container = try PersistenceController.makeContainer(inMemory: true)
+        let notebook = Notebook(title: "Restored during refresh"), page = NotePage(pageIndex: 0)
+        container.mainContext.insert(notebook); container.mainContext.insert(page); notebook.pages = [page]
+        try container.mainContext.save()
+        let snapshot = WorkspaceSnapshot(openIDs: [notebook.id], recentIDs: [notebook.id], activeID: notebook.id,
+                                         pages: [notebook.id: page.id], primaryID: notebook.id)
+        defaults.set(try JSONEncoder().encode(snapshot), forKey: "workspace.tabs.v1")
+        let navigation = LibraryNavigation(), focus = EditorFocusMode()
+        func library(_ identity: String = "library") -> some View {
+            LibraryView(context: container.mainContext, focusMode: focus, navigation: navigation,
+                        workspaceDefaults: defaults).modelContainer(container).id(identity)
+        }
+        let initialView = library()
+        XCTAssertEqual(defaults.dataReads, 0, "Creating a view value must not restore or fetch its models eagerly.")
+        let scene = try XCTUnwrap(UIApplication.shared.connectedScenes.compactMap { $0 as? UIWindowScene }.first)
+        let window = UIWindow(windowScene: scene)
+        window.frame = CGRect(x: 0, y: 0, width: 1180, height: 820)
+        let host = UIHostingController(rootView: initialView)
+        window.rootViewController = host; window.isHidden = false
+        defer { window.isHidden = true; window.rootViewController = nil }
+        host.view.frame = window.bounds
+        func canvases(_ view: UIView) -> [PKCanvasView] {
+            (view as? PKCanvasView).map { [$0] } ?? view.subviews.flatMap(canvases)
+        }
+        for _ in 0..<20 {
+            host.view.layoutIfNeeded()
+            if !canvases(host.view).isEmpty { break }
+            try await Task.sleep(for: .milliseconds(25))
+        }
+        let canvas = try XCTUnwrap(canvases(host.view).first)
+        XCTAssertEqual(defaults.dataReads, 1)
+        let reads = defaults.dataReads, writes = defaults.dataWrites
+        focus.enter(documentID: notebook.id)
+        for _ in 0..<20 {
+            host.rootView = library(); host.view.layoutIfNeeded()
+            await Task.yield()
+            XCTAssertTrue(canvases(host.view).contains { $0 === canvas })
+        }
+        XCTAssertEqual(defaults.dataReads, reads)
+        XCTAssertEqual(defaults.dataWrites, writes)
+        XCTAssertTrue(focus.isActive)
+        print("FLUIDITY library_parent_refreshes=20 workspace_reads=\(defaults.dataReads - reads) writes=\(defaults.dataWrites - writes) retained_canvas=true")
+        focus.exit()
+        host.rootView = library("new-library"); host.view.layoutIfNeeded()
+        for _ in 0..<20 {
+            host.view.layoutIfNeeded()
+            if canvases(host.view).contains(where: { $0 !== canvas }) { break }
+            try await Task.sleep(for: .milliseconds(25))
+        }
+        XCTAssertEqual(defaults.dataReads, reads + 1, "A new library identity must create its own state.")
+        XCTAssertTrue(canvases(host.view).contains { $0 !== canvas }, "Wait for the second restoration before releasing its in-memory store.")
+        window.isHidden = true; window.rootViewController = nil
+        // Let onDisappear/background-save callbacks finish while their store is alive.
+        try await Task.sleep(for: .milliseconds(100))
+        withExtendedLifetime(container) {}
+    }
+
     func testEditorPreferenceReadsDuringParentRefreshes() async throws {
         let suite = "EditorRefresh.\(UUID())"
         let defaults = try XCTUnwrap(FluidityDefaults(suiteName: suite))
