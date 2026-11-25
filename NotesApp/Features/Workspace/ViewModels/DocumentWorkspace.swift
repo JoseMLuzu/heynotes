@@ -239,6 +239,19 @@ final class DocumentWorkspace {
         }
     }
 
+    /// Fetch cloud headers before this short local boundary, so network waits never
+    /// pause writing. Flush again here before building the fresh local comparison.
+    func prepareCloudActivationReview(state: SyncStateStore, lease: SyncStateLease,
+                                      remote: SyncRemoteBaseline) async throws -> SyncActivationReview {
+        try await withSavedLibrary {
+            let container = context.container, libraryID = lease.libraryID
+            let source = await Task.detached(priority: .utility) {
+                SyncInitialEnrollmentStore(modelContainer: container, libraryID: libraryID)
+            }.value
+            return try await state.prepareActivationReview(using: source, remote: remote, lease: lease)
+        }
+    }
+
     /// Quiesce both native editors while producing or installing a consistent library snapshot.
     func withSavedLibrary<T: Sendable>(_ operation: @MainActor () async throws -> T) async throws -> T {
         guard !blocksNavigation else { throw LibraryBackupError.busy }

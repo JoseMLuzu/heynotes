@@ -225,6 +225,21 @@ actor SyncStateStore: ModelActor {
     private func requireNoEnrollment(_ library: Library) throws {
         if case .preparing = try enrollmentStatus(library) { throw SyncEnrollmentError.pending }
     }
+
+    /// Read-only advisory review; never records opt-in or changes engine state.
+    func prepareActivationReview(using source: SyncInitialEnrollmentStore, remote: SyncRemoteBaseline,
+                                 lease: SyncStateLease) async throws -> SyncActivationReview {
+        try requireNoEnrollment(validate(lease))
+        guard !applyingReceipts, !enrolling else { throw SyncStateError.busy }
+        guard source.libraryID == lease.libraryID, remote.scope == lease.scope else { throw SyncActivationError.scopeMismatch }
+        guard try pendingReceipts(lease: lease, limit: 1).isEmpty else { throw SyncStateError.recoveryPending }
+        guard case .readyForRemoteReconciliation(let report) = try initialEnrollmentStatus(lease: lease) else {
+            throw SyncActivationError.enrollmentRequired
+        }
+        let local = try await source.activationInventory()
+        _ = try validate(lease)
+        return try SyncActivationReview.make(local: local, remote: remote, enrollmentID: report.enrollmentID, lease: lease)
+    }
     private func recordRow(_ name: String, key scopeKey: String) throws -> Record? {
         let key = scopeKey + "." + name
         let row = try modelContext.fetch(FetchDescriptor<Record>(predicate: #Predicate { $0.key == key })).first

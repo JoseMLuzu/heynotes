@@ -56,4 +56,27 @@ actor SyncInitialEnrollmentStore: ModelActor {
         }
     }
 
+    /// Fresh read-only review input. Enrollment's cached counts are not a live inventory.
+    func activationInventory() throws -> SyncActivationLocalInventory {
+        let context = ModelContext(modelContainer); context.autosaveEnabled = false
+        return try SyncChangeJournal.withSaveBoundary {
+            let inventory = try SyncIdentityInventory.capture(in: context)
+            var query = FetchDescriptor<SyncChange>(); query.fetchLimit = Self.maximumIdentities + 1
+            let rows = try context.fetch(query)
+            guard rows.count <= Self.maximumIdentities else { throw SyncEnrollmentError.tooLarge }
+            var pending: [SyncEntityIdentity: SyncActivationLocalInventory.Pending] = [:]
+            for row in rows {
+                guard let kind = SyncEntityKind(rawValue: row.kindRawValue),
+                      let operation = SyncChangeOperation(rawValue: row.operationRawValue) else { throw SyncEnrollmentError.inconsistentJournal }
+                let identity = SyncEntityIdentity(kind: kind, id: row.entityID)
+                guard identity.recordName == row.recordName, pending[identity] == nil,
+                      inventory.identities.contains(identity) == (operation == .upsert) else { throw SyncEnrollmentError.inconsistentJournal }
+                pending[identity] = .init(operation: operation, revision: row.revision)
+            }
+            guard inventory.identities.count + pending.values.filter({ $0.operation == .delete }).count <= Self.maximumIdentities else {
+                throw SyncEnrollmentError.tooLarge
+            }
+            return SyncActivationLocalInventory(libraryID: libraryID, identities: inventory.identities, pending: pending)
+        }
+    }
 }
