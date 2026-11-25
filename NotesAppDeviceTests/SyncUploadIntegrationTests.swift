@@ -68,6 +68,32 @@ import CloudKit
         let reconstructed = try SyncRecordSystemFields.decode(archived, expecting: records.entity.recordID,
             type: SyncCloudRecordPlan.entityType)
         XCTAssertTrue(reconstructed.allKeys().isEmpty)
+        // Simulate a successful callback using this local record value, without a
+        // cloud account. Verify durable recovery cannot acknowledge the newer ink.
+        let stateURL = root.appendingPathComponent("SyncState").resolvingSymlinksInPath()
+        let state = try SyncStateStore(directory: stateURL)
+        let libraryID = try await state.registerLibrary()
+        let scope = try SyncAccountScope(containerIdentifier: "iCloud.heynotes.tests", environment: .development,
+            accountRecordName: "native-offline-test", zone: records.entity.recordID.zoneID)
+        let lease = try await state.bind(scope, libraryID: libraryID)
+        let sent = SyncSentRevision(identity: records.identity, revision: records.revision, operation: .upsert,
+            packageID: records.packageID)
+        _ = try await state.storeRecord(records.entity, expectedVersion: nil, sent: sent, lease: lease)
+        let pendingReceiptCount = try await state.pendingReceipts(lease: lease).count
+        XCTAssertEqual(pendingReceiptCount, 1)
+        try await state.close()
+        let reopened = try SyncStateStore(directory: stateURL)
+        let next = try await reopened.bind(scope, libraryID: libraryID)
+        let acknowledgement = SyncAcknowledgementStore(modelContainer: container, libraryID: libraryID)
+        let replayed = try await reopened.replayReceipts(using: acknowledgement, lease: next)
+        XCTAssertEqual(replayed, 1)
+        let pending = try ModelContext(container).fetch(FetchDescriptor<SyncChange>()).first { $0.recordName == key }
+        XCTAssertNotNil(pending); XCTAssertNotEqual(pending?.revision, records.revision)
+        XCTAssertEqual(primary.drawing.strokes.count, 3)
+        XCTAssertTrue(primary.canvas === ca && secondary.canvas === cb)
+        let restoredFields = try await reopened.record(key, lease: next)
+        XCTAssertEqual(restoredFields?.systemFields, archived)
+        try await reopened.close()
     }
 
     func testBusyOrFailedInkSaveCannotPrepareAnUploadOrClearPendingChanges() async throws {
