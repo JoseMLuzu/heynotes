@@ -4,12 +4,21 @@ import SwiftData
 extension ModelContext {
     /// User metadata and pending sync intent share one local transaction, never two saves.
     func saveRecordingSyncChanges() throws {
-        try SyncChangeJournal.recordPendingChanges(in: self)
-        try save()
+        try SyncChangeJournal.withSaveBoundary {
+            try SyncChangeJournal.recordPendingChanges(in: self)
+            try save()
+        }
     }
 }
 
 enum SyncChangeJournal {
+    // All in-process journal-producing commits and conditional acknowledgements
+    // share this short synchronous boundary. No await/network/file copying inside.
+    private static let saveLock = NSRecursiveLock()
+    static func withSaveBoundary<T>(_ body: () throws -> T) rethrows -> T {
+        try saveLock.withLock(body)
+    }
+
     static func identity(of model: any PersistentModel) -> SyncEntityIdentity? {
         switch model {
         case let value as Folder: .init(kind: .folder, id: value.id)
@@ -71,7 +80,8 @@ enum SyncChangeJournal {
     }
 
     /// Stages removal only for the exact revision a future transport successfully sent.
-    /// The caller commits this together with any server metadata; a newer edit stays pending.
+    /// Production recovery uses SyncAcknowledgementStore's save boundary after a durable
+    /// sidecar receipt has stored server metadata. A newer edit stays pending.
     @discardableResult static func acknowledge(_ recordName: String, revision: UUID, in context: ModelContext) throws -> Bool {
         let rows = try context.fetch(FetchDescriptor<SyncChange>(predicate: #Predicate { $0.recordName == recordName }))
         guard let row = rows.first, row.revision == revision else { return false }

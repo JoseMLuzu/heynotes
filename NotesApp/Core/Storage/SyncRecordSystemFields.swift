@@ -1,7 +1,7 @@
 import CloudKit
 
 /// Preserves CloudKit's identity/change tag without archiving user fields or file URLs.
-/// Persistence and account scoping of this data belong to the next transport milestone.
+/// SyncStateStore supplies persistence/account scoping; this codec has no account access.
 enum SyncRecordSystemFields {
     static func encode(_ record: CKRecord) -> Data {
         let coder = NSKeyedArchiver(requiringSecureCoding: true)
