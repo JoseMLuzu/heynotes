@@ -2,13 +2,15 @@
 
 Implemented November 25, 2026. This is passive persistence/recovery infrastructure. No CKContainer, account lookup, engine instance, opt-in UI, notification registration or network operation is started. AppDependencies does not create this store at launch. The user library remains on schema V8, with automatic SwiftData CloudKit integration disabled. No user-store migration, entitlement or document-path change is introduced.
 
+Follow-up: [initial local enrollment](SyncInitialEnrollment.md) now adds optional progress fields through a lightweight sidecar V1 → V2 migration. V1 model layouts are frozen; existing Record/Receipt types and ownership/checkpoint bytes are preserved. The description below records the original V1 foundation. The explicit enrollment inventory/seed also holds the save boundary, so that activation operation can be longer than normal journal/receipt commits; it is not a per-stroke or startup path.
+
 ## Separate store and identity
 
 SyncStateStore owns a separate versioned SwiftData SQLite store at Application Support/HeyNotesSyncState/State.sqlite. SyncStateSchemaV1 contains Library, Record and Receipt; its own migration plan starts at version 1. These models are not part of NotesSchemaV8 and never enter portable editable backups. The owned directory is excluded from system backup. The store reports errors without an automatic reset or deletion/recreation fallback.
 
 SyncStateDirectory rejects symlinked paths and nonregular SQLite/lock files and holds an exclusive nonblocking flock for one active writer, including across instances/processes. close() revokes the service instance and releases that lock; old queued operations fail. Idle SQLite connections can remain retained until their container deinitializes, but closed services cannot write through their methods. Other code must not bypass the service by writing its model container directly.
 
-registerLibrary(named:) returns a durable local installation UUID for an explicit logical key such as primary. It is an identity for this sidecar registration, **not a fingerprint embedded in the user SQLite store**. Future activation must pair it with the correct user ModelContainer and define policy for restored/replaced stores or a missing sidecar. Losing an excluded sidecar must not silently authorize uploading a restored library to a different account. Initial enrollment and account-aware restore remain separate gates.
+registerLibrary(named:) returns a durable local installation UUID for an explicit logical key such as primary. It is an identity for this sidecar registration, **not a fingerprint embedded in the user SQLite store**. Future activation must pair it with the correct user ModelContainer and define policy for restored/replaced stores or a missing sidecar. Losing an excluded sidecar must not silently authorize uploading a restored library to a different account. Local enrollment is implemented in the follow-up; remote activation and account-aware restore remain separate gates.
 
 SyncAccountScope includes the container identifier, development/production environment, actual authenticated account record name, custom zone name and zone owner. A SHA-256 key uses length-delimited values. Raw account names do not appear in keys or directory names, although the scope is intentionally stored inside the app-private database for ownership verification. CKCurrentUserDefaultName is rejected as an account identity: the same placeholder cannot distinguish people. The future adapter must obtain and verify the real current account before binding; these local APIs do not authenticate it.
 
@@ -54,7 +56,7 @@ All **21 selected native tests** and the signed Release build pass. The two-edit
 
 ## Next milestones
 
-1. Initial enrollment/reconciliation of an existing library, explicit opt-in, sidecar/user-store pairing and account-aware restore/switch policy. The existing outbox only covers changes since its migration; it is not a complete initial upload inventory.
+1. Initial local enrollment is implemented in [SyncInitialEnrollment.md](SyncInitialEnrollment.md). Next implement explicit opt-in, verified sidecar/user-store pairing, remote reconciliation and account-aware restore/switch policy. Its local completion marker alone must not authorize overwriting remote records.
 2. Confirm final bundle/team identity and create/configure the development CloudKit container. Add the real CKSyncEngine adapter with verified account events, durable stateUpdate handling, success-only confirmations and serial per-record retries.
 3. Implement incoming staging/apply recovery and editable conflict copies, then trial one notebook on two physical devices through offline edits, termination and sign-out/sign-in. Verify genuine nonempty engine serialization and server change tags.
 
