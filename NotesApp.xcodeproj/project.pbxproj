@@ -3921,6 +3921,8 @@
 				<string>4167E8319E76542FE98FC55A</string>
 				<string>B312A09356A6FC7E6B348955</string>
 				<string>F59A7087E641FF3AEBDC1B29</string>
+				<string>71083A7C228108D4BE435784</string>
+				<string>AEF9E8EE2F5FAD9E7B180999</string>
 			</array>
 			<key>isa</key>
 			<string>PBXSourcesBuildPhase</string>
@@ -5089,6 +5091,8 @@
 				<string>293FE67796827C8B31E038DA</string>
 				<string>799767EE3E67F480FCB142CE</string>
 				<string>65D485B605589C86100E026A</string>
+				<string>327C052718C5F2BBAEAA7D8A</string>
+				<string>B9D627791DB17794B565FB44</string>
 			</array>
 			<key>isa</key>
 			<string>PBXGroup</string>
@@ -5875,6 +5879,42 @@
 			<string>PBXBuildFile</string>
 			<key>fileRef</key>
 			<string>65D485B605589C86100E026A</string>
+		</dict>
+		<key>327C052718C5F2BBAEAA7D8A</key>
+		<dict>
+			<key>isa</key>
+			<string>PBXFileReference</string>
+			<key>lastKnownFileType</key>
+			<string>sourcecode.swift</string>
+			<key>path</key>
+			<string>NotesApp/Core/Persistence/SyncInitialEnrollmentStore.swift</string>
+			<key>sourceTree</key>
+			<string>SOURCE_ROOT</string>
+		</dict>
+		<key>71083A7C228108D4BE435784</key>
+		<dict>
+			<key>isa</key>
+			<string>PBXBuildFile</string>
+			<key>fileRef</key>
+			<string>327C052718C5F2BBAEAA7D8A</string>
+		</dict>
+		<key>B9D627791DB17794B565FB44</key>
+		<dict>
+			<key>isa</key>
+			<string>PBXFileReference</string>
+			<key>lastKnownFileType</key>
+			<string>sourcecode.swift</string>
+			<key>path</key>
+			<string>NotesApp/Core/Storage/SyncInitialEnrollment.swift</string>
+			<key>sourceTree</key>
+			<string>SOURCE_ROOT</string>
+		</dict>
+		<key>AEF9E8EE2F5FAD9E7B180999</key>
+		<dict>
+			<key>isa</key>
+			<string>PBXBuildFile</string>
+			<key>fileRef</key>
+			<string>B9D627791DB17794B565FB44</string>
 		</dict>
 	</dict>
 	<key>rootObject</key>
