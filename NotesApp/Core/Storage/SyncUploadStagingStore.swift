@@ -1,5 +1,6 @@
 import Foundation
 import CryptoKit
+import CloudKit
 
 /// App-owned durable packages live outside Documents and never share writable source paths.
 /// No automatic purge: a future sender releases a package only after its operation finishes.
@@ -99,6 +100,39 @@ actor SyncUploadStagingStore {
         try prepareRoot()
         return try FileManager.default.contentsOfDirectory(at: root, includingPropertiesForKeys: nil)
             .compactMap { UUID(uuidString: $0.lastPathComponent) }.sorted { $0.uuidString < $1.uuidString }
+    }
+
+    /// Verify a durable package and build actual CloudKit values locally. Call only
+    /// after workspace capture; this method does not flush editors or access a server.
+    func cloudRecordPlan(_ id: UUID, zone: CKRecordZone.ID, systemFields: [String: Data] = [:]) throws -> SyncCloudRecordPlan {
+        try Task.checkCancellation()
+        try SyncCloudRecordPlan.validateZone(zone)
+        let package = try load(id)
+        guard package.manifest.assets.allSatisfy({ $0.byteCount <= SyncCloudRecordPlan.maximumAssetBytes }) else {
+            throw SyncCloudError.assetTooLarge
+        }
+        var payloadURL: URL?, payloadHash: String?
+        if package.manifest.operation == .upsert {
+            let encoder = JSONEncoder(); encoder.outputFormatting = .sortedKeys
+            let data = try encoder.encode(SyncCloudPayload.make(from: package))
+            guard data.count <= SyncCloudRecordPlan.maximumAssetBytes else { throw SyncCloudError.assetTooLarge }
+            let hash = Self.digest(data)
+            let url = package.directory.appendingPathComponent("cloud-v1-\(hash).json")
+            try Task.checkCancellation()
+            if FileManager.default.fileExists(atPath: url.path) {
+                try checkLocation(url)
+                guard try byteCount(url) == data.count, try Self.digest(Data(contentsOf: url)) == hash else {
+                    throw SyncUploadError.invalidSnapshot
+                }
+            } else {
+                guard url.resolvingSymlinksInPath().path == url.path else { throw SyncUploadError.unsafePath }
+                try data.write(to: url, options: .atomic); try makeReadOnly(url)
+            }
+            payloadURL = url; payloadHash = hash
+        }
+        try Task.checkCancellation()
+        return try SyncCloudRecordPlan.make(package: package, zone: zone, payloadURL: payloadURL,
+                                             payloadHash: payloadHash, systemFields: systemFields)
     }
 
     /// Call after the future CloudKit operation ends, or explicitly abandon an unused package.
