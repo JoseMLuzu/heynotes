@@ -3925,7 +3925,9 @@
 				<string>D6CB49E4FCDA72D7CD93D98F</string>
 				<string>AEF9E8EE2F5FAD9E7B180999</string>
 				<string>264ABD376367EF4F52B5D601</string>
+				<string>5CA2B93442B2439290378FE7</string>
 				<string>F1460354F0B683A99F84A1C7</string>
+				<string>38A17BCD68DB3F5E2B8B592C</string>
 				<string>602E7DB08150ABFC50EA6C90</string>
 			</array>
 			<key>isa</key>
@@ -5099,7 +5101,9 @@
 				<string>F7138677E1D1982CF3D309FF</string>
 				<string>B9D627791DB17794B565FB44</string>
 				<string>C81DB401F4976839DF8E5DB0</string>
+				<string>BAA7AE8AD330ED82F7DA4B62</string>
 				<string>1EE2CD30432B9EAFDC998774</string>
+				<string>AA59D8D76D48F1066897E612</string>
 				<string>D14830EC6C1DF3ABD4EEF5F5</string>
 			</array>
 			<key>isa</key>
@@ -5960,6 +5964,24 @@
 			<key>fileRef</key>
 			<string>C81DB401F4976839DF8E5DB0</string>
 		</dict>
+		<key>BAA7AE8AD330ED82F7DA4B62</key>
+		<dict>
+			<key>isa</key>
+			<string>PBXFileReference</string>
+			<key>lastKnownFileType</key>
+			<string>sourcecode.swift</string>
+			<key>path</key>
+			<string>NotesApp/Core/Storage/CloudKitInspectionTransport.swift</string>
+			<key>sourceTree</key>
+			<string>SOURCE_ROOT</string>
+		</dict>
+		<key>5CA2B93442B2439290378FE7</key>
+		<dict>
+			<key>isa</key>
+			<string>PBXBuildFile</string>
+			<key>fileRef</key>
+			<string>BAA7AE8AD330ED82F7DA4B62</string>
+		</dict>
 		<key>1EE2CD30432B9EAFDC998774</key>
 		<dict>
 			<key>isa</key>
@@ -5977,6 +5999,24 @@
 			<string>PBXBuildFile</string>
 			<key>fileRef</key>
 			<string>1EE2CD30432B9EAFDC998774</string>
+		</dict>
+		<key>AA59D8D76D48F1066897E612</key>
+		<dict>
+			<key>isa</key>
+			<string>PBXFileReference</string>
+			<key>lastKnownFileType</key>
+			<string>sourcecode.swift</string>
+			<key>path</key>
+			<string>NotesApp/Core/Storage/SyncCloudActivationInspector.swift</string>
+			<key>sourceTree</key>
+			<string>SOURCE_ROOT</string>
+		</dict>
+		<key>38A17BCD68DB3F5E2B8B592C</key>
+		<dict>
+			<key>isa</key>
+			<string>PBXBuildFile</string>
+			<key>fileRef</key>
+			<string>AA59D8D76D48F1066897E612</string>
 		</dict>
 		<key>D14830EC6C1DF3ABD4EEF5F5</key>
 		<dict>
