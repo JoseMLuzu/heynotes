@@ -3913,6 +3913,9 @@
 				<string>B3D0C372462AB2AC77A889A4</string>
 				<string>26688CD108B4D78DCB214200</string>
 				<string>96431E41DD1B95A14AC06083</string>
+				<string>6CF1A4D2A27EEB0D4CE18B90</string>
+				<string>6E1EE966DF3C847FB5E95E5D</string>
+				<string>5188509F0F16551A547A6A6F</string>
 			</array>
 			<key>isa</key>
 			<string>PBXSourcesBuildPhase</string>
@@ -5073,6 +5076,9 @@
 				<string>D4192BCCE37736E217216492</string>
 				<string>4D7B99967842D2392D39BDBE</string>
 				<string>EBC8A6A376A494A2263D16C3</string>
+				<string>891D92668A3CF35D0CA3F8E7</string>
+				<string>9B053E1C0BCC71D193874B9D</string>
+				<string>3ACF4D15366C6CC3516D10FC</string>
 			</array>
 			<key>isa</key>
 			<string>PBXGroup</string>
@@ -5715,6 +5721,60 @@
 			<string>PBXBuildFile</string>
 			<key>fileRef</key>
 			<string>EBC8A6A376A494A2263D16C3</string>
+		</dict>
+		<key>891D92668A3CF35D0CA3F8E7</key>
+		<dict>
+			<key>isa</key>
+			<string>PBXFileReference</string>
+			<key>lastKnownFileType</key>
+			<string>sourcecode.swift</string>
+			<key>path</key>
+			<string>NotesApp/Core/Storage/SyncCloudPayload.swift</string>
+			<key>sourceTree</key>
+			<string>SOURCE_ROOT</string>
+		</dict>
+		<key>6CF1A4D2A27EEB0D4CE18B90</key>
+		<dict>
+			<key>isa</key>
+			<string>PBXBuildFile</string>
+			<key>fileRef</key>
+			<string>891D92668A3CF35D0CA3F8E7</string>
+		</dict>
+		<key>9B053E1C0BCC71D193874B9D</key>
+		<dict>
+			<key>isa</key>
+			<string>PBXFileReference</string>
+			<key>lastKnownFileType</key>
+			<string>sourcecode.swift</string>
+			<key>path</key>
+			<string>NotesApp/Core/Storage/SyncCloudRecordPlan.swift</string>
+			<key>sourceTree</key>
+			<string>SOURCE_ROOT</string>
+		</dict>
+		<key>6E1EE966DF3C847FB5E95E5D</key>
+		<dict>
+			<key>isa</key>
+			<string>PBXBuildFile</string>
+			<key>fileRef</key>
+			<string>9B053E1C0BCC71D193874B9D</string>
+		</dict>
+		<key>3ACF4D15366C6CC3516D10FC</key>
+		<dict>
+			<key>isa</key>
+			<string>PBXFileReference</string>
+			<key>lastKnownFileType</key>
+			<string>sourcecode.swift</string>
+			<key>path</key>
+			<string>NotesApp/Core/Storage/SyncRecordSystemFields.swift</string>
+			<key>sourceTree</key>
+			<string>SOURCE_ROOT</string>
+		</dict>
+		<key>5188509F0F16551A547A6A6F</key>
+		<dict>
+			<key>isa</key>
+			<string>PBXBuildFile</string>
+			<key>fileRef</key>
+			<string>3ACF4D15366C6CC3516D10FC</string>
 		</dict>
 	</dict>
 	<key>rootObject</key>
