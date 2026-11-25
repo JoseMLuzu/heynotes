@@ -2,6 +2,7 @@ import XCTest
 import SwiftData
 import PencilKit
 import PDFKit
+import CloudKit
 @testable import NotesApp
 
 @MainActor final class SyncUploadIntegrationTests: XCTestCase {
@@ -47,6 +48,26 @@ import PDFKit
         XCTAssertFalse(try SyncChangeJournal.acknowledge(key, revision: package.manifest.revision, in: context))
         let afterRestart = try await SyncUploadStagingStore(root: root.appendingPathComponent("Prepared")).load(package.manifest.id)
         XCTAssertEqual(afterRestart.manifest.revision, package.manifest.revision)
+        let records = try await staging.cloudRecordPlan(afterRestart.manifest.id,
+            zone: CKRecordZone.ID(zoneName: "OfflineNativeVerification"))
+        let payloadURL = try XCTUnwrap((records.entity["hnPayload"] as? CKAsset)?.fileURL)
+        let payload = try JSONDecoder().decode(SyncCloudPayload.self, from: Data(contentsOf: payloadURL))
+        let remotePage = try JSONDecoder().decode(BackupManifest.SavedPage.self, from: payload.metadata)
+        let inkRecord = try XCTUnwrap(records.blobs.first { $0.recordID.recordName == remotePage.drawing })
+        let inkURL = try XCTUnwrap((inkRecord["hnAsset"] as? CKAsset)?.fileURL)
+        XCTAssertEqual(try PKDrawing(data: Data(contentsOf: inkURL)).strokes.count, 1)
+        let pdfRecord = try XCTUnwrap(records.blobs.first { $0.recordID.recordName == remotePage.pdf })
+        let pdfURL = try XCTUnwrap((pdfRecord["hnAsset"] as? CKAsset)?.fileURL)
+        XCTAssertEqual(PDFDocument(url: pdfURL)?.pageCount, 1)
+        XCTAssertEqual(remotePage.pdfIndex, first.pdfPageIndex)
+        XCTAssertEqual(records.identity.recordName, key)
+        XCTAssertFalse(try SyncChangeJournal.acknowledge(key, revision: records.revision, in: context))
+        XCTAssertTrue(primary.canvas === ca && secondary.canvas === cb)
+        XCTAssertEqual(primary.drawing.strokes.count, 3)
+        let archived = SyncRecordSystemFields.encode(records.entity)
+        let reconstructed = try SyncRecordSystemFields.decode(archived, expecting: records.entity.recordID,
+            type: SyncCloudRecordPlan.entityType)
+        XCTAssertTrue(reconstructed.allKeys().isEmpty)
     }
 
     func testBusyOrFailedInkSaveCannotPrepareAnUploadOrClearPendingChanges() async throws {
