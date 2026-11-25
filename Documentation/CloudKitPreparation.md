@@ -2,7 +2,7 @@
 
 Product decision — November 14, 2026: **ship v1.0 offline and add iCloud after launch**. The sync milestones below are post-launch work and do not block the initial App Store release. See [ReleaseReadiness.md](ReleaseReadiness.md) for the launch critical path.
 
-Status: editable backups are implemented and integrated into `main`. The transactional local change journal and immutable local upload packages are implemented. There are no cloud entitlements, configured containers, automatic uploads or cloud-status indicators.
+Status: editable backups are implemented and integrated into `main`. The transactional local change journal, immutable local upload packages and local CloudKit record mapping are implemented. There are no cloud entitlements, configured containers, automatic uploads or cloud-status indicators. See [SyncCloudRecords.md](SyncCloudRecords.md) for the new wire format and its current limits.
 
 ## Implemented local change journal — V7 → V8 migration
 
@@ -25,17 +25,17 @@ The proposed approach is an explicit adapter using **CKSyncEngine**, available f
 | Milestone | Work | Acceptance gate |
 | --- | --- | --- |
 | 1. Local recovery | Complete library export, integrity validation, additive restore, source-link remapping | Reopen restored stores; preserve editable ink, originals and Study; failed restore cannot overwrite local notes |
-| 2. Sync design and migration | Choose the container/zone/record schema; durable outbox, engine state, asset staging, revision and deletion design; V7 → V8 local journal implemented; immutable asset staging implemented; engine/account work pending | Reopen pre-sync libraries without changing IDs, paths or content; local-only mode remains fully functional |
+| 2. Sync design and migration | V7 → V8 local journal, immutable asset staging and versioned local record/blob mapping implemented; development container, durable engine/account bookkeeping and conflict policy pending | Reopen pre-sync libraries without changing IDs, paths or content; local-only mode remains fully functional |
 | 3. One notebook | Explicit opt-in; notebook/page records plus drawing assets; foreground receive/apply and retry | Two physical devices round-trip one real notebook offline/online, across process termination and account changes |
 | 4. Full document content | Folders, sections, PDFs, images, margins, bookmarks, moves, ordering and Trash | Large/mixed libraries retain geometry and assets; document moves never re-upload identical binary content unnecessarily |
 | 5. Study and release hardening | Decks/cards/reviews, reference resolution, conflict diagnostics and status UI | Concurrent reviews do not lose history; stable links survive conflicts/restores; production schema and TestFlight migration verified |
 
 Each gate leaves a usable build. Do not present a local save dot as cloud success before the server has confirmed the corresponding revision.
 
-## Record and asset design to settle before implementation
+## Record and asset design: implemented foundations and remaining work
 
-- Use model-type-plus-permanent-UUID record names; never page indices, titles, folder paths or SwiftData persistent implementation IDs. Represent ownership with stable record references/IDs. Resolve partial downloads without creating editable empty pages or deleting existing ones.
-- Keep local app-relative paths private. Remote asset identity, content hash and revision must be independent of the file's device-specific storage location. Use immutable staged upload files that remain present until the engine has finished with them.
+- Implemented locally: model-type-plus-permanent-UUID entity names, stable relationship IDs, content-addressed blob names and a versioned payload. Partial-download resolution must still avoid editable empty replacement pages or removal of existing ones.
+- Implemented locally: structural file paths are replaced with blob IDs before creating CKRecords. Immutable upload files remain present until explicit discard. A future sender must retain them through operation completion and implement cross-package/server upload deduplication.
 - Record each committed local change durably in an outbox. Persist CKSyncEngine serialized state and successful server record system fields/change tags. Handle crashes between SwiftData, outbox and filesystem updates with an explicit import/recovery journal and idempotent operations.
 - Store per-page revisions and an agreed base revision. Two-device drawing conflicts must preserve both editable drawings in a recoverable conflict copy; merging `PKDrawing` bytes by timestamp is unsafe. Use deterministic policies for metadata conflicts, section/page ordering and folder-parent cycles.
 - Treat deleted/trashed items separately. Use durable tombstones and retention rules before any remote hard delete; propagate references in a recoverable order. Do not allow an old offline device to resurrect or purge notes unintentionally.
@@ -45,7 +45,7 @@ Each gate leaves a usable build. Do not present a local save dot as cloud succes
 
 ## Configuration and verification prerequisites
 
-The next implementation milestone needs the Apple Developer team/container configuration and development CloudKit environment. Enable only the capabilities required by the selected sync path, then validate signing, private database access, notifications, retry limits and offline operation on two devices. Development and production schemas are separate deployment steps; production rollout and App Store privacy information must reflect the final behavior.
+Local preparation can continue with durable account-scoped engine/system-field bookkeeping and enrollment design before creating a container. Actual transport needs the Apple Developer team/container configuration and development CloudKit environment. Enable only the capabilities required by the selected sync path, then validate signing, private database access, notifications, retry limits and offline operation on two devices. Development and production schemas are separate deployment steps; production rollout and App Store privacy information must reflect the final behavior.
 
 Before enabling sync on existing user libraries: save a backup outside the app, test the migration against a frozen V7 fixture, exercise missing/corrupt assets and full disk, test retry/duplicate delivery, kill during upload/download/commit, conflict both handwriting and page order, restore a backup while sync is enabled, and change iCloud accounts. Collision remapping creates new IDs for colliding local records. Before enabling sync, define account-aware handling for restored IDs that are absent locally but may exist remotely; do not blindly overwrite remote content.
 
@@ -62,7 +62,7 @@ Before enabling sync on existing user libraries: save a backup outside the app, 
 
 `ModelContext.saveRecordingSyncChanges()` stages intents and user metadata in the same context, then performs one save. Library/PDF operations, debounced ink checkpoints, inserted objects/bookmarks, Study/sample decks, backup restore and workspace/background flush boundaries use it. `SyncChangeJournal` ignores its own entity changes, coalesces by kind plus permanent UUID, bounds fetch predicates to 100 keys, and stages acknowledgements only when the revision token still matches. It performs no networking and does not add a second drawing save or a per-movement task.
 
-A journal row is an intent to reconcile the latest committed local entity, not a historical payload. It does not snapshot drawing/PDF/image bytes, store CloudKit system fields, hold account tokens, or establish a base for concurrent ink merging. Metadata and file writes still have the existing independent atomic boundaries. Immutable upload staging is now available through the workspace save/capture boundary. Before starting any sender, implement initial reconciliation, account ownership, engine-state persistence, a wire-record mapper and recoverable conflict handling. Future remote imports must deliberately choose whether to journal; the normal application save helper represents local edits.
+A journal row is an intent to reconcile the latest committed local entity, not a historical payload. It does not snapshot drawing/PDF/image bytes, store CloudKit system fields, hold account tokens, or establish a base for concurrent ink merging. Metadata and file writes still have the existing independent atomic boundaries. Immutable upload staging and wire-record mapping are now available through the workspace save/capture boundary. Before starting any sender, implement initial reconciliation, account ownership, engine/system-field persistence and recoverable conflict handling. Future remote imports must deliberately choose whether to journal; the normal application save helper represents local edits.
 
 A clean migrated library initially has no pending rows until a local save changes an entity. Creating the complete initial upload is an explicit future activation step. The local blue/orange save dot continues to represent saving on this iPad only. No iCloud switch, success message or automatic account access is exposed in this milestone.
 
@@ -72,3 +72,7 @@ A clean migrated library initially has no pending rows until a local save change
 `DocumentWorkspace.prepareSyncUpload` flushes both editors and captures metadata plus read-only source descriptors inside a short quiescent boundary, then releases editing before chunked copying/SHA-256 work. Prepared copies are atomically published into owned Application Support directories, survive reopening and are verified before retry. Actual CKAsset objects point at the copies, never live document paths. Preparation does not acknowledge a journal entry, upload a record or delete source files. Native tests exercise newer PencilKit saves while an older captured drawing/PDF revision is prepared.
 
 The owner confirmed that no iCloud container exists yet. Creating one and verifying the final app identity/team remain prerequisites for actual CloudKit configuration. No placeholder container identifier or signing capability has been added. See [SyncUploadPreparation.md](SyncUploadPreparation.md) for file lifetime, limits, retry/cancellation behavior and remaining transport gates.
+
+## Local wire mapping implemented — November 24, 2026
+
+Verified packages can now produce real CKRecord values with immutable CKAsset payloads and shared blob identities. All seven metadata entity kinds are covered; nested object image/font paths and card images are transformed along with drawing/PDF references. Permanent deletion intents become tombstones with no hard-delete or shared-file cleanup. A secure system-fields codec validates record identity/type/zone for future server metadata reuse, but does not persist engine/account state. No account or database is contacted. See [SyncCloudRecords.md](SyncCloudRecords.md) for the schema, receiver requirements, conservative 40 MB preparation cap, verification and next steps.

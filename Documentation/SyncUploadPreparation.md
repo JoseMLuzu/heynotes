@@ -21,7 +21,7 @@ The default root is `Application Support/HeyNotesSyncUploads`, outside the docum
 - SHA-256-named `.asset` files; roles with identical bytes share one file within the package.
 - A small ownership marker used before explicit deletion.
 
-Package and asset identifiers do not depend on notebook titles, page positions or device-specific paths. Absolute URLs are not serialized. The private metadata snapshot reuses the editable-backup value mapping and can contain **relative local paths**; it is not a finished CloudKit record payload. A future wire mapper must replace file references with remote asset identities and define record/schema compatibility before sending it.
+Package and asset identifiers do not depend on notebook titles, page positions or device-specific paths. Absolute URLs are not serialized. The private metadata snapshot reuses the editable-backup value mapping and can contain **relative local paths**; it is not a finished CloudKit record payload. The separate [local wire mapper](SyncCloudRecords.md) now replaces those references with blob record IDs in a versioned derived payload. Original local metadata is retained unchanged; neither format is sent automatically.
 
 Copies use 1 MiB chunks, keeping PDF/drawing streaming buffers bounded. Current explicit limits are 256 file roles and 64 MiB of encoded metadata per item, with a 1 MiB manifest-read limit. These bounds do not make metadata encoding constant-memory. Shared PDF hashes remain stable across packages, but cross-package storage sharing and server-side upload deduplication are not implemented.
 
@@ -45,4 +45,4 @@ Native coverage captures two live PencilKit editors, including ink whose final d
 
 ## Next gate
 
-Create/configure the development CloudKit container using the final app identity and the owner's Apple Developer team. Then implement the wire mapper, persisted engine/system-field state and account-bound opt-in flow before a one-notebook two-device trial. Initial reconciliation, remote apply, conflict copies, account-aware restore and production rollout remain separate gates. The app continues to work offline while these are unfinished.
+The wire mapper and secure system-field codec are implemented locally; see [SyncCloudRecords.md](SyncCloudRecords.md). Next persist account-scoped engine/system-field state and define enrollment/account switching. Actual transport additionally requires the development CloudKit container using the final app identity/Developer team and an explicit opt-in flow before a one-notebook two-device trial. Initial reconciliation, remote apply, conflict copies, account-aware restore and production rollout remain separate gates. The app continues to work offline while these are unfinished.
