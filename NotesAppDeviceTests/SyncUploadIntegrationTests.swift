@@ -93,6 +93,23 @@ import CloudKit
         XCTAssertTrue(primary.canvas === ca && secondary.canvas === cb)
         let restoredFields = try await reopened.record(key, lease: next)
         XCTAssertEqual(restoredFields?.systemFields, archived)
+        let legacy = Notebook(title: "Pre-journal notebook"), legacyPage = NotePage(pageIndex: 0)
+        context.insert(legacy); context.insert(legacyPage); legacy.pages = [legacyPage]
+        legacyPage.drawingFilePath = "Legacy/ink.drawing"
+        let legacyInk = ink(4).dataRepresentation()
+        try await storage.write(legacyInk, to: "Legacy/ink.drawing")
+        try context.save() // Deliberately simulate content that existed before the local journal.
+        let enrollment = try await workspace.prepareInitialSyncEnrollment(state: reopened, lease: next)
+        XCTAssertEqual(enrollment.entityCounts["notebook"], 3)
+        XCTAssertEqual(enrollment.entityCounts["page"], 3)
+        XCTAssertEqual(enrollment.enqueued, 2)
+        XCTAssertFalse(workspace.isSwitching)
+        XCTAssertTrue(primary.canvas === ca && secondary.canvas === cb)
+        XCTAssertEqual(primary.drawing.strokes.count, 3)
+        let retainedLegacy = try await storage.read("Legacy/ink.drawing")
+        XCTAssertEqual(retainedLegacy, legacyInk)
+        let legacyKey = SyncEntityIdentity(kind: .page, id: legacyPage.id).recordName
+        XCTAssertTrue(try ModelContext(container).fetch(FetchDescriptor<SyncChange>()).contains { $0.recordName == legacyKey })
         try await reopened.close()
     }
 
@@ -109,19 +126,31 @@ import CloudKit
         await workspace.restore(); _ = await workspace.open(book)
         let session = try XCTUnwrap(workspace.activeSession); defer { workspace.discardPreparedPages() }
         let staging = SyncUploadStagingStore(root: root.appendingPathComponent("Prepared"))
+        let state = try SyncStateStore(directory: root.appendingPathComponent("EnrollmentState").resolvingSymlinksInPath())
+        let libraryID = try await state.registerLibrary()
+        let scope = try SyncAccountScope(containerIdentifier: "iCloud.heynotes.tests", environment: .development,
+            accountRecordName: "native-enrollment-test", zone: CKRecordZone.ID(zoneName: "Notes"))
+        let lease = try await state.bind(scope, libraryID: libraryID)
         let key = SyncEntityIdentity(kind: .page, id: page.id).recordName
         session.auxiliaryInputActive = true
         do { _ = try await workspace.prepareSyncUpload(key, staging: staging); XCTFail("Busy editor must reject capture") }
+        catch LibraryBackupError.busy {} catch { XCTFail("Unexpected error: \(error)") }
+        do { _ = try await workspace.prepareInitialSyncEnrollment(state: state, lease: lease); XCTFail("Busy editor must reject enrollment") }
         catch LibraryBackupError.busy {} catch { XCTFail("Unexpected error: \(error)") }
         session.auxiliaryInputActive = false
         try await storage.write(Data([7]), to: "blocked")
         page.drawingFilePath = "blocked/ink.drawing"; session.changed(ink(1))
         do { _ = try await workspace.prepareSyncUpload(key, staging: staging); XCTFail("Failed save must reject capture") }
         catch LibraryBackupError.savePending {} catch { XCTFail("Unexpected error: \(error)") }
+        do { _ = try await workspace.prepareInitialSyncEnrollment(state: state, lease: lease); XCTFail("Failed ink save must reject enrollment") }
+        catch LibraryBackupError.savePending {} catch { XCTFail("Unexpected error: \(error)") }
+        let status = try await state.initialEnrollmentStatus(lease: lease)
+        if case .notStarted = status {} else { XCTFail("Rejected editor must not begin enrollment") }
         XCTAssertTrue(session.hasPendingSave); XCTAssertFalse(workspace.isSwitching)
         let packages = try await staging.packageIDs(); XCTAssertTrue(packages.isEmpty)
         let retained = try await storage.read("blocked"); XCTAssertEqual(retained, Data([7]))
         XCTAssertGreaterThan(try ModelContext(container).fetchCount(FetchDescriptor<SyncChange>()), 0)
+        try await state.close()
     }
 
     private func ink(_ count: Int) -> PKDrawing {
