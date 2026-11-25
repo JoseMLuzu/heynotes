@@ -110,6 +110,19 @@ import CloudKit
         XCTAssertEqual(retainedLegacy, legacyInk)
         let legacyKey = SyncEntityIdentity(kind: .page, id: legacyPage.id).recordName
         XCTAssertTrue(try ModelContext(container).fetch(FetchDescriptor<SyncChange>()).contains { $0.recordName == legacyKey })
+        let beforeReview = try ModelContext(container).fetch(FetchDescriptor<SyncChange>())
+            .reduce(into: [String: UUID]()) { $0[$1.recordName] = $1.revision }
+        // Header-only offline fixture; no CKContainer or account is contacted.
+        let remote = SyncRemoteBaseline(id: UUID(), scope: next.scope, entities: [:], blobNames: [],
+            deletedEntities: [], finalToken: Data([0x11]))
+        let review = try await workspace.prepareCloudActivationReview(state: reopened, lease: next, remote: remote)
+        XCTAssertEqual(review.items.count, 6)
+        XCTAssertTrue(review.items.allSatisfy { $0.disposition == .localOnlyNeedsReview })
+        let afterReview = try ModelContext(container).fetch(FetchDescriptor<SyncChange>())
+            .reduce(into: [String: UUID]()) { $0[$1.recordName] = $1.revision }
+        XCTAssertEqual(beforeReview, afterReview)
+        XCTAssertTrue(primary.canvas === ca && secondary.canvas === cb)
+        XCTAssertEqual(primary.drawing.strokes.count, 3)
         try await reopened.close()
     }
 
