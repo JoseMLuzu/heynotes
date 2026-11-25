@@ -182,9 +182,9 @@ import Testing
         try await state.close()
         // Corrupt our storage envelope, without inventing Apple's opaque engine format.
         do {
-            let schema = Schema(versionedSchema: SyncStateSchemaV1.self)
+            let schema = Schema(versionedSchema: SyncStateSchemaV2.self)
             let c = try ModelContainer(for: schema, configurations: [.init(schema: schema, url: f.root.appendingPathComponent("State.sqlite"), cloudKitDatabase: .none)])
-            let library = try #require(c.mainContext.fetch(FetchDescriptor<SyncStateSchemaV1.Library>()).first)
+            let library = try #require(c.mainContext.fetch(FetchDescriptor<SyncStateSchemaV2.Library>()).first)
             library.engineData = Data([0xFF, 0xFE])
             let metadata = try #require(c.mainContext.fetch(FetchDescriptor<SyncStateSchemaV1.Record>()).first)
             metadata.scopeKey = "damaged-scope-key"
@@ -195,9 +195,9 @@ import Testing
         await #expect(throws: SyncStateError.damagedState) { try await reopened.record(record.recordID.recordName, lease: lease) }
         #expect(try await reopened.registerLibrary() == id)
         try await reopened.close()
-        let schema = Schema(versionedSchema: SyncStateSchemaV1.self)
+        let schema = Schema(versionedSchema: SyncStateSchemaV2.self)
         let check = try ModelContainer(for: schema, configurations: [.init(schema: schema, url: f.root.appendingPathComponent("State.sqlite"), cloudKitDatabase: .none)])
-        #expect(try check.mainContext.fetch(FetchDescriptor<SyncStateSchemaV1.Library>()).first?.engineData == Data([0xFF, 0xFE]))
+        #expect(try check.mainContext.fetch(FetchDescriptor<SyncStateSchemaV2.Library>()).first?.engineData == Data([0xFF, 0xFE]))
     }
 
     @Test func exclusiveWriterAndUnsafeLocationsFailWithoutRemovingState() async throws {
