@@ -227,6 +227,18 @@ final class DocumentWorkspace {
         return try await staging.prepare(captured)
     }
 
+    /// Explicit local preparation only. Flush actual ink and quiesce both panes
+    /// before enrolling the committed library; no account/network activity occurs.
+    func prepareInitialSyncEnrollment(state: SyncStateStore, lease: SyncStateLease) async throws -> SyncEnrollmentReport {
+        try await withSavedLibrary {
+            let container = context.container, libraryID = lease.libraryID
+            let source = await Task.detached(priority: .utility) {
+                SyncInitialEnrollmentStore(modelContainer: container, libraryID: libraryID)
+            }.value
+            return try await state.prepareInitialEnrollment(using: source, lease: lease)
+        }
+    }
+
     /// Quiesce both native editors while producing or installing a consistent library snapshot.
     func withSavedLibrary<T: Sendable>(_ operation: @MainActor () async throws -> T) async throws -> T {
         guard !blocksNavigation else { throw LibraryBackupError.busy }

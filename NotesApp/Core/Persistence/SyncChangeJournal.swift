@@ -13,7 +13,8 @@ extension ModelContext {
 
 enum SyncChangeJournal {
     // All in-process journal-producing commits and conditional acknowledgements
-    // share this short synchronous boundary. No await/network/file copying inside.
+    // share this synchronous boundary. Initial enrollment also holds it for its
+    // metadata inventory/seed transaction. No await/network/asset copying inside.
     private static let saveLock = NSRecursiveLock()
     static func withSaveBoundary<T>(_ body: () throws -> T) rethrows -> T {
         try saveLock.withLock(body)

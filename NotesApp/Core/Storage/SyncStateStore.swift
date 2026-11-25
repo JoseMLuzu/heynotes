@@ -11,14 +11,15 @@ actor SyncStateStore: ModelActor {
     private let instanceID = UUID()
     private var closed = false
     private var applyingReceipts = false
-    private typealias Library = SyncStateSchemaV1.Library
+    private var enrolling = false
+    private typealias Library = SyncStateSchemaV2.Library
     private typealias Record = SyncStateSchemaV1.Record
     private typealias Receipt = SyncStateSchemaV1.Receipt
 
     init(directory url: URL = URL.applicationSupportDirectory.appendingPathComponent("HeyNotesSyncState", isDirectory: true),
          save: @escaping @Sendable (ModelContext) throws -> Void = { try $0.save() }) throws {
         let directory = try SyncStateDirectory(url)
-        let schema = Schema(versionedSchema: SyncStateSchemaV1.self)
+        let schema = Schema(versionedSchema: SyncStateSchemaV2.self)
         let config = ModelConfiguration(schema: schema, url: directory.url.appendingPathComponent("State.sqlite"), cloudKitDatabase: .none)
         let container = try ModelContainer(for: schema, migrationPlan: SyncStateMigrationPlan.self, configurations: [config])
         let context = ModelContext(container); context.autosaveEnabled = false
@@ -40,7 +41,7 @@ actor SyncStateStore: ModelActor {
     /// retained on pause: binding another account/scope requires a future migration policy.
     func bind(_ scope: SyncAccountScope, libraryID: UUID) throws -> SyncStateLease {
         try checkOpen(); try scope.validate()
-        guard !applyingReceipts else { throw SyncStateError.busy }
+        guard !applyingReceipts, !enrolling else { throw SyncStateError.busy }
         let library = try library(libraryID)
         guard (library.scopeData == nil) == (library.scopeKey == nil) else { throw SyncStateError.damagedState }
         if let key = library.scopeKey, key != scope.key { throw SyncStateError.differentAccount }
@@ -55,7 +56,7 @@ actor SyncStateStore: ModelActor {
 
     func pause(libraryID: UUID) throws {
         try checkOpen()
-        guard !applyingReceipts else { throw SyncStateError.busy }
+        guard !applyingReceipts, !enrolling else { throw SyncStateError.busy }
         try library(libraryID).activeGeneration = nil
         try commit()
     }
@@ -72,7 +73,7 @@ actor SyncStateStore: ModelActor {
     /// System fields and an optional sent-revision receipt commit in one sidecar transaction.
     func storeRecord(_ record: CKRecord, expectedVersion: UUID?, sent: SyncSentRevision? = nil,
                      confirmationID: UUID = UUID(), lease: SyncStateLease) throws -> SyncStoredRecord {
-        _ = try validate(lease)
+        try requireNoEnrollment(validate(lease))
         let name = record.recordID.recordName
         guard record.recordID.zoneID == lease.scope.zoneID,
               [SyncCloudRecordPlan.entityType, SyncCloudRecordPlan.blobType].contains(record.recordType) else {
@@ -128,7 +129,7 @@ actor SyncStateStore: ModelActor {
     /// Recovery order: sidecar receipt already committed -> journal transaction ->
     /// remove receipts. Replaying after either crash window cannot clear a newer revision.
     @discardableResult func replayReceipts(using journal: SyncAcknowledgementStore, lease: SyncStateLease) async throws -> Int {
-        _ = try validate(lease)
+        try requireNoEnrollment(validate(lease))
         guard !applyingReceipts else { throw SyncStateError.busy }
         guard journal.libraryID == lease.libraryID else { throw SyncStateError.unknownLibrary }
         let receipts = try pendingReceipts(lease: lease)
@@ -147,6 +148,7 @@ actor SyncStateStore: ModelActor {
 
     func engineState(lease: SyncStateLease) throws -> CKSyncEngine.State.Serialization? {
         let library = try validate(lease)
+        try requireNoEnrollment(library)
         guard try pendingReceipts(lease: lease, limit: 1).isEmpty else { throw SyncStateError.recoveryPending }
         guard let bytes = library.engineData else { return nil }
         guard bytes.count <= 8_388_608 else { throw SyncStateError.damagedState }
@@ -158,6 +160,7 @@ actor SyncStateStore: ModelActor {
     /// completions and callbacks from an older lease cannot overwrite a checkpoint.
     func saveEngineState(_ state: CKSyncEngine.State.Serialization, sequence: Int64, lease: SyncStateLease) throws {
         let library = try validate(lease)
+        try requireNoEnrollment(library)
         guard try pendingReceipts(lease: lease, limit: 1).isEmpty else { throw SyncStateError.recoveryPending }
         guard sequence > library.engineSequence else { throw SyncStateError.staleEngineState }
         let data = try JSONEncoder().encode(state)
@@ -167,13 +170,60 @@ actor SyncStateStore: ModelActor {
     }
 
     func close() throws {
-        guard !applyingReceipts else { throw SyncStateError.busy }
+        guard !applyingReceipts, !enrolling else { throw SyncStateError.busy }
         closed = true; directory.release()
     }
 
     private func library(_ id: UUID) throws -> Library {
         guard let row = try modelContext.fetch(FetchDescriptor<Library>(predicate: #Predicate { $0.id == id })).first else { throw SyncStateError.unknownLibrary }
         return row
+    }
+
+    func initialEnrollmentStatus(lease: SyncStateLease) throws -> SyncEnrollmentStatus {
+        try enrollmentStatus(validate(lease))
+    }
+
+    private func enrollmentStatus(_ library: Library) throws -> SyncEnrollmentStatus {
+        guard let id = library.enrollmentID else {
+            guard library.enrollmentReport == nil, library.enrollmentStartedAt == nil else { throw SyncEnrollmentError.invalidInventory }
+            return .notStarted
+        }
+        guard library.enrollmentStartedAt != nil else { throw SyncEnrollmentError.invalidInventory }
+        guard let bytes = library.enrollmentReport else { return .preparing(id) }
+        guard bytes.count <= 65_536, let report = try? JSONDecoder().decode(SyncEnrollmentReport.self, from: bytes),
+              report.enrollmentID == id, report.libraryID == library.id else { throw SyncEnrollmentError.invalidInventory }
+        try report.validate(); return .readyForRemoteReconciliation(report)
+    }
+
+    /// Durable begin -> one idempotent user-journal transaction -> durable report.
+    /// A completed report prevents later activation attempts from re-enrolling records
+    /// whose intents have since been acknowledged. It does not authorize cloud uploads.
+    func prepareInitialEnrollment(using source: SyncInitialEnrollmentStore, lease: SyncStateLease) async throws -> SyncEnrollmentReport {
+        let library = try validate(lease)
+        guard !applyingReceipts, !enrolling else { throw SyncStateError.busy }
+        guard source.libraryID == lease.libraryID else { throw SyncStateError.unknownLibrary }
+        if case .readyForRemoteReconciliation(let report) = try initialEnrollmentStatus(lease: lease) { return report }
+        guard library.engineData == nil else { throw SyncEnrollmentError.existingCheckpoint }
+        guard try pendingReceipts(lease: lease, limit: 1).isEmpty else { throw SyncStateError.recoveryPending }
+        if library.enrollmentID == nil {
+            library.enrollmentID = UUID(); library.enrollmentStartedAt = .now
+            try commit()
+        }
+        guard let id = library.enrollmentID else { throw SyncEnrollmentError.invalidInventory }
+        enrolling = true
+        defer { enrolling = false }
+        let report = try await source.seed(enrollmentID: id)
+        let completedLibrary = try validate(lease)
+        try report.validate()
+        guard report.enrollmentID == id, report.libraryID == lease.libraryID else { throw SyncEnrollmentError.invalidInventory }
+        let encoder = JSONEncoder(); encoder.outputFormatting = .sortedKeys
+        completedLibrary.enrollmentReport = try encoder.encode(report)
+        try commit()
+        return report
+    }
+
+    private func requireNoEnrollment(_ library: Library) throws {
+        if case .preparing = try enrollmentStatus(library) { throw SyncEnrollmentError.pending }
     }
     private func recordRow(_ name: String, key scopeKey: String) throws -> Record? {
         let key = scopeKey + "." + name

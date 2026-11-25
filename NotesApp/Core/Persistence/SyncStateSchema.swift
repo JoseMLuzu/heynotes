@@ -49,6 +49,6 @@ enum SyncStateSchemaV1: VersionedSchema {
 }
 
 enum SyncStateMigrationPlan: SchemaMigrationPlan {
-    static var schemas: [any VersionedSchema.Type] { [SyncStateSchemaV1.self] }
-    static var stages: [MigrationStage] { [] }
+    static var schemas: [any VersionedSchema.Type] { [SyncStateSchemaV1.self, SyncStateSchemaV2.self] }
+    static var stages: [MigrationStage] { [.lightweight(fromVersion: SyncStateSchemaV1.self, toVersion: SyncStateSchemaV2.self)] }
 }
