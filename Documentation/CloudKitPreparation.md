@@ -2,7 +2,7 @@
 
 Product decision — November 14, 2026: **ship v1.0 offline and add iCloud after launch**. The sync milestones below are post-launch work and do not block the initial App Store release. See [ReleaseReadiness.md](ReleaseReadiness.md) for the launch critical path.
 
-Status: editable backups are implemented and integrated into `main`. The transactional journal, immutable upload packages, local CloudKit record mapping, passive account-scoped recovery and resumable initial local enrollment are implemented. There are no cloud entitlements, configured containers, automatic uploads or cloud-status indicators. See [SyncCloudRecords.md](SyncCloudRecords.md), [SyncStatePersistence.md](SyncStatePersistence.md) and [SyncInitialEnrollment.md](SyncInitialEnrollment.md) for formats, boundaries and remaining runtime gates.
+Status: editable backups, the transactional journal, immutable packages, wire mapping, passive account-state recovery and initial local enrollment are implemented. A real read-only CloudKit inspection adapter and conservative activation-review policy are also implemented, but not configured or called automatically. There are no cloud entitlements, configured containers, automatic uploads or cloud-status indicators. See [SyncActivationReview.md](SyncActivationReview.md) and [CloudKitDevelopmentSetup.md](CloudKitDevelopmentSetup.md) for the latest step and next real-account gate.
 
 ## Implemented local change journal — V7 → V8 migration
 
@@ -25,7 +25,7 @@ The proposed approach is an explicit adapter using **CKSyncEngine**, available f
 | Milestone | Work | Acceptance gate |
 | --- | --- | --- |
 | 1. Local recovery | Complete library export, integrity validation, additive restore, source-link remapping | Reopen restored stores; preserve editable ink, originals and Study; failed restore cannot overwrite local notes |
-| 2. Sync design and migration | V7 → V8 journal, immutable staging, wire mapping, passive state/receipt recovery and initial local enrollment implemented; sidecar V1 → V2 migration; explicit activation/remote reconciliation, real engine and conflicts pending | Reopen pre-sync libraries without changing IDs, paths or content; local-only mode remains fully functional |
+| 2. Sync design and migration | Journal, staging, wire mapping, passive recovery, local enrollment and read-only inspection/review implemented; sidecar V2; real provisioning/account trial, opt-in consent, reconciliation execution, engine and conflicts pending | Reopen pre-sync libraries without changing IDs, paths or content; local-only mode remains fully functional |
 | 3. One notebook | Explicit opt-in; notebook/page records plus drawing assets; foreground receive/apply and retry | Two physical devices round-trip one real notebook offline/online, across process termination and account changes |
 | 4. Full document content | Folders, sections, PDFs, images, margins, bookmarks, moves, ordering and Trash | Large/mixed libraries retain geometry and assets; document moves never re-upload identical binary content unnecessarily |
 | 5. Study and release hardening | Decks/cards/reviews, reference resolution, conflict diagnostics and status UI | Concurrent reviews do not lose history; stable links survive conflicts/restores; production schema and TestFlight migration verified |
@@ -45,7 +45,7 @@ Each gate leaves a usable build. Do not present a local save dot as cloud succes
 
 ## Configuration and verification prerequisites
 
-Initial local inventory/seeding is implemented. Next define explicit opt-in, verified user-store/sidecar pairing, remote baseline reconciliation and account-aware restore policy. The passive sidecar persists system fields, receipts and typed engine checkpoints; genuine nonempty engine state/account events still need a configured container. Actual transport needs the Developer team/container and development CloudKit environment. Enable only the required capabilities, then verify signing, private access, notifications, retries and offline operation on two devices. Development and production schema deployment remain separate steps.
+Local inventory/seeding and an advisory local/remote review are implemented. The next real-account gate is configuring the Developer container/signing/custom zone and trying the read-only inspector. Explicit opt-in/consent, verified user-store pairing, reconciliation execution and account-aware restore still need implementation. Genuine engine serialization/account events, sending, incoming recovery and two-device verification remain gated. See [CloudKitDevelopmentSetup.md](CloudKitDevelopmentSetup.md). Development and production schema deployment are separate steps.
 
 Before enabling sync on existing user libraries: save a backup outside the app, test the migration against a frozen V7 fixture, exercise missing/corrupt assets and full disk, test retry/duplicate delivery, kill during upload/download/commit, conflict both handwriting and page order, restore a backup while sync is enabled, and change iCloud accounts. Collision remapping creates new IDs for colliding local records. Before enabling sync, define account-aware handling for restored IDs that are absent locally but may exist remotely; do not blindly overwrite remote content.
 
@@ -84,3 +84,7 @@ SyncStateStore adds a separate versioned local SQLite sidecar, stable registrati
 ## Initial local enrollment implemented — November 25, 2026
 
 The next local milestone scans committed UUIDs, queues only missing intents and persists begin/completion progress across a lightweight sidecar V1 → V2 migration. It retains existing revisions/tombstones, preserves user metadata/files and resumes safely after a final-marker failure. The workspace flushes both actual canvases before starting. Its completed status is readyForRemoteReconciliation; it neither authorizes uploads nor infers remote deletions from missing local IDs. See [SyncInitialEnrollment.md](SyncInitialEnrollment.md) for the transaction/retry contract, limits and next opt-in/remote-baseline gate.
+
+## Read-only inspection and advisory review — November 25, 2026
+
+The real adapter checks account availability and reads paginated private-zone headers only. Missing setup, failed pages, account changes and unsupported metadata abort rather than indicating an empty account. A fresh workspace-flushed local inventory produces conservative review items, with no automatic merge, upload, acknowledgement or deletion. Scope/revision fingerprints invalidate stale reviews. No container was instantiated or account queried in this validation pass; tests use explicit fixtures. See [SyncActivationReview.md](SyncActivationReview.md) for implementation and real-device limits.

@@ -45,4 +45,4 @@ Native coverage captures two live PencilKit editors, including ink whose final d
 
 ## Next gate
 
-The wire mapper, passive account-state persistence and [initial local enrollment](SyncInitialEnrollment.md) are implemented. See [SyncCloudRecords.md](SyncCloudRecords.md) and [SyncStatePersistence.md](SyncStatePersistence.md). Next define explicit opt-in, remote reconciliation and account-aware restore/switching. Transport requires the development container using the final identity/team, genuine engine/account verification and a one-notebook two-device trial. Remote apply, editable conflicts and production rollout remain separate gates. The app continues to work offline.
+Wire mapping, passive state, [initial enrollment](SyncInitialEnrollment.md) and [advisory inspection/review](SyncActivationReview.md) are implemented. The next gate is [development setup](CloudKitDevelopmentSetup.md) and a real read-only account trial. Opt-in consent, reconciliation execution, account-aware restore, sending/engine verification, incoming recovery and editable conflicts remain pending. The app continues to work offline.

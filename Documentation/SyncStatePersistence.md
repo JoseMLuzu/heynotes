@@ -56,7 +56,7 @@ All **21 selected native tests** and the signed Release build pass. The two-edit
 
 ## Next milestones
 
-1. Initial local enrollment is implemented in [SyncInitialEnrollment.md](SyncInitialEnrollment.md). Next implement explicit opt-in, verified sidecar/user-store pairing, remote reconciliation and account-aware restore/switch policy. Its local completion marker alone must not authorize overwriting remote records.
+1. [Local enrollment](SyncInitialEnrollment.md) and [advisory activation review](SyncActivationReview.md) are implemented. Next configure the real container/signing/zone, then implement explicit opt-in, verified store pairing, reconciliation execution and account-aware restore/switching. Neither local completion nor an advisory review authorizes overwriting remote records.
 2. Confirm final bundle/team identity and create/configure the development CloudKit container. Add the real CKSyncEngine adapter with verified account events, durable stateUpdate handling, success-only confirmations and serial per-record retries.
 3. Implement incoming staging/apply recovery and editable conflict copies, then trial one notebook on two physical devices through offline edits, termination and sign-out/sign-in. Verify genuine nonempty engine serialization and server change tags.
 

@@ -38,6 +38,8 @@ Batching limits each projected fetch, but the live-ID set, pending-row map, inse
 
 A remote account can already contain records whose IDs are absent locally. Empty local content does not imply remote deletion. This service neither sends local content over those records nor infers remote tombstones from absence. Next implement an explicit activation/reconciliation policy: verify the real account, pair the correct user store with its registration, inspect the remote baseline, and preserve/remap conflicts and restored IDs before authorizing sends.
 
+Follow-up: [read-only inspection and advisory review](SyncActivationReview.md) now implements header enumeration and conservative comparison with fresh local identities/revisions. The actual development container/signing/zone still need setup and genuine account testing. Opt-in consent, reconciliation execution, incoming validation and conflict-copy decisions remain pending; no review result authorizes sends.
+
 The sidecar registration still is not a fingerprint embedded in the user's store. An externally replaced/restored library or lost sidecar requires account-aware activation policy; a cached completion marker must not be treated as proof that a different database was enrolled. Real account switching, opt-in UI, CKSyncEngine events, incoming apply recovery and editable conflict copies remain separate gates. No cloud-ready boolean or cloud-success UI is added.
 
 ## Verification
