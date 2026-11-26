@@ -67,7 +67,7 @@ struct SyncCloudActivationInspector: Sendable {
 }
 
 /// Notification callbacks may arrive on any thread; only the locked flag is shared.
-private final class SyncAccountChangeWatch: @unchecked Sendable {
+final class SyncAccountChangeWatch: @unchecked Sendable {
     private let lock = NSLock()
     private var changed = false
     private let center: NotificationCenter

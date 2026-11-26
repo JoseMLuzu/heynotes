@@ -3929,6 +3929,8 @@
 				<string>F1460354F0B683A99F84A1C7</string>
 				<string>38A17BCD68DB3F5E2B8B592C</string>
 				<string>602E7DB08150ABFC50EA6C90</string>
+				<string>481EAA12FEB529B2FE9DE390</string>
+				<string>B863E90466EA480264A4AA41</string>
 			</array>
 			<key>isa</key>
 			<string>PBXSourcesBuildPhase</string>
@@ -5105,6 +5107,8 @@
 				<string>1EE2CD30432B9EAFDC998774</string>
 				<string>AA59D8D76D48F1066897E612</string>
 				<string>D14830EC6C1DF3ABD4EEF5F5</string>
+				<string>320A97777C91A1E74782A26E</string>
+				<string>6A56CBD4E1A1A98B54173C8A</string>
 			</array>
 			<key>isa</key>
 			<string>PBXGroup</string>
@@ -6035,6 +6039,42 @@
 			<string>PBXBuildFile</string>
 			<key>fileRef</key>
 			<string>D14830EC6C1DF3ABD4EEF5F5</string>
+		</dict>
+		<key>320A97777C91A1E74782A26E</key>
+		<dict>
+			<key>isa</key>
+			<string>PBXFileReference</string>
+			<key>lastKnownFileType</key>
+			<string>sourcecode.swift</string>
+			<key>path</key>
+			<string>NotesApp/Core/Storage/CloudKitDevelopmentZoneTransport.swift</string>
+			<key>sourceTree</key>
+			<string>SOURCE_ROOT</string>
+		</dict>
+		<key>481EAA12FEB529B2FE9DE390</key>
+		<dict>
+			<key>isa</key>
+			<string>PBXBuildFile</string>
+			<key>fileRef</key>
+			<string>320A97777C91A1E74782A26E</string>
+		</dict>
+		<key>6A56CBD4E1A1A98B54173C8A</key>
+		<dict>
+			<key>isa</key>
+			<string>PBXFileReference</string>
+			<key>lastKnownFileType</key>
+			<string>sourcecode.swift</string>
+			<key>path</key>
+			<string>NotesApp/Core/Storage/SyncDevelopmentZoneSetup.swift</string>
+			<key>sourceTree</key>
+			<string>SOURCE_ROOT</string>
+		</dict>
+		<key>B863E90466EA480264A4AA41</key>
+		<dict>
+			<key>isa</key>
+			<string>PBXBuildFile</string>
+			<key>fileRef</key>
+			<string>6A56CBD4E1A1A98B54173C8A</string>
 		</dict>
 	</dict>
 	<key>rootObject</key>
