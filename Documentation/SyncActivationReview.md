@@ -42,4 +42,6 @@ All **21 selected native tests** and the signed Release build pass. The real two
 
 Next configure the development container and signing, add controlled custom-zone provisioning and the real opt-in coordinator, then run this read-only inspector against a development account before adding any sender. After that, validate actual engine serialization, incoming apply recovery and conflict preservation on two devices. The offline-v1-first decision is unchanged. The verified inspection work was subsequently organized into scoped local commits at the owner's request. No installation or push was performed.
 
+Follow-up: [controlled Debug-zone provisioning](SyncDevelopmentZoneSetup.md) is now implemented. Direct Xcode inspection found only Personal Team, which blocks actual container/capability setup until an enrolled-program team is available. The helper has not made a live request; inspection remains unconfigured.
+
 Apple reference: [recordZoneChanges](https://developer.apple.com/documentation/cloudkit/ckdatabase/recordzonechanges(inzonewith:since:desiredkeys:resultslimit:)) documents selective keys, per-record failures, pagination and opaque change-token handling.

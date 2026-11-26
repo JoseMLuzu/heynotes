@@ -1,6 +1,6 @@
 # Pending CloudKit development setup
 
-The local preparation, recovery, enrollment and read-only inspection services are implemented. There is no configured container or user-facing activation flow yet. The November 25 signed Release inspection confirms team 62TPVT35FP, application identifier 62TPVT35FP.com.local.notesapp and no iCloud/ubiquity entitlements. No developer-account resource was created in this pass.
+Local preparation, recovery, enrollment, read-only inspection and controlled Debug-zone setup are implemented. There is no configured container or user-facing activation flow. The signed Release inspection confirms team 62TPVT35FP, application identifier 62TPVT35FP.com.local.notesapp and no iCloud/ubiquity entitlements. Xcode was subsequently inspected directly: only Personal Team is currently available, so a suitable Apple Developer Program team must be added/refreshed before provisioning can proceed. No developer-account resource was created. See [SyncDevelopmentZoneSetup.md](SyncDevelopmentZoneSetup.md) for the verified blocker and tests.
 
 ## Configuration work before real requests
 
@@ -8,7 +8,7 @@ The local preparation, recovery, enrollment and read-only inspection services ar
 2. Add the iCloud capability and enable CloudKit. This explicit CloudKit adapter does not use iCloud Documents, key-value sync or automatic SwiftData mirroring. Xcode can also add Push Notifications when CloudKit is enabled; background engine delivery still needs its later integration.
 3. Select or create the intended real iCloud container in that capability. Its identifier starts with iCloud. and uses a unique reverse-DNS name. Confirm the actual identifier rather than copying a test fixture name from the repository.
 4. Build with the updated provisioning profile and inspect the signed app's entitlements. Verify container association, CloudKit service and actual development/production environment. The inspection configuration's environment value must match signing; changing that value cannot switch servers.
-5. Provision the chosen custom private zone in a controlled setup step before inspection. This milestone intentionally implements no zone-creation call. A zone-not-found response must remain a setup error, not proof that remote content is empty.
+5. Provision the chosen custom private zone in a controlled setup step before inspection. The Debug-only SyncDevelopmentZoneSetup service now supports a read-only plan followed by an explicit create-if-needed action. It requires verified development signing and is disabled in Release. A zone-not-found response remains a setup error, not proof that remote content is empty.
 
 Xcode registration changes, container creation and provisioning are pending owner/team setup, not completed actions. Apple describes the capability/container workflow in [Configuring iCloud services](https://developer.apple.com/documentation/xcode/configuring-icloud-services).
 

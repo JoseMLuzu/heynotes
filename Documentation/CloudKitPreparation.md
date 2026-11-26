@@ -2,7 +2,7 @@
 
 Product decision — November 14, 2026: **ship v1.0 offline and add iCloud after launch**. The sync milestones below are post-launch work and do not block the initial App Store release. See [ReleaseReadiness.md](ReleaseReadiness.md) for the launch critical path.
 
-Status: editable backups, the transactional journal, immutable packages, wire mapping, passive account-state recovery and initial local enrollment are implemented. A real read-only CloudKit inspection adapter and conservative activation-review policy are also implemented, but not configured or called automatically. There are no cloud entitlements, configured containers, automatic uploads or cloud-status indicators. See [SyncActivationReview.md](SyncActivationReview.md) and [CloudKitDevelopmentSetup.md](CloudKitDevelopmentSetup.md) for the latest step and next real-account gate.
+Status: backups, the journal, immutable packages, wire mapping, passive recovery, enrollment, read-only inspection/review and a Debug-only zone setup helper are implemented. Direct Xcode inspection found only Personal Team; a suitable enrolled-program team is the current provisioning blocker. There are no cloud entitlements, configured containers, automatic uploads or cloud-status indicators. See [SyncDevelopmentZoneSetup.md](SyncDevelopmentZoneSetup.md) and [CloudKitDevelopmentSetup.md](CloudKitDevelopmentSetup.md) for the verified handoff gate.
 
 ## Implemented local change journal — V7 → V8 migration
 
@@ -88,3 +88,7 @@ The next local milestone scans committed UUIDs, queues only missing intents and 
 ## Read-only inspection and advisory review — November 25, 2026
 
 The real adapter checks account availability and reads paginated private-zone headers only. Missing setup, failed pages, account changes and unsupported metadata abort rather than indicating an empty account. A fresh workspace-flushed local inventory produces conservative review items, with no automatic merge, upload, acknowledgement or deletion. Scope/revision fingerprints invalidate stale reviews. No container was instantiated or account queried in this validation pass; tests use explicit fixtures. See [SyncActivationReview.md](SyncActivationReview.md) for implementation and real-device limits.
+
+## Verified team gate and Debug zone setup — November 25, 2026
+
+The target's available-team menu contains only Personal Team. Real provisioning therefore needs an enrolled Apple Developer Program team with the required permissions. The current app identifier/signing were retained. Controlled custom-zone planning/creation is implemented for explicitly configured Debug development use, with account rechecks and idempotent retry; it is disabled in Release and has not been run against a real account. See [SyncDevelopmentZoneSetup.md](SyncDevelopmentZoneSetup.md). No container identifier was selected or permanently registered.
