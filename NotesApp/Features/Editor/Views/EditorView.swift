@@ -223,7 +223,7 @@ struct EditorView: View {
         } message: { Text(session.errorMessage ?? "") }
         .confirmationDialog("Delete this page?", isPresented: $deleting, titleVisibility: .visible) {
             Button("Delete Page", role: .destructive) { Task { await session.deletePage() } }
-        } message: { Text("The page will be removed from this notebook. Its drawing file is retained locally for recovery.") }
+        } message: { Text("The page will move to Recently Deleted in this notebook’s Pages panel. You can restore it there.") }
     }
 
     private var isCurrentSession: Bool { workspace == nil || workspace?.contains(session) == true }
@@ -356,7 +356,7 @@ struct EditorView: View {
 
     private var pageControls: some View {
         Button { showingPages.toggle() } label: {
-            Text("\((session.page?.pageIndex ?? 0) + 1) / \(session.notebook.pages.count)")
+            Text("\((session.page?.pageIndex ?? 0) + 1) / \(session.notebook.activePageCount)")
                 .font(.system(.caption, weight: .medium).monospacedDigit())
                 .foregroundStyle(.secondary)
                 .lineLimit(1)
@@ -365,7 +365,7 @@ struct EditorView: View {
                 .frame(width: pageControlWidth, height: 44)
                 .contentShape(Rectangle())
         }
-        .accessibilityLabel("Page \((session.page?.pageIndex ?? 0) + 1) of \(session.notebook.pages.count). Show all pages")
+        .accessibilityLabel("Page \((session.page?.pageIndex ?? 0) + 1) of \(session.notebook.activePageCount). Show all pages")
         .accessibilityIdentifier("editor.pages")
         .help("Show pages and bookmarks")
         .popover(isPresented: $showingPages, arrowEdge: .top) {

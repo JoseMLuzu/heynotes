@@ -352,7 +352,7 @@ struct LibraryView: View {
                 }
                 deletingNotebook = nil
             }
-        } message: { Text("This notebook and its \(deletingNotebook?.pages.count ?? 0) pages will move to Trash. You can restore them later.") }
+        } message: { Text("This notebook and its \(deletingNotebook?.activePageCount ?? 0) pages will move to Trash. You can restore them later.") }
         .confirmationDialog("Move folder and contents to Trash?", isPresented: Binding(
             get: { deletingFolder != nil }, set: { if !$0 { deletingFolder = nil } }
         ), titleVisibility: .visible) {
@@ -401,7 +401,7 @@ struct LibraryView: View {
         do {
             let request = FetchDescriptor<Notebook>(predicate: #Predicate { $0.id == id })
             guard let notebook = try model.modelContext.fetch(request).first, !notebook.isInTrash,
-                  notebook.pages.contains(where: { $0.id == source.pageID }) else {
+                  notebook.pages.contains(where: { $0.trashedAt == nil && $0.id == source.pageID }) else {
                 throw StudyError.unavailableSource
             }
             openingSource = nil
@@ -527,7 +527,7 @@ struct LibraryView: View {
 
     @ViewBuilder
     private func notebookMenu(_ notebook: Notebook) -> some View {
-        if !notebook.pages.contains(where: { $0.pdfFilePath != nil }) {
+        if !notebook.pages.contains(where: { $0.trashedAt == nil && $0.pdfFilePath != nil }) {
             Button("Change Cover", systemImage: "book.closed") { changingCover = notebook }
         }
         Button("Rename", systemImage: "pencil") { sheet = .renameNotebook(notebook) }

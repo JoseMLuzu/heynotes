@@ -80,7 +80,8 @@ import PencilKit
         XCTAssertEqual(fixture.session.drawing.strokes.count, 1)
         XCTAssertEqual(fixture.notebook.orderedPages.map(\.pageIndex), [0])
         await fixture.session.deletePage()
-        XCTAssertEqual(fixture.notebook.pages.count, 1)
+        XCTAssertEqual(fixture.notebook.activePageCount, 1)
+        XCTAssertEqual(fixture.notebook.removedPages.count, 2)
     }
 
     func testFailedSaveBlocksThumbnailDuplicationAndDeletion() async throws {
@@ -92,6 +93,7 @@ import PencilKit
         XCTAssertEqual(fixture.notebook.pages.count, 2)
         await fixture.session.deletePage(fixture.second)
         XCTAssertEqual(fixture.notebook.pages.count, 2)
+        XCTAssertNil(fixture.second.trashedAt)
         XCTAssertTrue(fixture.session.hasPendingSave)
         XCTAssertEqual(fixture.session.page?.id, fixture.first.id)
         XCTAssertTrue(allActions(fixture.menu().make()).contains { $0.title == "Retry Saving" })

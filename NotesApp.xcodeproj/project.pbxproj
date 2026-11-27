@@ -3933,6 +3933,7 @@
 				<string>B863E90466EA480264A4AA41</string>
 				<string>33CC969C23438268B264AE3F</string>
 				<string>DAB997F55F62F0CF65773FAD</string>
+				<string>E28F102832A9425BE18E362D</string>
 			</array>
 			<key>isa</key>
 			<string>PBXSourcesBuildPhase</string>
@@ -5113,6 +5114,7 @@
 				<string>6A56CBD4E1A1A98B54173C8A</string>
 				<string>B817B1E97D7935EDBDD5583D</string>
 				<string>025D2E8B8DD0884D047BED17</string>
+				<string>01F9393FF6F4DEAABE2ACEC4</string>
 			</array>
 			<key>isa</key>
 			<string>PBXGroup</string>
@@ -6080,6 +6082,17 @@
 			<key>fileRef</key>
 			<string>6A56CBD4E1A1A98B54173C8A</string>
 		</dict>
+		<key>01F9393FF6F4DEAABE2ACEC4</key>
+		<dict>
+			<key>isa</key>
+			<string>PBXFileReference</string>
+			<key>lastKnownFileType</key>
+			<string>sourcecode.swift</string>
+			<key>path</key>
+			<string>NotesApp/Features/Editor/Views/RemovedPagesView.swift</string>
+			<key>sourceTree</key>
+			<string>SOURCE_ROOT</string>
+		</dict>
 		<key>025D2E8B8DD0884D047BED17</key>
 		<dict>
 			<key>isa</key>
@@ -6113,6 +6126,13 @@
 		<dict>
 			<key>fileRef</key>
 			<string>025D2E8B8DD0884D047BED17</string>
+			<key>isa</key>
+			<string>PBXBuildFile</string>
+		</dict>
+		<key>E28F102832A9425BE18E362D</key>
+		<dict>
+			<key>fileRef</key>
+			<string>01F9393FF6F4DEAABE2ACEC4</string>
 			<key>isa</key>
 			<string>PBXBuildFile</string>
 		</dict>

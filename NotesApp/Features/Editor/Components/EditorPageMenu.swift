@@ -21,8 +21,8 @@ import UIKit
                 : item("Page Template", "square.grid.2x2", enabled: ready) { present(.templates) },
             item("Duplicate Page", "plus.square.on.square", enabled: ready) { Task { await session.duplicatePage() } },
             item("Move Page Earlier", "arrow.left", enabled: ready && (session.page?.pageIndex ?? 0) > 0) { session.movePage(-1) },
-            item("Move Page Later", "arrow.right", enabled: ready && (session.page?.pageIndex ?? 0) < session.notebook.pages.count - 1) { session.movePage(1) },
-            item("Delete Page", "trash", enabled: ready && session.notebook.pages.count > 1, destructive: true) { present(.delete) }
+            item("Move Page Later", "arrow.right", enabled: ready && (session.page?.pageIndex ?? 0) < session.notebook.activePageCount - 1) { session.movePage(1) },
+            item("Delete Page", "trash", enabled: ready && session.notebook.activePageCount > 1, destructive: true) { present(.delete) }
         ]
         var pageOptions = pages
         if !session.elements.isEmpty {
@@ -81,7 +81,7 @@ import UIKit
         let currentHasTape = session.elements.contains { $0.kind == .tape }
         var notebookHasTape = currentHasTape
         if !currentHasTape {
-            let otherContent = session.notebook.pages.filter { $0.id != session.page?.id }.compactMap(\.objectsData)
+            let otherContent = session.notebook.pages.filter { $0.trashedAt == nil && $0.id != session.page?.id }.compactMap(\.objectsData)
             notebookHasTape = await Task.detached(priority: .utility) {
                 otherContent.contains { data in
                     (try? PageElementsCodec.decode(data).contains { $0.kind == .tape }) == true

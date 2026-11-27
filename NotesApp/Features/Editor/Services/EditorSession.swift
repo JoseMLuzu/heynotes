@@ -52,7 +52,7 @@ final class EditorSession {
     }
 
     func open(_ target: NotePage) async {
-        guard !busy else { return }
+        guard !busy, target.trashedAt == nil, target.notebook?.id == notebook.id else { return }
         let opening = PageTurnDiagnostics.signposter.beginInterval("PageOpen", id: PageTurnDiagnostics.signposter.makeSignpostID())
         defer { PageTurnDiagnostics.signposter.endInterval("PageOpen", opening) }
         handwriting.cancel()
@@ -105,7 +105,7 @@ final class EditorSession {
         guard let page else { return }
         let originID = page.id
         let requests = [1, -1].compactMap { direction in
-            notebook.pages.first { $0.pageIndex == page.pageIndex + direction }
+            notebook.pages.first { $0.trashedAt == nil && $0.pageIndex == page.pageIndex + direction }
         }.filter {
             ($0.drawingFilePath ?? DrawingStorage.path(notebook: notebook.id, page: $0.id)) != path
         }.map(preparationRequest)
@@ -116,7 +116,7 @@ final class EditorSession {
                 }
                 for await (id, content) in group {
                     guard !Task.isCancelled, let self, self.page?.id == originID,
-                          let content, let target = self.notebook.pages.first(where: { $0.id == id }) else { continue }
+                          let content, let target = self.notebook.pages.first(where: { $0.trashedAt == nil && $0.id == id }) else { continue }
                     let prepared = PreparedCanvasPage(page: target, content: content)
                     self.preparedNeighbors.append(prepared)
                     self.onPreparedNeighbor?(prepared)
@@ -128,7 +128,7 @@ final class EditorSession {
     func prioritizePageTurn(_ direction: Int) {
         priorityPreparation?.cancel()
         guard ready, !busy, let page,
-              let target = notebook.pages.first(where: { $0.pageIndex == page.pageIndex + direction }) else { return }
+              let target = notebook.pages.first(where: { $0.trashedAt == nil && $0.pageIndex == page.pageIndex + direction }) else { return }
         let request = preparationRequest(target)
         guard request.source.resolvedDrawingPath != path else { return }
         priorityPreparation = Task(priority: .userInitiated) { [pagePreparation, storage] in
@@ -263,7 +263,7 @@ final class EditorSession {
         guard !busy else { return }
         busy = true
         guard await flush() else { busy = false; return }
-        let new = NotePage(pageIndex: notebook.pages.count, paperTemplate: page?.paperTemplate ?? .blank)
+        let new = NotePage(pageIndex: notebook.activePageCount, paperTemplate: page?.paperTemplate ?? .blank)
         new.pageWidth = page.map { Double($0.logicalSize.width) }; new.pageHeight = page.map { Double($0.logicalSize.height) }
         new.section = page?.section
         context.insert(new); notebook.pages.append(new)
@@ -275,10 +275,10 @@ final class EditorSession {
 
     func duplicatePage(_ target: NotePage? = nil) async {
         guard !busy, ready, let source = target ?? page,
-              notebook.pages.contains(where: { $0.id == source.id }) else { return }
+              source.trashedAt == nil, notebook.pages.contains(where: { $0.id == source.id }) else { return }
         busy = true
         guard await flush() else { busy = false; return }
-        let new = NotePage(pageIndex: notebook.pages.count, paperTemplate: source.paperTemplate)
+        let new = NotePage(pageIndex: notebook.activePageCount, paperTemplate: source.paperTemplate)
         new.pdfFilePath = source.pdfFilePath; new.pdfPageIndex = source.pdfPageIndex
         new.pageWidth = source.pageWidth; new.pageHeight = source.pageHeight
         new.pdfRightMargin = source.pdfRightMargin; new.bookmarkTitle = source.bookmarkTitle; new.section = source.section
@@ -303,20 +303,26 @@ final class EditorSession {
     }
 
     func deletePage(_ target: NotePage? = nil) async {
-        guard !busy, let target = target ?? page, notebook.pages.count > 1,
-              notebook.pages.contains(where: { $0.id == target.id }) else { return }
+        guard !busy, let target = target ?? page, target.trashedAt == nil, notebook.activePageCount > 1,
+              target.notebook?.id == notebook.id else { return }
         busy = true
         guard await flush() else { busy = false; return }
         let wasCurrent = page?.id == target.id
-        // File bytes and their backup are deliberately retained for recovery.
-        notebook.pages.removeAll { $0.id == target.id }
-        if wasCurrent { page = nil }
-        context.delete(target)
-        PageOrdering.normalize(notebook.orderedPages)
+        guard PageRecovery.remove(target, from: notebook) else { busy = false; return }
         let success = commit()
         busy = false
-        guard success else { if wasCurrent { page = target }; return }
+        guard success else { return }
+        // Keep the old canvas until the next active page is ready, just as in ordinary paging.
         if wasCurrent, let first = notebook.orderedPages.first { await open(first) }
+        else { prepareNeighboringPages() }
+    }
+
+    func restorePage(_ target: NotePage) async {
+        guard !busy, target.trashedAt != nil, target.notebook?.id == notebook.id else { return }
+        busy = true
+        defer { busy = false }
+        guard await flush(), PageRecovery.restore(target, in: notebook) else { return }
+        if commit() { prepareNeighboringPages() }
     }
 
     func movePage(_ offset: Int, target: NotePage? = nil) {

@@ -6,7 +6,7 @@ struct NotebookCard: View {
 
     var body: some View {
         let notebookID = notebook.id
-        let pdfPage = notebook.pages.lazy.filter { $0.pdfFilePath != nil }.min {
+        let pdfPage = notebook.pages.lazy.filter { $0.trashedAt == nil && $0.pdfFilePath != nil }.min {
             $0.pageIndex == $1.pageIndex ? $0.id.uuidString < $1.id.uuidString : $0.pageIndex < $1.pageIndex
         }
         VStack(alignment: .leading, spacing: 13) {
@@ -26,12 +26,12 @@ struct NotebookCard: View {
                     }
                 }
             LibraryItemCaption(title: notebook.title,
-                               detail: "\(notebook.pages.count) \(notebook.pages.count == 1 ? "page" : "pages") · \(notebook.updatedAt.formatted(date: .abbreviated, time: .omitted))")
+                               detail: "\(notebook.activePageCount) \(notebook.activePageCount == 1 ? "page" : "pages") · \(notebook.updatedAt.formatted(date: .abbreviated, time: .omitted))")
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .contentShape(RoundedRectangle(cornerRadius: 12))
         .accessibilityElement(children: .ignore)
-        .accessibilityLabel("\(notebook.title)\(pdfPage != nil ? ", PDF" : ""), \(notebook.pages.count) pages\(notebook.isFavorite ? ", favorite" : "")")
+        .accessibilityLabel("\(notebook.title)\(pdfPage != nil ? ", PDF" : ""), \(notebook.activePageCount) pages\(notebook.isFavorite ? ", favorite" : "")")
         .accessibilityValue("Modified \(notebook.updatedAt.formatted(date: .abbreviated, time: .omitted))")
     }
 }

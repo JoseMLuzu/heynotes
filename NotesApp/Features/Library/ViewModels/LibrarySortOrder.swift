@@ -17,7 +17,7 @@ enum LibrarySortOrder: String, CaseIterable, Identifiable {
         notebooks.map { notebook in
             (notebook: notebook, key: SortKey(title: notebook.title, id: notebook.id.uuidString,
                 date: self == .recent ? notebook.updatedAt : .distantPast,
-                isPDF: self == .type && notebook.pages.contains { $0.pdfFilePath != nil }))
+                isPDF: self == .type && notebook.pages.contains { $0.trashedAt == nil && $0.pdfFilePath != nil }))
         }.sorted { left, right in
             if self == .recent, left.key.date != right.key.date { return left.key.date > right.key.date }
             if self == .type, left.key.isPDF != right.key.isPDF { return !left.key.isPDF }

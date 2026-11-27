@@ -24,10 +24,10 @@ struct SplitDocumentPicker: View {
                             Label {
                                 VStack(alignment: .leading, spacing: 4) {
                                     Text(notebook.title).foregroundStyle(.primary)
-                                    Text("\(notebook.pages.count) pages").font(.caption).foregroundStyle(.secondary)
+                                    Text("\(notebook.activePageCount) pages").font(.caption).foregroundStyle(.secondary)
                                 }
                             } icon: {
-                                Image(systemName: notebook.pages.contains { $0.pdfFilePath != nil } ? "doc.richtext" : "book.closed")
+                                Image(systemName: notebook.pages.contains { $0.trashedAt == nil && $0.pdfFilePath != nil } ? "doc.richtext" : "book.closed")
                                     .foregroundStyle(notebook.coverColor.color)
                             }
                         }.disabled(workspace.blocksNavigation)

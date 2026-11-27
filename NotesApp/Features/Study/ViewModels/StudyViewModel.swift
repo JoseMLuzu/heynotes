@@ -149,7 +149,7 @@ enum StudyError: LocalizedError {
         lookup.autosaveEnabled = false
         let id = source.pageID
         var request = FetchDescriptor<NotePage>(predicate: #Predicate { $0.id == id }); request.fetchLimit = 1
-        guard let page = try lookup.fetch(request).first, let notebook = page.notebook,
+        guard let page = try lookup.fetch(request).first, page.trashedAt == nil, let notebook = page.notebook,
               notebook.id == source.notebookID, !notebook.isInTrash else { throw StudyError.unavailableSource }
         return source
     }

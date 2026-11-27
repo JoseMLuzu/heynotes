@@ -29,7 +29,7 @@ struct LibraryTrashView: View {
                             HStack {
                                 VStack(alignment: .leading, spacing: 4) {
                                     Text(notebook.title).font(.headline)
-                                    Text("\(notebook.pages.count) pages · \(notebook.folder?.pathTitle ?? "Inbox")")
+                                    Text("\(notebook.activePageCount) pages · \(notebook.folder?.pathTitle ?? "Inbox")")
                                         .font(.caption).foregroundStyle(.secondary)
                                 }
                                 Spacer()

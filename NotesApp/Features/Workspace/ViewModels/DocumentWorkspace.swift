@@ -88,7 +88,7 @@ final class DocumentWorkspace {
     func open(_ notebook: Notebook, pageID: UUID? = nil) async -> Bool {
         guard !blocksNavigation, validate(notebook, pageID: pageID) else { return false }
         if let existing = visibleSessions.first(where: { $0.notebook.id == notebook.id }) {
-            if let pageID, existing.page?.id != pageID, let target = notebook.pages.first(where: { $0.id == pageID }) {
+            if let pageID, existing.page?.id != pageID, let target = notebook.pages.first(where: { $0.trashedAt == nil && $0.id == pageID }) {
                 isSwitching = true
                 await existing.open(target)
                 isSwitching = false
@@ -281,7 +281,7 @@ final class DocumentWorkspace {
         return true
     }
     private func load(_ notebook: Notebook, pageID: UUID? = nil) async -> EditorSession? {
-        let remembered = (pageID ?? saved.pages[notebook.id]).flatMap { id in notebook.pages.first { $0.id == id } }
+        let remembered = (pageID ?? saved.pages[notebook.id]).flatMap { id in notebook.pages.first { $0.trashedAt == nil && $0.id == id } }
         guard let destination = remembered ?? notebook.orderedPages.first else { return nil }
         let incoming = EditorSession(notebook: notebook, context: context, storage: storage)
         await incoming.open(destination)
@@ -298,9 +298,9 @@ final class DocumentWorkspace {
     }
     private func validate(_ notebook: Notebook, pageID: UUID? = nil) -> Bool {
         guard !notebook.isInTrash else { errorMessage = "Restore this notebook from Trash before opening it."; return false }
-        guard !notebook.pages.isEmpty else { errorMessage = "This notebook has no available pages. Your saved files have not been removed."; return false }
-        if let pageID, !notebook.pages.contains(where: { $0.id == pageID }) {
-            errorMessage = "The original page is no longer available. Your study card is unchanged."; return false
+        guard notebook.activePageCount > 0 else { errorMessage = "This notebook has no available pages. Your saved files have not been removed."; return false }
+        if let pageID, !notebook.pages.contains(where: { $0.trashedAt == nil && $0.id == pageID }) {
+            errorMessage = "Restore the original page from Recently Deleted in its notebook’s Pages panel. Your study card is unchanged."; return false
         }
         return true
     }

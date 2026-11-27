@@ -389,13 +389,13 @@ struct PaperCanvas: UIViewRepresentable {
         guard let host = container.current else { return }
         var neighborIDs: [Int: UUID] = [:]
         for direction in [-1, 1] {
-            neighborIDs[direction] = session.notebook.pages.first { $0.pageIndex == page.pageIndex + direction }?.id
+            neighborIDs[direction] = session.notebook.pages.first { $0.trashedAt == nil && $0.pageIndex == page.pageIndex + direction }?.id
         }
         container.retainNeighbors(neighborIDs)
         for prepared in session.preparedNeighbors { container.prepare(prepared) }
         // Tool/metadata updates never replace the live drawing or its undo history.
         if !sameTool(host.ink.tool, tool) { host.ink.tool = tool }
-        host.hasNextPage = page.pageIndex < session.notebook.pages.count - 1
+        host.hasNextPage = page.pageIndex < session.notebook.activePageCount - 1
         host.hasPreviousPage = page.pageIndex > 0
         host.pagePan.isEnabled = isEnabled && !fingerDrawing && session.ready && !session.busy
         let auxiliary = editorTool.usesAuxiliaryInput || editorTool == .eraser && eraserMode == .highlighter

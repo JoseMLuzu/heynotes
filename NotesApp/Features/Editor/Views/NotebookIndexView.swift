@@ -8,6 +8,7 @@ struct NotebookIndexView: View {
     @State private var title = ""
     @State private var deleting: NotebookSection?
     @State private var deletingPageID: UUID?
+    @State private var showingRemovedPages = false
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     init(session: EditorSession, bookmarksOnly: Bool = false, close: @escaping () -> Void) {
         self.session = session
@@ -38,10 +39,10 @@ struct NotebookIndexView: View {
                 Button { Task { await session.turnPage(-1) } } label: { Image(systemName: "chevron.left").frame(width: 44, height: 44) }
                     .disabled(session.page?.pageIndex == 0).accessibilityLabel("Previous page")
                 Spacer()
-                Text("\((session.page?.pageIndex ?? 0) + 1) / \(session.notebook.pages.count)").font(.subheadline.monospacedDigit())
+                Text("\((session.page?.pageIndex ?? 0) + 1) / \(session.notebook.activePageCount)").font(.subheadline.monospacedDigit())
                 Spacer()
                 Button { Task { await session.turnPage(1) } } label: { Image(systemName: "chevron.right").frame(width: 44, height: 44) }
-                    .disabled(session.page?.pageIndex == session.notebook.pages.count - 1).accessibilityLabel("Next page")
+                    .disabled(session.page?.pageIndex == session.notebook.activePageCount - 1).accessibilityLabel("Next page")
             }.padding(.horizontal, 16)
             if let page = session.page {
                 Button {
@@ -84,9 +85,19 @@ struct NotebookIndexView: View {
                         if !session.notebook.sections.isEmpty { Text("Unsectioned Pages").font(.subheadline.weight(.semibold)) }
                         pageGrid(session.notebook.orderedPages.filter { $0.section == nil })
                     }
+                    Divider()
+                    Button { showingRemovedPages = true } label: {
+                        HStack {
+                            Label("Recently Deleted", systemImage: "trash")
+                            Spacer()
+                            Text("\(session.notebook.removedPages.count)").foregroundStyle(.secondary)
+                            Image(systemName: "chevron.right").font(.caption)
+                        }.font(.subheadline).frame(minHeight: 44)
+                    }.accessibilityIdentifier("pages.recentlyDeleted")
                 }.padding(16)
             }
         }
+        .sheet(isPresented: $showingRemovedPages) { RemovedPagesView(session: session) }
         .buttonStyle(.plain).tint(AppTheme.accent)
         .allowsHitTesting(!session.busy)
         .alert(naming?.heading ?? "Name", isPresented: Binding(get: { naming != nil }, set: { if !$0 { naming = nil } })) {
@@ -112,7 +123,7 @@ struct NotebookIndexView: View {
                 deletingPageID = nil
             }
             Button("Cancel", role: .cancel) { deletingPageID = nil }
-        } message: { Text("The page will be removed from this notebook. Its drawing file is retained locally for recovery.") }
+        } message: { Text("The page will move to Recently Deleted in this notebook’s Pages panel. You can restore it there.") }
         .alert("Could Not Update Notebook", isPresented: Binding(get: { session.errorMessage != nil }, set: { if !$0 { session.errorMessage = nil } })) {
             Button("OK") { session.errorMessage = nil }
         } message: { Text(session.errorMessage ?? "") }
@@ -142,9 +153,9 @@ struct NotebookIndexView: View {
                     Button("Move Page Earlier", systemImage: "arrow.left") { session.movePage(-1, target: page) }
                         .disabled(page.pageIndex == 0)
                     Button("Move Page Later", systemImage: "arrow.right") { session.movePage(1, target: page) }
-                        .disabled(page.pageIndex == session.notebook.pages.count - 1)
+                        .disabled(page.pageIndex == session.notebook.activePageCount - 1)
                     Button("Delete Page", systemImage: "trash", role: .destructive) { deletingPageID = page.id }
-                        .disabled(session.notebook.pages.count <= 1)
+                        .disabled(session.notebook.activePageCount <= 1)
                 }
             }
         }
