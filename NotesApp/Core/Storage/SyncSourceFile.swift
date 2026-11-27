@@ -7,6 +7,7 @@ import Darwin
 final class SyncSourceFile: @unchecked Sendable {
     private let descriptor: Int32
     private let original: stat
+    var byteCount: UInt64 { UInt64(original.st_size) }
 
     init(url: URL) throws {
         let descriptor = Darwin.open(url.path, O_RDONLY | O_NOFOLLOW | O_NONBLOCK)
@@ -24,6 +25,23 @@ final class SyncSourceFile: @unchecked Sendable {
                                               attributes: [.posixPermissions: 0o600]) else { throw CocoaError(.fileWriteUnknown) }
         let output = try FileHandle(forWritingTo: destination)
         defer { try? output.close() }
+        let result = try stream { try output.write(contentsOf: $0) }
+        try output.synchronize()
+        return result
+    }
+
+    func read(maximumBytes: UInt64) throws -> Data {
+        guard byteCount <= maximumBytes, byteCount <= UInt64(Int.max) else { throw SyncUploadError.tooLarge }
+        var data = Data(); data.reserveCapacity(Int(byteCount))
+        _ = try stream { data.append(contentsOf: $0) }
+        return data
+    }
+
+    func fingerprint() throws -> (String, UInt64) { try stream { _ in } }
+
+    /// All operations use the pinned descriptor, including validation reads. A path
+    /// replacement cannot redirect reads or move a stream's offset in another task.
+    private func stream(_ consume: (Data.SubSequence) throws -> Void) throws -> (String, UInt64) {
         var hash = SHA256(), offset: Int64 = 0
         var buffer = Data(count: 1_048_576)
         while offset < original.st_size {
@@ -34,14 +52,14 @@ final class SyncSourceFile: @unchecked Sendable {
             if count < 0 && errno == EINTR { continue }
             guard count > 0 else { throw SyncUploadError.changedSource }
             let chunk = buffer.prefix(count)
-            hash.update(data: chunk); try output.write(contentsOf: chunk)
+            hash.update(data: chunk); try consume(chunk)
             offset += Int64(count)
         }
         var current = stat()
         guard fstat(descriptor, &current) == 0, current.st_size == original.st_size,
               current.st_mtimespec.tv_sec == original.st_mtimespec.tv_sec,
               current.st_mtimespec.tv_nsec == original.st_mtimespec.tv_nsec else { throw SyncUploadError.changedSource }
-        try Task.checkCancellation(); try output.synchronize()
+        try Task.checkCancellation()
         return (hash.finalize().map { String(format: "%02x", $0) }.joined(), UInt64(offset))
     }
 }
