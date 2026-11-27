@@ -58,6 +58,12 @@ struct AppSettingsView: View {
                         BackupSettingsView(container: context.container, workspace: workspace, working: $backupWorking)
                     } label: { Label("Backups", systemImage: "externaldrive") }
                 }
+                Section("Privacy & Help") {
+                    NavigationLink { PrivacyView() } label: { Label("Privacy", systemImage: "hand.raised") }
+                        .accessibilityIdentifier("settings.privacy")
+                    NavigationLink { DataRecoveryView() } label: { Label("Data & Recovery", systemImage: "lifepreserver") }
+                        .accessibilityIdentifier("settings.recovery")
+                }
                 Section("About") {
                     LabeledContent("Storage", value: "On this iPad")
                     Text("Your notes work offline, without an account.").font(.footnote).foregroundStyle(.secondary)

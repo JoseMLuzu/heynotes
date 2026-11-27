@@ -31,19 +31,20 @@ for directory, target_name in [('NotesApp', 'NotesApp'), ('NotesAppDeviceTests',
                 value['files'] = [key for key in value['files'] if key != build]
         if build not in phase['files']:
             phase['files'].append(build)
-# Register the bundled cover atlas as a real compiled asset catalog.
+# Register app resources, including the privacy manifest, in the app target.
 app = next(v for v in objects.values() if v['isa'] == 'PBXNativeTarget' and v['name'] == 'NotesApp')
 resources = next(objects[key] for key in app['buildPhases'] if objects[key]['isa'] == 'PBXResourcesBuildPhase')
-path = 'NotesApp/Resources/Assets.xcassets'
-ref = next((k for k, v in objects.items() if v['isa'] == 'PBXFileReference' and v.get('path') == path), None)
-if ref is None:
-    ref = uid(path)
-    objects[ref] = dict(isa='PBXFileReference', lastKnownFileType='folder.assetcatalog', path=path, sourceTree='SOURCE_ROOT')
-    objects[main]['children'].append(ref)
-build = next((k for k, v in objects.items() if v['isa'] == 'PBXBuildFile' and v.get('fileRef') == ref), None)
-if build is None:
-    build = uid(path + 'build')
-    objects[build] = dict(isa='PBXBuildFile', fileRef=ref)
-if build not in resources['files']:
-    resources['files'].append(build)
+for path, file_type in [('NotesApp/Resources/Assets.xcassets', 'folder.assetcatalog'),
+                        ('NotesApp/Resources/PrivacyInfo.xcprivacy', 'text.xml')]:
+    ref = next((k for k, v in objects.items() if v['isa'] == 'PBXFileReference' and v.get('path') == path), None)
+    if ref is None:
+        ref = uid(path)
+        objects[ref] = dict(isa='PBXFileReference', lastKnownFileType=file_type, path=path, sourceTree='SOURCE_ROOT')
+        objects[main]['children'].append(ref)
+    build = next((k for k, v in objects.items() if v['isa'] == 'PBXBuildFile' and v.get('fileRef') == ref), None)
+    if build is None:
+        build = uid(path + 'build')
+        objects[build] = dict(isa='PBXBuildFile', fileRef=ref)
+    if build not in resources['files']:
+        resources['files'].append(build)
 project.write_bytes(plistlib.dumps(data, sort_keys=False))

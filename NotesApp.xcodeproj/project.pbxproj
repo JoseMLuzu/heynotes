@@ -71,6 +71,7 @@
 			<key>files</key>
 			<array>
 				<string>19614F8B80AF668D67360873</string>
+				<string>5B7CB318736581280880329A</string>
 			</array>
 			<key>isa</key>
 			<string>PBXResourcesBuildPhase</string>
@@ -3934,6 +3935,8 @@
 				<string>33CC969C23438268B264AE3F</string>
 				<string>DAB997F55F62F0CF65773FAD</string>
 				<string>E28F102832A9425BE18E362D</string>
+				<string>D4362F755134837051EF7AB3</string>
+				<string>3760522E61AF950993C3C0C1</string>
 			</array>
 			<key>isa</key>
 			<string>PBXSourcesBuildPhase</string>
@@ -5115,6 +5118,9 @@
 				<string>B817B1E97D7935EDBDD5583D</string>
 				<string>025D2E8B8DD0884D047BED17</string>
 				<string>01F9393FF6F4DEAABE2ACEC4</string>
+				<string>A3DCD5D28AADAE039FBC9ACD</string>
+				<string>12ECC6DE200E87135D924CD7</string>
+				<string>EFDAC732A306B30A83D1906C</string>
 			</array>
 			<key>isa</key>
 			<string>PBXGroup</string>
@@ -6104,12 +6110,48 @@
 			<key>sourceTree</key>
 			<string>SOURCE_ROOT</string>
 		</dict>
+		<key>12ECC6DE200E87135D924CD7</key>
+		<dict>
+			<key>isa</key>
+			<string>PBXFileReference</string>
+			<key>lastKnownFileType</key>
+			<string>sourcecode.swift</string>
+			<key>path</key>
+			<string>NotesApp/Features/Settings/Views/PrivacyView.swift</string>
+			<key>sourceTree</key>
+			<string>SOURCE_ROOT</string>
+		</dict>
 		<key>33CC969C23438268B264AE3F</key>
 		<dict>
 			<key>fileRef</key>
 			<string>B817B1E97D7935EDBDD5583D</string>
 			<key>isa</key>
 			<string>PBXBuildFile</string>
+		</dict>
+		<key>3760522E61AF950993C3C0C1</key>
+		<dict>
+			<key>fileRef</key>
+			<string>12ECC6DE200E87135D924CD7</string>
+			<key>isa</key>
+			<string>PBXBuildFile</string>
+		</dict>
+		<key>5B7CB318736581280880329A</key>
+		<dict>
+			<key>fileRef</key>
+			<string>EFDAC732A306B30A83D1906C</string>
+			<key>isa</key>
+			<string>PBXBuildFile</string>
+		</dict>
+		<key>A3DCD5D28AADAE039FBC9ACD</key>
+		<dict>
+			<key>isa</key>
+			<string>PBXFileReference</string>
+			<key>lastKnownFileType</key>
+			<string>sourcecode.swift</string>
+			<key>path</key>
+			<string>NotesApp/Features/Settings/Views/DataRecoveryView.swift</string>
+			<key>sourceTree</key>
+			<string>SOURCE_ROOT</string>
 		</dict>
 		<key>B817B1E97D7935EDBDD5583D</key>
 		<dict>
@@ -6121,6 +6163,13 @@
 			<string>NotesApp/Core/Models/PageRecovery.swift</string>
 			<key>sourceTree</key>
 			<string>SOURCE_ROOT</string>
+		</dict>
+		<key>D4362F755134837051EF7AB3</key>
+		<dict>
+			<key>fileRef</key>
+			<string>A3DCD5D28AADAE039FBC9ACD</string>
+			<key>isa</key>
+			<string>PBXBuildFile</string>
 		</dict>
 		<key>DAB997F55F62F0CF65773FAD</key>
 		<dict>
@@ -6135,6 +6184,17 @@
 			<string>01F9393FF6F4DEAABE2ACEC4</string>
 			<key>isa</key>
 			<string>PBXBuildFile</string>
+		</dict>
+		<key>EFDAC732A306B30A83D1906C</key>
+		<dict>
+			<key>isa</key>
+			<string>PBXFileReference</string>
+			<key>lastKnownFileType</key>
+			<string>text.xml</string>
+			<key>path</key>
+			<string>NotesApp/Resources/PrivacyInfo.xcprivacy</string>
+			<key>sourceTree</key>
+			<string>SOURCE_ROOT</string>
 		</dict>
 	</dict>
 	<key>rootObject</key>

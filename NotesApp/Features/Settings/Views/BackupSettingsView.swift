@@ -30,6 +30,11 @@ struct BackupSettingsView: View {
             } footer: {
                 Text("Backups include notebooks, folders, PDFs, handwriting, images, study progress and Trash. Restore adds content without replacing existing notes.")
             }
+            Section {
+                NavigationLink { DataRecoveryView() } label: { Label("Backup & Recovery Guide", systemImage: "lifepreserver") }
+            } footer: {
+                Text("A backup is not password-protected. Keep a trusted copy outside HeyNotes before deleting the app or changing devices.")
+            }
             if model.busy { Section { HStack(spacing: 12) { ProgressView(); Text(model.activity) }.accessibilityElement(children: .combine) } }
             if let notice = model.notice { Section { Label(notice, systemImage: "checkmark.circle").foregroundStyle(.secondary) } }
             if let error = model.errorMessage { Section("Unable to Complete Backup") { Text(error).foregroundStyle(.red) } }
