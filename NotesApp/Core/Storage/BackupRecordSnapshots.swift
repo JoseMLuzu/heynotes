@@ -25,7 +25,7 @@ extension BackupManifest.SavedPage {
                   template: value.paperTemplateRawValue, drawing: value.drawingFilePath, pdf: value.pdfFilePath,
                   pdfIndex: value.pdfPageIndex, width: value.pageWidth, height: value.pageHeight,
                   bookmark: value.bookmarkTitle, objects: value.objectsData, margin: value.pdfRightMargin,
-                  createdAt: value.createdAt, updatedAt: value.updatedAt)
+                  createdAt: value.createdAt, updatedAt: value.updatedAt, trashedAt: value.trashedAt)
     }
 }
 extension BackupManifest.SavedDeck {

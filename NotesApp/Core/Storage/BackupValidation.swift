@@ -25,8 +25,9 @@ enum BackupValidation {
     }
 
     static func manifest(_ value: BackupManifest) throws {
-        guard (1...2).contains(value.formatVersion) else { throw LibraryBackupError.unsupportedVersion }
+        guard (1...3).contains(value.formatVersion) else { throw LibraryBackupError.unsupportedVersion }
         guard value.formatVersion >= 2 || value.cards.allSatisfy({ $0.questionImage == nil && $0.answerImage == nil }) else { throw LibraryBackupError.invalidMetadata }
+        guard value.formatVersion >= 3 || value.pages.allSatisfy({ $0.trashedAt == nil }) else { throw LibraryBackupError.invalidMetadata }
         func ids(_ values: [UUID]) throws -> Set<UUID> {
             let set = Set(values)
             guard values.count <= 200_000, set.count == values.count else { throw LibraryBackupError.invalidMetadata }

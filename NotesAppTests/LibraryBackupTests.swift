@@ -122,7 +122,7 @@ import Testing
         manifest.pages = []; manifest.sections = []
         inputs.append(try rawArchive(manifest, files: [("../outside", Data([1]))]))
         inputs.append(try rawArchive(manifest, files: [("A/file", Data([1])), ("a/file", Data([2]))]))
-        manifest.formatVersion = 3; inputs.append(try rawArchive(manifest, files: []))
+        manifest.formatVersion = 4; inputs.append(try rawArchive(manifest, files: []))
         for (index, bytes) in inputs.enumerated() {
             let source = f.root.appendingPathComponent("invalid-\(index).heynotesbackup"); try bytes.write(to: source)
             await #expect(throws: (any Error).self) { try await service.prepareRestore(from: source) }
@@ -208,6 +208,38 @@ import Testing
         _ = try await LibraryBackupService(container: target.container, storage: target.storage).restore(old)
         #expect(try target.container.mainContext.fetchCount(FetchDescriptor<Flashcard>()) == 2)
         #expect(try target.container.mainContext.fetch(FetchDescriptor<Flashcard>()).allSatisfy { $0.questionImagePath == nil && $0.answerImagePath == nil })
+    }
+
+    @Test func removedPagesAndTheirSourceLinksSurvivePortableRestoreAndLegacyV2RemainsReadable() async throws {
+        let f = try BackupFixture(); defer { f.cleanup() }; try await f.seed()
+        let context = f.container.mainContext
+        let page = try #require(context.fetch(FetchDescriptor<NotePage>()).first { $0.id == f.pageID })
+        let book = try #require(page.notebook)
+        #expect(PageRecovery.remove(page, from: book, at: f.date))
+        try context.saveRecordingSyncChanges()
+        let service = LibraryBackupService(container: f.container, storage: f.storage)
+        let url = try await service.exportLibrary(); defer { Task { await service.discardExport(url) } }
+        let prepared = try await service.prepareRestore(from: url); defer { Task { await service.discard(prepared) } }
+        #expect(prepared.manifest.formatVersion == 3)
+        #expect(prepared.manifest.pages.first { $0.id == f.pageID }?.trashedAt == f.date)
+        // Restore into the populated store exercises collision remapping for removed-page sources too.
+        _ = try await service.restore(prepared)
+        let observer = ModelContext(f.container)
+        let copy = try #require(observer.fetch(FetchDescriptor<Notebook>()).first { $0.id != f.bookID })
+        let removed = try #require(copy.removedPages.first)
+        #expect(copy.activePageCount == 1 && removed.id != page.id && removed.trashedAt == f.date)
+        #expect(try await f.storage.read(try #require(removed.drawingFilePath)) == f.ink)
+        let linked = try #require(observer.fetch(FetchDescriptor<Flashcard>()).first { $0.sourceNotebookID == copy.id && $0.trashedAt == nil })
+        #expect(linked.sourcePageID == removed.id)
+        #expect(PageRecovery.restore(removed, in: copy)); try observer.saveRecordingSyncChanges()
+        #expect(copy.activePageCount == 2 && linked.sourcePageID == removed.id)
+        // An actual version-2 JSON payload has no page removal key.
+        var old = prepared.manifest; old.formatVersion = 2
+        for i in old.pages.indices { old.pages[i].trashedAt = nil }
+        let encoded = try JSONEncoder().encode(old)
+        try BackupValidation.manifest(JSONDecoder().decode(BackupManifest.self, from: encoded))
+        var invalid = prepared.manifest; invalid.formatVersion = 2
+        #expect(throws: LibraryBackupError.self) { try BackupValidation.manifest(invalid) }
     }
 
     private func rawArchive(_ manifest: BackupManifest, files: [(String, Data)]) throws -> Data {

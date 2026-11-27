@@ -70,6 +70,7 @@ extension BackupMetadataStore {
             }
             item.pdfFilePath = try path(record.pdf); item.pdfPageIndex = record.pdfIndex
             item.pageWidth = record.width; item.pageHeight = record.height; item.bookmarkTitle = record.bookmark
+            item.trashedAt = record.trashedAt
             item.pdfRightMargin = record.margin
             if record.objects != nil {
                 var objects = try PageElementsCodec.decode(record.objects)

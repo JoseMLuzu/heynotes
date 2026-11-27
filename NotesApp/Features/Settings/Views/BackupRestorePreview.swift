@@ -13,6 +13,7 @@ struct BackupRestorePreview: View {
                     LabeledContent("Created", value: backup.manifest.createdAt.formatted(date: .abbreviated, time: .shortened))
                     LabeledContent("Notebooks", value: "\(backup.manifest.notebooks.count)")
                     LabeledContent("Pages", value: "\(backup.manifest.pages.count)")
+                    LabeledContent("Removed pages", value: "\(backup.manifest.pages.filter { $0.trashedAt != nil }.count)")
                     LabeledContent("Study decks", value: "\(backup.manifest.decks.count)")
                     LabeledContent("Study cards", value: "\(backup.manifest.cards.count)")
                     LabeledContent("Files", value: "\(backup.files.count)")

@@ -2,7 +2,7 @@ import Foundation
 
 /// Portable library records, independent of the SQLite store and SwiftData schema internals.
 struct BackupManifest: Codable, Sendable {
-    var formatVersion = 2
+    var formatVersion = 3
     var createdAt = Date.now
     var folders: [SavedFolder]
     var notebooks: [SavedNotebook]
@@ -28,6 +28,7 @@ struct BackupManifest: Codable, Sendable {
         var drawing: String?; var pdf: String?; var pdfIndex: Int?
         var width: Double?; var height: Double?; var bookmark: String?; var objects: Data?; var margin: Double?
         var createdAt: Date; var updatedAt: Date
+        var trashedAt: Date? = nil
     }
     struct SavedDeck: Codable, Sendable {
         var id: UUID; var title: String; var notebookID: UUID?; var createdAt: Date; var trashedAt: Date?
