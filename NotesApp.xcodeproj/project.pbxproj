@@ -1484,6 +1484,7 @@
 				<string>EEC409481B5417475966530E</string>
 				<string>BCD7B9096034E752800816EE</string>
 				<string>0701092055CA9CF03C8D7DEF</string>
+				<string>B94E20F391DF7CCC9191F68F</string>
 			</array>
 			<key>isa</key>
 			<string>PBXSourcesBuildPhase</string>
@@ -5121,6 +5122,7 @@
 				<string>A3DCD5D28AADAE039FBC9ACD</string>
 				<string>12ECC6DE200E87135D924CD7</string>
 				<string>EFDAC732A306B30A83D1906C</string>
+				<string>F51479A6A7CA7E95A4A8B18A</string>
 			</array>
 			<key>isa</key>
 			<string>PBXGroup</string>
@@ -6164,6 +6166,13 @@
 			<key>sourceTree</key>
 			<string>SOURCE_ROOT</string>
 		</dict>
+		<key>B94E20F391DF7CCC9191F68F</key>
+		<dict>
+			<key>fileRef</key>
+			<string>F51479A6A7CA7E95A4A8B18A</string>
+			<key>isa</key>
+			<string>PBXBuildFile</string>
+		</dict>
 		<key>D4362F755134837051EF7AB3</key>
 		<dict>
 			<key>fileRef</key>
@@ -6193,6 +6202,17 @@
 			<string>text.xml</string>
 			<key>path</key>
 			<string>NotesApp/Resources/PrivacyInfo.xcprivacy</string>
+			<key>sourceTree</key>
+			<string>SOURCE_ROOT</string>
+		</dict>
+		<key>F51479A6A7CA7E95A4A8B18A</key>
+		<dict>
+			<key>isa</key>
+			<string>PBXFileReference</string>
+			<key>lastKnownFileType</key>
+			<string>sourcecode.swift</string>
+			<key>path</key>
+			<string>NotesAppDeviceTests/DataRecoveryPrivacyTests.swift</string>
 			<key>sourceTree</key>
 			<string>SOURCE_ROOT</string>
 		</dict>
