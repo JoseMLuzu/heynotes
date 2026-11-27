@@ -34,7 +34,7 @@ The file snapshot/install runs synchronously on `DrawingStorage`'s executor so d
 
 The application exports a temporary archive through `UIDocumentPickerViewController(forExporting:asCopy:)`, avoiding a whole-archive `FileDocument`/`Data` buffer. Source URLs use security-scoped access and coordinated reads. The custom public data UTI is `com.local.notesapp.library-backup`.
 
-## Archive format, record version 2
+## Archive format, record version 3
 
 The format is an uncompressed, unencrypted sequential container, not a ZIP file. SHA-256 detects accidental corruption; it does not authenticate a sender. Treat a backup as a copy of private notes when choosing a destination.
 
@@ -75,3 +75,8 @@ On a physical iPad:
 ## Captured flashcards and compatibility
 
 Manifest record version 2 adds optional question/answer image paths to card records. The container layout and magic remain unchanged. Required-image validation, all-files capture, additive UUID remapping and restored asset namespace rewriting cover these images too. Version-1 archives remain readable and restore plain cards with nil images. Version 2 is rejected by older applications that support only record version 1, preventing an apparently complete restore that silently drops image faces. This format change is separate from SwiftData schema V7.
+
+
+## Recoverable pages — November 26, 2026
+
+Manifest version 3 adds optional SavedPage.trashedAt. Capture includes active and removed pages with all files, and restore retains removal state and remaps card sources together. The preview reports removed-page counts. Versions 1 and 2 decode with nil removal timestamps. Older apps reject v3 rather than silently resurrecting removed pages. The binary container and magic remain unchanged. See [DataRecovery.md](DataRecovery.md) for migration, UX and physical acceptance; Settings now contains an offline recovery guide.

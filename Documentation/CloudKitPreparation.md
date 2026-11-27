@@ -4,6 +4,8 @@ Product decision — November 14, 2026: **ship v1.0 offline and add iCloud after
 
 Status: backups, the journal, immutable packages, wire mapping, passive recovery, enrollment, read-only inspection/review and a Debug-only zone setup helper are implemented. Direct Xcode inspection found only Personal Team; a suitable enrolled-program team is the current provisioning blocker. There are no cloud entitlements, configured containers, automatic uploads or cloud-status indicators. See [SyncDevelopmentZoneSetup.md](SyncDevelopmentZoneSetup.md) and [CloudKitDevelopmentSetup.md](CloudKitDevelopmentSetup.md) for the verified handoff gate.
 
+Current user metadata is now V9: the V8 journal layout is frozen and a lightweight migration adds optional page-removal state. Removed pages retain their UUIDs/assets and are queued as upserts; active navigation excludes them, while backup/sync snapshots retain them. Portable backups now use record version 3. See [DataRecovery.md](DataRecovery.md). This does not enable cloud synchronization or alter the separate sync-state sidecar.
+
 ## Implemented local change journal — V7 → V8 migration
 
 The shipped V7 user-data layout, including image flashcards, is frozen in `SchemaV7.swift`. V8 retains those seven entity layouts and adds only the local `SyncChange` entity, using a lightweight V7 → V8 migration. V1–V6 snapshots are unchanged. Disk migration tests cover the previously installed global V7 model layout, image faces, source-note references and unchanged asset bytes, alongside the existing older-version migration coverage.

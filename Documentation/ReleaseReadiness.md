@@ -1,6 +1,14 @@
 # HeyNotes — release readiness audit
 
-Audit date: November 14, 2026. Scope: source, working tree, model/migration design, tests, built Release metadata and existing PlainJot documents. This replaces the November 13 snapshot. **Owner decision: ship offline first; implement iCloud after launch.**
+Original audit: November 14, 2026. Current-status update: November 26, 2026. Scope: source, working tree, model/migration design, tests, built Release metadata and existing PlainJot documents. This replaces the November 13 snapshot. **Owner decision: ship offline first; implement iCloud after launch.**
+
+## Current status — November 26, 2026
+
+Phases 1–4, editable library backups, image flashcards and the local iCloud preparation through Debug-only zone setup are implemented and published on main through 743c556. The latest recovery milestone adds recoverable page removal (schema V9 / backup v3), offline privacy/recovery help and a bundled privacy manifest. At the owner's subsequent request, these milestones were organized into scoped local commits. They have not been installed on the owner's iPad or pushed in this commit pass.
+
+R1 remains open for physical Files-provider backup/isolated restore, interrupted-operation and real upgrade acceptance; page-removal metadata retention and restoration are now implemented and tested. R3 remains open for real publisher/contact details, public HTTPS policy/support pages, in-app external links and final distribution-archive privacy review. The owner confirmed the public URLs and contact do not exist yet. Do not mark either gate complete based on automated tests.
+
+Only Personal Team was available in the last Xcode inspection; enrolled-program provisioning/Connect setup is pending. iCloud stays disabled and post-launch. The older inventory, test counts, branch state and planning dates below describe the original audit and are not the current repository status. See [Validation.md](Validation.md), [DataRecovery.md](DataRecovery.md), [PrivacyAndSupport.md](PrivacyAndSupport.md) and [CloudKitPreparation.md](CloudKitPreparation.md) for current evidence. No release date is reaffirmed by this update.
 
 ## Verdict
 
@@ -36,9 +44,9 @@ Avoid a misleading percentage complete: functional scope is broad, but physical 
 
 ## Actual blockers versus optional features
 
-**Release-blocking work / unaccepted gates:** missing privacy manifest and in-app policy/support entries; account/Connect/archive validation not verified; identity/version strategy; rights and listing assets; realistic recovery/migration and supported-device acceptance; physical Pencil/performance/accessibility verification; TestFlight feedback and final candidate freeze.
+**Release-blocking work / unaccepted gates:** public policy/support/contact and final archive privacy review pending; account/Connect/archive validation not verified; identity/version strategy; rights and listing assets; realistic recovery/migration and supported-device acceptance; physical Pencil/performance/accessibility verification; TestFlight feedback and final candidate freeze.
 
-**Important product gaps that can follow v1:** Home/All Notes, real dated Recents/lastOpenedAt, global Quick Note, grid/list mode, recoverable page Trash, Spanish UI and storage diagnostics. Page-deletion safety still requires a specific launch decision; implementing page Trash should be promoted if tests cannot establish an acceptable deletion/recovery experience.
+**Important product gaps that can follow v1:** Home/All Notes, real dated Recents/lastOpenedAt, global Quick Note, grid/list mode, recoverable page Trash, Spanish UI and storage diagnostics. Recoverable page removal is now implemented; its hardware acceptance remains part of R1.
 
 **Post-launch:** iCloud, global handwriting search, selected-ink cards, FSRS, PowerPoint, reminders/statistics. These are not failures of the current offline MVP.
 
@@ -46,13 +54,13 @@ Avoid a misleading percentage complete: functional scope is broad, but physical 
 
 | Risk | Finding | Next action |
 | --- | --- | --- |
-| Data ownership | Backups exist but physical Files-provider acceptance is pending; page metadata deletion lacks restore | Run external backup/recovery drill on copies; decide page-deletion policy |
+| Data ownership | Backups and recoverable page removal exist; physical Files-provider acceptance is pending | Run external backup/recovery drill on copies, including removed pages |
 | Interrupted operations | Atomic drawings/metadata saves are independent; no complete filesystem journal | Test interruption windows, retain original backup and orphan bytes; never silently purge |
 | Performance | Bounded caches/prepared canvases and tests exist; real peak RAM/FPS not established | Instruments on long handwritten notes, large PDFs and split panes; fix measured bottlenecks |
 | Compatibility | Minimum OS 17 compile-checked, runtime tests are 26.5 | Test minimum OS or deliberately revise minimum before distribution |
 | Experimental conversion | OCR can misrecognize cursive/equations; original ink retained | Accept opt-in behavior on hardware or hide from the release |
 | Artwork | Gallery-resolution cover atlas supplied by user | Verify distribution rights; assess small-screen quality and replace with originals where needed |
-| Packaging | Notes display name, local bundle ID, 0.1.0/build 1, missing manifest | Final identity/privacy/archive gate; preserve development notes if ID changes |
+| Packaging | Development identity/version still require release decisions; privacy manifest is now bundled | Final identity/privacy/archive gate; preserve development notes if ID changes |
 | Maintainability | Several large view/paging files; no CI workflow | Targeted extraction when needed, regression coverage and release artifacts; avoid a rewrite |
 
 ## When can it ship?
@@ -153,7 +161,7 @@ First stabilize actual support/beta findings. Then implement iCloud in gated sli
 
 ## Release gates
 
-Updated November 14, 2026. v1.0 is offline; iCloud is post-launch. Open boxes mean unaccepted work, not an assertion that the corresponding implementation is missing.
+Updated November 26, 2026. v1.0 is offline; iCloud is post-launch. Open boxes mean unaccepted work, not an assertion that the corresponding implementation is missing.
 
 ## Completed — do not schedule again
 
@@ -176,11 +184,11 @@ Updated November 14, 2026. v1.0 is offline; iCloud is post-launch. Open boxes me
 | R5 | Listing, rights and review materials | Original sample content, icon/cover rights, accepted iPad screenshots, actual feature claims, age rating, review instructions and contact ready |
 | R6 | TestFlight and final candidate | Internal/external beta feedback reviewed; blocking issues fixed; upgrade and recovery retested; regression suite passes on the frozen release candidate |
 
-R1 also requires an explicit decision about page deletion: implement recoverable page removal or ship clearly confirmed deletion with honest limits and external-backup guidance. Retained drawing bytes alone do not constitute a recoverable page Trash.
+R1 includes physical acceptance of the implemented recoverable page removal. New removals retain metadata and files in the notebook’s Recently Deleted view. Earlier orphan drawing bytes alone remain insufficient to reconstruct an old removed page.
 
 ## P1 — valuable work, not automatically required for first release
 
-- [ ] Recoverable page Trash with sufficient metadata to rebuild page order/content/source links. Promote before beta if deletion tests reveal a data-loss risk.
+- [x] Recoverable page removal with stable IDs, retained metadata/files, restore UI and backup v3. Physical recovery acceptance remains open under R1.
 - [ ] Home / All Notes / dedicated Recents, lastOpenedAt distinct from updatedAt, global New Quick Note, grid/list. Current Library and modification sorting already work.
 - [ ] Short offline first-run/help guide for Pencil, paging, palette, Study ratings and backups.
 - [ ] Decide English-only launch versus Spanish localization. English-only can ship if listing/language claims match; multilingual support adds scope.
@@ -220,7 +228,7 @@ Re-audited November 14, 2026. v1.0 is offline; iCloud will be a later update. Pl
 
 ## R3 — privacy, support and declarations
 
-- [ ] Add and bundle an accurate privacy manifest. Audit UserDefaults in settings/workspace/tools and file timestamp reads in cache fingerprints; use Apple's current approved reasons based on actual use.
+- [x] Bundle PrivacyInfo.xcprivacy for app-owned UserDefaults (CA92.1) and internal/user-selected file metadata (C617.1 / 3B52.1), with offline Privacy and Data & Recovery screens. Final archive review and public policy/support publication remain open.
 - [ ] Inspect Xcode's archive privacy report and final dependencies/entitlements. No analytics, tracking, backend or CloudKit service exists in the current source.
 - [ ] Publish policy/support URLs with real contact details and expose them inside the app. Explain local storage, optional system sharing/Files, editable backups, deletion, uninstall consequences and experimental recognition if shipped.
 - [ ] Complete App Privacy from the final binary's actual collection behavior. On-device processing is not collection under Apple's definition; do not preselect answers solely from a product slogan.
