@@ -84,15 +84,15 @@ public enum NotesSchemaV1: VersionedSchema {
     }
 }
 
-public enum NotesSchemaV8: VersionedSchema {
-    public static var versionIdentifier: Schema.Version { .init(8, 0, 0) }
+public enum NotesSchemaV9: VersionedSchema {
+    public static var versionIdentifier: Schema.Version { .init(9, 0, 0) }
     public static var models: [any PersistentModel.Type] {
         [Folder.self, Notebook.self, NotePage.self, NotebookSection.self, StudyDeck.self, Flashcard.self, ReviewRecord.self, SyncChange.self]
     }
 }
 
 public enum NotesMigrationPlan: SchemaMigrationPlan {
-    public static var schemas: [any VersionedSchema.Type] { [NotesSchemaV1.self, NotesSchemaV2.self, NotesSchemaV3.self, NotesSchemaV4.self, NotesSchemaV5.self, NotesSchemaV6.self, NotesSchemaV7.self, NotesSchemaV8.self] }
+    public static var schemas: [any VersionedSchema.Type] { [NotesSchemaV1.self, NotesSchemaV2.self, NotesSchemaV3.self, NotesSchemaV4.self, NotesSchemaV5.self, NotesSchemaV6.self, NotesSchemaV7.self, NotesSchemaV8.self, NotesSchemaV9.self] }
     public static var stages: [MigrationStage] {
         [.lightweight(fromVersion: NotesSchemaV1.self, toVersion: NotesSchemaV2.self),
          .lightweight(fromVersion: NotesSchemaV2.self, toVersion: NotesSchemaV3.self),
@@ -100,6 +100,7 @@ public enum NotesMigrationPlan: SchemaMigrationPlan {
          .lightweight(fromVersion: NotesSchemaV4.self, toVersion: NotesSchemaV5.self),
          .lightweight(fromVersion: NotesSchemaV5.self, toVersion: NotesSchemaV6.self),
          .lightweight(fromVersion: NotesSchemaV6.self, toVersion: NotesSchemaV7.self),
-         .lightweight(fromVersion: NotesSchemaV7.self, toVersion: NotesSchemaV8.self)]
+         .lightweight(fromVersion: NotesSchemaV7.self, toVersion: NotesSchemaV8.self),
+         .lightweight(fromVersion: NotesSchemaV8.self, toVersion: NotesSchemaV9.self)]
     }
 }

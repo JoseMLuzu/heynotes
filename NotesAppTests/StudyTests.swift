@@ -255,19 +255,18 @@ import Testing
         #expect(model.dueTodayCount(at: start, calendar: calendar) == 0)
     }
 
-    @Test func shippedV5TopLevelModelLayoutMigratesToFrozenPlan() throws {
+    @Test func frozenV5ModelLayoutMigratesWithoutChangingSources() throws {
         let root = URL.temporaryDirectory.appendingPathComponent(UUID().uuidString)
         try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
         defer { try? FileManager.default.removeItem(at: root) }
         let url = root.appendingPathComponent("shipped-v5.store"), id = UUID(), pageID = UUID()
         do {
-            // Before freezing V5, its schema referenced these same four top-level classes.
-            // Their persisted fields remain unchanged in V6.
-            let schema = Schema([Folder.self, Notebook.self, NotePage.self, NotebookSection.self], version: .init(5, 0, 0))
+            // Use frozen classes; live global models now belong to V9.
+            let schema = Schema(versionedSchema: NotesSchemaV5.self)
             let old = try ModelContainer(for: schema, configurations: [ModelConfiguration(schema: schema, url: url, cloudKitDatabase: .none)])
-            let folder = Folder(title: "Kept"); folder.color = .blue
-            let book = Notebook(title: "Existing V5", folder: folder, id: id)
-            let page = NotePage(pageIndex: 0, id: pageID); page.drawingFilePath = "Notebooks/kept.drawing"
+            let folder = NotesSchemaV5.Folder(title: "Kept"); folder.color = .blue
+            let book = NotesSchemaV5.Notebook(title: "Existing V5", folder: folder, id: id)
+            let page = NotesSchemaV5.NotePage(pageIndex: 0, id: pageID); page.drawingFilePath = "Notebooks/kept.drawing"
             old.mainContext.insert(folder); old.mainContext.insert(book); old.mainContext.insert(page)
             book.pages = [page]; try old.mainContext.save()
         }

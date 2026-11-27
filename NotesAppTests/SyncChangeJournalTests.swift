@@ -118,17 +118,16 @@ import Testing
             let inkURL = url.deletingLastPathComponent().appendingPathComponent("kept.drawing")
             let ink = Data([1, 4, 9, 16]); try ink.write(to: inkURL)
             do {
-                // Same global seven-entity layout used by the installed app, independent
-                // of the new frozen V7 migration snapshot's nested model types.
-                let schema = Schema(versionedSchema: InstalledV7Schema.self)
+                // Frozen seven-entity layout; live global models now belong to V9.
+                let schema = Schema(versionedSchema: NotesSchemaV7.self)
                 let container = try ModelContainer(for: schema, configurations: [ModelConfiguration(schema: schema, url: url, cloudKitDatabase: .none)])
                 container.mainContext.autosaveEnabled = false
-                let book = Notebook(title: "Existing", id: bookID), page = NotePage(pageIndex: 2, id: pageID)
+                let book = NotesSchemaV7.Notebook(title: "Existing", id: bookID), page = NotesSchemaV7.NotePage(pageIndex: 2, id: pageID)
                 page.drawingFilePath = "kept.drawing"; page.pdfFilePath = "Sources/original.pdf"; page.pdfPageIndex = 4
-                let deck = StudyDeck(title: "Linked", notebookID: bookID)
-                let card = Flashcard(question: "Image", answer: "Answer", sourceNotebookID: bookID, sourcePageID: pageID, id: cardID)
+                let deck = NotesSchemaV7.StudyDeck(title: "Linked", notebookID: bookID)
+                let card = NotesSchemaV7.Flashcard(question: "Image", answer: "Answer", sourceNotebookID: bookID, sourcePageID: pageID, id: cardID)
                 card.questionImagePath = "Images/question.png"; card.answerImagePath = "Images/answer.png"
-                let review = ReviewRecord(rating: "easy", reviewedAt: .now, nextReviewAt: .now, intervalSeconds: 600)
+                let review = NotesSchemaV7.ReviewRecord(rating: "easy", reviewedAt: .now, nextReviewAt: .now, intervalSeconds: 600)
                 for model: any PersistentModel in [book, page, deck, card, review] { container.mainContext.insert(model) }
                 book.pages = [page]; deck.cards = [card]; card.reviews = [review]
                 try container.mainContext.save()
@@ -153,12 +152,5 @@ import Testing
         try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
         defer { try? FileManager.default.removeItem(at: root) }
         try action(root.appendingPathComponent("library.store"))
-    }
-}
-
-private enum InstalledV7Schema: VersionedSchema {
-    static var versionIdentifier: Schema.Version { .init(7, 0, 0) }
-    static var models: [any PersistentModel.Type] {
-        [Folder.self, Notebook.self, NotePage.self, NotebookSection.self, StudyDeck.self, Flashcard.self, ReviewRecord.self]
     }
 }

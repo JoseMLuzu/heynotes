@@ -29,8 +29,17 @@ public final class Notebook {
         set { coverColorRawValue = newValue.rawValue }
     }
 
+    public var activePageCount: Int { pages.lazy.filter { $0.trashedAt == nil }.count }
+
+    public var removedPages: [NotePage] {
+        pages.filter { $0.trashedAt != nil }.sorted {
+            if $0.trashedAt != $1.trashedAt { return $0.trashedAt! > $1.trashedAt! }
+            return $0.id.uuidString < $1.id.uuidString
+        }
+    }
+
     public var orderedPages: [NotePage] {
-        pages.sorted {
+        pages.filter { $0.trashedAt == nil }.sorted {
             $0.pageIndex == $1.pageIndex
                 ? $0.id.uuidString < $1.id.uuidString
                 : $0.pageIndex < $1.pageIndex

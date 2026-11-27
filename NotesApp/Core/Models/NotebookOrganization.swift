@@ -2,9 +2,9 @@ import Foundation
 
 @MainActor public enum NotebookOrganization {
     public static func assign(_ page: NotePage, to section: NotebookSection?, in notebook: Notebook) -> Bool {
-        guard page.notebook?.id == notebook.id, section == nil || section?.notebook?.id == notebook.id else { return false }
+        guard page.trashedAt == nil, page.notebook?.id == notebook.id, section == nil || section?.notebook?.id == notebook.id else { return false }
         page.section = section
-        page.pageIndex = (notebook.pages.map(\.pageIndex).max() ?? 0) + 1
+        page.pageIndex = (notebook.orderedPages.map(\.pageIndex).max() ?? 0) + 1
         normalize(notebook); return true
     }
     public static func normalize(_ notebook: Notebook) {

@@ -9,6 +9,7 @@ public final class NotePage {
     public var paperTemplateRawValue: String
     // Relative to the app's document root. Nil means a new page without saved ink.
     public var drawingFilePath: String?
+    public var trashedAt: Date? = nil
     public var pdfFilePath: String? = nil
     public var pdfPageIndex: Int? = nil
     public var pageWidth: Double? = nil
