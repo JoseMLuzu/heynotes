@@ -139,3 +139,8 @@ The local sync preparation now includes private value snapshots and read-only so
 ## Recoverable pages and privacy (V9)
 
 PageRecovery changes removal/restoration metadata without touching files or IDs. The editor saves through its existing flush/journal boundary. Active-page queries exclude removed pages; backup snapshots retain them. Manifest v3 preserves removal state with backwards reading of v1/v2. V8 is frozen and the V8 → V9 stage is lightweight; the separate sync sidecar is unchanged. Settings provides offline privacy/recovery screens and the app bundles PrivacyInfo.xcprivacy. Public policy/support publication and hardware recovery acceptance remain open. See [DataRecovery.md](DataRecovery.md) and [PrivacyAndSupport.md](PrivacyAndSupport.md).
+
+
+## Incoming reception boundary
+
+SyncIncomingStore owns a private, separately locked filesystem inbox. SyncIncomingInput adapts fetched CKRecord/CKAsset values; normalized manifests and wire validation remain Foundation/CloudKit services shared by host and native targets. Streamed copies use pinned descriptors and checked relative names, then publish atomically. Incomplete/corrupt or unresolved content cannot become an importable empty replacement. The service has no user ModelContext and does not change outgoing revisions or engine checkpoints. Import/conflict coordination is the next boundary; see [SyncIncomingReception.md](SyncIncomingReception.md).

@@ -2,7 +2,7 @@
 
 Product decision — November 14, 2026: **ship v1.0 offline and add iCloud after launch**. The sync milestones below are post-launch work and do not block the initial App Store release. See [ReleaseReadiness.md](ReleaseReadiness.md) for the launch critical path.
 
-Status: backups, the journal, immutable packages, wire mapping, passive recovery, enrollment, read-only inspection/review and a Debug-only zone setup helper are implemented. Direct Xcode inspection found only Personal Team; a suitable enrolled-program team is the current provisioning blocker. There are no cloud entitlements, configured containers, automatic uploads or cloud-status indicators. See [SyncDevelopmentZoneSetup.md](SyncDevelopmentZoneSetup.md) and [CloudKitDevelopmentSetup.md](CloudKitDevelopmentSetup.md) for the verified handoff gate.
+Status: backups, the journal, immutable packages, wire mapping, passive recovery, enrollment, read-only inspection/review, a Debug-only zone setup helper and durable incoming reception are implemented. Direct Xcode inspection found only Personal Team; a suitable enrolled-program team is the current provisioning blocker. There are no cloud entitlements, configured containers, automatic uploads or cloud-status indicators. See [SyncDevelopmentZoneSetup.md](SyncDevelopmentZoneSetup.md) and [CloudKitDevelopmentSetup.md](CloudKitDevelopmentSetup.md) for the verified handoff gate.
 
 Current user metadata is now V9: the V8 journal layout is frozen and a lightweight migration adds optional page-removal state. Removed pages retain their UUIDs/assets and are queued as upserts; active navigation excludes them, while backup/sync snapshots retain them. Portable backups now use record version 3. See [DataRecovery.md](DataRecovery.md). This does not enable cloud synchronization or alter the separate sync-state sidecar.
 
@@ -94,3 +94,8 @@ The real adapter checks account availability and reads paginated private-zone he
 ## Verified team gate and Debug zone setup — November 25, 2026
 
 The target's available-team menu contains only Personal Team. Real provisioning therefore needs an enrolled Apple Developer Program team with the required permissions. The current app identifier/signing were retained. Controlled custom-zone planning/creation is implemented for explicitly configured Debug development use, with account rechecks and idempotent retry; it is disabled in Release and has not been run against a real account. See [SyncDevelopmentZoneSetup.md](SyncDevelopmentZoneSetup.md). No container identifier was selected or permanently registered.
+
+
+## Durable incoming reception — November 26, 2026
+
+Incoming record/CKAsset reception now has an exclusive account/library-bound inbox with checksum-verified manifests, immutable streamed copies, explicit restart recovery and dependency resolution across deliveries. Received pages wait for missing blobs rather than creating empty replacements. Hard deletions/tombstones are retained only as pending descriptions. This does not apply remote changes, update user data, advance engine state or enable a network engine. See [SyncIncomingReception.md](SyncIncomingReception.md) for limits, offline-fixture evidence and the next safe import transaction.
